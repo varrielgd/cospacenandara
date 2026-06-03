@@ -59,16 +59,14 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     setSelectedLeads({});
 
     try {
-      const response = await fetch('/api/leads/discover', {
+      const response = await fetch('/api/discovery/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // Ensure token is sent
         },
         body: JSON.stringify({
-          country,
-          region,
-          importerType,
-          count
+          query: `${importerType} in ${country} ${region}`
         })
       });
 
@@ -78,16 +76,33 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
       }
 
       const data = await response.json();
-      setDiscoveredLeads(data.leads || []);
+      // Map backend Importer model to frontend Lead type if necessary
+      const mappedLeads = (data.results || []).map((importer: any) => ({
+        id: importer.id,
+        companyName: importer.companyName,
+        website: importer.website,
+        email: importer.email,
+        phone: importer.phone,
+        country: importer.country,
+        leadScore: importer.leadScore,
+        status: importer.status,
+        notes: importer.notes,
+        dateAdded: importer.createdAt
+      }));
+
+      setDiscoveredLeads(mappedLeads);
       
       // Auto-select all by default
       const initialSelected: { [key: string]: boolean } = {};
-      (data.leads || []).forEach((lead: Lead) => {
+      mappedLeads.forEach((lead: any) => {
         initialSelected[lead.id] = true;
       });
       setSelectedLeads(initialSelected);
       
-      setStatusMessage(data.message || 'Scouted and verified active coffee entities successfully.');
+      setStatusMessage(data.message || 'Scouted and verified active coffee entities successfully saved to database.');
+      
+      // Refresh the main lead list in App.tsx
+      onAddLeads(mappedLeads);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Discovery failed. Please verify API configuration or try again.');

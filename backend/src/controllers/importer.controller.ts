@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma, logger } from '../index';
 import { AuthRequest } from '../middleware/auth';
+import { GoogleSheetsService } from '../services/google-sheets.service';
 
 export const getAllImporters = async (req: AuthRequest, res: Response) => {
   try {
@@ -68,6 +69,9 @@ export const createImporter = async (req: AuthRequest, res: Response) => {
         description: `Importer ${importer.companyName} created manually.`
       }
     });
+
+    // Sync to Google Sheets
+    await GoogleSheetsService.syncImporter(importer);
 
     return res.status(201).json(importer);
   } catch (error) {

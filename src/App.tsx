@@ -55,134 +55,117 @@ export default function App() {
   const [selectedLeadForSample, setSelectedLeadForSample] = useState<Lead | null>(null);
   const [selectedLeadForQuote, setSelectedLeadForQuote] = useState<Lead | null>(null);
 
-  // Load from LocalStorage or pre-fill with premium demo on first turn
+  // Load from Database
   useEffect(() => {
-    const savedActiveTab = localStorage.getItem('nandara_ciis_active_tab');
-    if (savedActiveTab) setActiveTabState(savedActiveTab);
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
 
-    const savedLeads = localStorage.getItem('nandara_ciis_leads');
-    const savedEmails = localStorage.getItem('nandara_ciis_emails');
-    const savedSamples = localStorage.getItem('nandara_ciis_samples');
-    const savedQuotes = localStorage.getItem('nandara_ciis_quotes');
-    const savedConfig = localStorage.getItem('nandara_ciis_config');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const [leadsRes, samplesRes, quotesRes, emailsRes] = await Promise.all([
+          fetch('/api/importers', { headers }),
+          fetch('/api/samples', { headers }),
+          fetch('/api/quotations', { headers }),
+          fetch('/api/emails', { headers })
+        ]);
 
-    const cleanList = <T extends { id?: string; leadId?: string; quoteNumber?: string }>(list: T[]): T[] => {
-      return list.filter(item => {
-        const idStr = String(item.id || item.leadId || item.quoteNumber || '').toLowerCase();
-        return !idStr.includes('demo');
-      });
+        if (leadsRes.ok) setLeads(await leadsRes.json());
+        if (samplesRes.ok) setSamples(await samplesRes.json());
+        if (quotesRes.ok) setQuotations(await quotesRes.json());
+        if (emailsRes.ok) setEmails(await emailsRes.json());
+
+      } catch (err) {
+        console.error('Error fetching data from database:', err);
+      }
     };
 
-    if (savedLeads) {
-      const parsed = cleanList(JSON.parse(savedLeads));
-      setLeads(parsed);
-      localStorage.setItem('nandara_ciis_leads', JSON.stringify(parsed));
-    } else {
-      setLeads([]);
-      localStorage.setItem('nandara_ciis_leads', JSON.stringify([]));
-    }
+    fetchData();
 
-    if (savedEmails) {
-      const parsed = cleanList(JSON.parse(savedEmails));
-      setEmails(parsed);
-      localStorage.setItem('nandara_ciis_emails', JSON.stringify(parsed));
-    } else {
-      setEmails([]);
-      localStorage.setItem('nandara_ciis_emails', JSON.stringify([]));
-    }
-
-    if (savedSamples) {
-      const parsed = cleanList(JSON.parse(savedSamples));
-      setSamples(parsed);
-      localStorage.setItem('nandara_ciis_samples', JSON.stringify(parsed));
-    } else {
-      setSamples([]);
-      localStorage.setItem('nandara_ciis_samples', JSON.stringify([]));
-    }
-
-    if (savedQuotes) {
-      const parsed = cleanList(JSON.parse(savedQuotes));
-      setQuotations(parsed);
-      localStorage.setItem('nandara_ciis_quotes', JSON.stringify(parsed));
-    } else {
-      setQuotations([]);
-      localStorage.setItem('nandara_ciis_quotes', JSON.stringify([]));
-    }
-
+    const savedActiveTab = localStorage.getItem('nandara_ciis_active_tab');
+    if (savedActiveTab) setActiveTabState(savedActiveTab);
+    const savedConfig = localStorage.getItem('nandara_ciis_config');
     if (savedConfig) setConfig(JSON.parse(savedConfig));
   }, []);
 
-  // Sync to localstorage helper
-  const updateLeads = (newLeads: Lead[]) => {
-    setLeads(newLeads);
-    localStorage.setItem('nandara_ciis_leads', JSON.stringify(newLeads));
-  };
-
-  const updateEmails = (newEmails: EmailLog[]) => {
-    setEmails(newEmails);
-    localStorage.setItem('nandara_ciis_emails', JSON.stringify(newEmails));
-  };
-
-  const updateSamples = (newSamples: Sample[]) => {
-    setSamples(newSamples);
-    localStorage.setItem('nandara_ciis_samples', JSON.stringify(newSamples));
-  };
-
-  const updateQuotations = (newQuotes: Quotation[]) => {
-    setQuotations(newQuotes);
-    localStorage.setItem('nandara_ciis_quotes', JSON.stringify(newQuotes));
+  // Database update helpers
+  const refreshLeads = async () => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/importers', { 
+      headers: { 'Authorization': `Bearer ${token}` } 
+    });
+    if (res.ok) setLeads(await res.json());
   };
 
   // State manipulation triggers
-  const handleAddDiscoveryLeads = (newLeads: Lead[]) => {
-    // Merge new leads avoiding duplicating companies already logged
-    const existingNames = leads.map(l => l.companyName.toLowerCase());
-    const filteredNew = newLeads.filter(l => !existingNames.includes(l.companyName.toLowerCase()));
-    
-    const updated = [...leads, ...filteredNew];
-    updateLeads(updated);
+  const handleAddDiscoveryLeads = (newLeads: any[]) => {
+    // Discovery results are already saved to DB by backend
+    // Just refresh the frontend list
+    refreshLeads();
   };
 
-  const handleUpdateLeadStatus = (leadId: string, newStatus: Lead['status']) => {
-    const updated = leads.map(l => {
-      if (l.id === leadId) {
-        return {
-          ...l,
-          status: newStatus,
-          lastContact: new Date().toISOString().split('T')[0]
-        };
+  const handleUpdateLeadStatus = async (leadId: string, newStatus: Lead['status']) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/importers/${leadId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        refreshLeads();
       }
-      return l;
-    });
-    updateLeads(updated);
+    } catch (err) {
+      console.error('Error updating lead status:', err);
+    }
   };
 
-  const handleUpdateMultipleLeadsStatus = (leadIds: string[], newStatus: Lead['status']) => {
-    const updated = leads.map(l => {
-      if (leadIds.includes(l.id)) {
-        return {
-          ...l,
-          status: newStatus,
-          lastContact: new Date().toISOString().split('T')[0]
-        };
+  const handleUpdateMultipleLeadsStatus = async (leadIds: string[], newStatus: Lead['status']) => {
+    // For simplicity, update each one or create a bulk endpoint
+    for (const id of leadIds) {
+      await handleUpdateLeadStatus(id, newStatus);
+    }
+  };
+
+  const handleDeleteLead = async (leadId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/importers/${leadId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        refreshLeads();
       }
-      return l;
-    });
-    updateLeads(updated);
+    } catch (err) {
+      console.error('Error deleting lead:', err);
+    }
   };
 
-  const handleDeleteLead = (leadId: string) => {
-    const updated = leads.filter(l => l.id !== leadId);
-    updateLeads(updated);
-  };
+  const handleAddLeadManual = async (leadData: Omit<Lead, 'id' | 'dateAdded'>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/importers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(leadData)
+      });
 
-  const handleAddLeadManual = (leadData: Omit<Lead, 'id' | 'dateAdded'>) => {
-    const fresh: Lead = {
-      ...leadData,
-      id: `lead_manual_${Date.now()}`,
-      dateAdded: new Date().toISOString().split('T')[0]
-    };
-    updateLeads([...leads, fresh]);
+      if (response.ok) {
+        refreshLeads();
+      }
+    } catch (err) {
+      console.error('Error adding lead manually:', err);
+    }
   };
 
   const handleSaveOrUpdateEmail = (emailData: EmailLog) => {
@@ -283,43 +266,26 @@ export default function App() {
 
   // MODULE 7 - Google Sheets synchronization engine (Live integration lookup)
   const handleSyncAll = async () => {
-    if (!config.googleAppsScriptUrl) {
-      throw new Error("Google Apps Script URL is required to sync sheets.");
-    }
-
     try {
-      // Enrich email logs with related spreadsheet columns on the fly
-      const enrichedEmails = emails.map(email => {
-        const matchingLead = leads.find(l => l.id === email.leadId);
-        return {
-          ...email,
-          companyName: matchingLead ? matchingLead.companyName : 'Unknown Partner',
-          notes: matchingLead ? matchingLead.notes : ''
-        };
-      });
-
-      const response = await fetch(config.googleAppsScriptUrl, {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/dashboard/sync-sheets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        mode: 'no-cors', // Apps script utilizes redirect, CORS is handled via no-cors if backend rules trigger it
-        body: JSON.stringify({
-          action: 'syncAll',
-          leads,
-          emails: enrichedEmails,
-          samples,
-          quotations
-        })
+          'Authorization': `Bearer ${token}`
+        }
       });
+
+      if (!response.ok) throw new Error('Failed to sync with Google Sheets');
 
       // Simple wait and state save
       const updated = { ...config, isSynced: true };
       setConfig(updated);
       localStorage.setItem('nandara_ciis_config', JSON.stringify(updated));
+      alert("Database successfully synced to Google Sheets!");
     } catch (err: any) {
       console.error(err);
-      throw new Error(err.message || 'CORS or routing mismatch with script execution payload.');
+      alert(err.message || 'Sync failed.');
     }
   };
 

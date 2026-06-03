@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { prisma, logger } from '../index';
 import { LeadScore } from '@prisma/client';
+import { GoogleSheetsService } from './google-sheets.service';
 
 export class DiscoveryService {
   /**
@@ -51,6 +52,10 @@ export class DiscoveryService {
               notes: `Discovered via automated search: ${query}`
             }
           });
+          
+          // Sync to Google Sheets
+          await GoogleSheetsService.syncImporter(importer);
+          
           results.push(importer);
         }
       }
