@@ -1,0 +1,307 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ImporterStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  SAMPLE_REQUESTED
+  SAMPLE_SENT
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum SampleStatus {
+  INQUIRY
+  QUALIFICATION
+  REQUESTED
+  QUOTED
+  PAYMENT_CONFIRMED
+  PREPARING
+  SHIPPED
+  DELIVERED
+  FEEDBACK_RECEIVED
+  COMMERCIAL_ORDER
+  CANCELLED
+}
+
+enum SampleFormat {
+  GREEN_BEANS
+  ROASTED_BEANS
+  GROUND_COFFEE
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum QuotationType {
+  SAMPLE
+  COMMERCIAL
+}
+
+enum ShipmentType {
+  AIR_FREIGHT
+  LCL_SHIPMENT
+  FCL_SHIPMENT
+  SAMPLE_ORDER
+}
+
+enum PackagingOption {
+  VACUUM_GRAINPRO_5KG
+  GRAINPRO_10_15KG
+  GRAINPRO_JUTE_30_60KG
+}
+
+enum PaymentTerms {
+  TT_50_DEPOSIT_50_BEFORE_SHIPMENT
+  LC_AT_SIGHT
+}
+
+enum Incoterm {
+  FOB
+  CIF
+  EXW
+  CNF
+}
+
+enum EmailValidationStatus {
+  VALID
+  INVALID
+  CATCH_ALL
+  UNKNOWN
+}
+
+enum LeadScore {
+  A
+  B
+  C
+}
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String
+  firstName     String?
+  lastName      String?
+  role          String      @default("USER")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  auditLogs     AuditLog[]
+  activities    Activity[]
+  tasks         Task[]
+  notes         Note[]
+}
+
+model Importer {
+  id                   String               @id @default(uuid())
+  companyName          String
+  website              String?              @unique
+  email                String?              @unique
+  phone                String?
+  whatsapp             String?
+  linkedin             String?
+  country              String?
+  city                 String?
+  address              String?              @db.Text
+  coffeeType           String?
+  greenBeanInterest    Boolean              @default(false)
+  roastedBeanInterest  Boolean              @default(false)
+  leadScore            LeadScore?
+  confidenceScore      Float?
+  status               ImporterStatus       @default(NEW)
+  notes                String?              @db.Text
+  emailValidation      EmailValidationStatus @default(UNKNOWN)
+  emailValidatedAt     DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  contacts             Contact[]
+  emails               Email[]
+  samples              Sample[]
+  quotations           Quotation[]
+  activities           Activity[]
+  importerNotes        Note[]
+  tasks                Task[]
+  attachments          Attachment[]
+}
+
+model Contact {
+  id          String   @id @default(uuid())
+  importerId  String
+  importer    Importer @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  firstName   String
+  lastName    String?
+  jobTitle    String?
+  email       String?
+  phone       String?
+  linkedin    String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum EmailStatus {
+  DRAFT
+  SENT
+  APPROVED
+  RECEIVED
+  BOUNCED
+}
+
+enum EmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model Email {
+  id            String         @id @default(uuid())
+  importerId    String?
+  importer      Importer?      @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  messageId     String?        @unique // From Hostinger
+  subject       String
+  body          String         @db.LongText
+  from          String
+  to            String
+  status        EmailStatus    @default(DRAFT)
+  direction     EmailDirection @default(OUTBOUND)
+  isAiGenerated Boolean        @default(false)
+  sentAt        DateTime?
+  receivedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Sample {
+  id             String       @id @default(uuid())
+  importerId     String
+  importer       Importer     @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  product        String
+  format         SampleFormat @default(GREEN_BEANS)
+  weight         String       // e.g., "300g", "500g", "1kg"
+  trackingNumber String?
+  courier        String?      // e.g., "DHL", "FedEx", "EMS", "Cargo"
+  destination    String
+  status         SampleStatus @default(INQUIRY)
+  paymentStatus  String       @default("PENDING") // PENDING, CONFIRMED
+  shipmentDate   DateTime?
+  deliveryDate   DateTime?
+  feedback       String?      @db.Text
+  notes          String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Quotation {
+  id              String          @id @default(uuid())
+  quotationNumber String          @unique
+  importerId      String
+  importer        Importer        @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  type            QuotationType   @default(COMMERCIAL)
+  shipmentType    ShipmentType    @default(LCL_SHIPMENT)
+  packaging       PackagingOption @default(GRAINPRO_JUTE_30_60KG)
+  paymentTerms    PaymentTerms    @default(TT_50_DEPOSIT_50_BEFORE_SHIPMENT)
+  incoterm        Incoterm        @default(FOB)
+  product         String
+  quantity        Float
+  price           Float
+  currency        String          @default("USD")
+  leadTimeDays    Int             @default(21) // 14-21 days as per infographic
+  validUntil      DateTime
+  status          QuotationStatus @default(DRAFT)
+  pdfPath         String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Activity {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  importerId  String?
+  importer    Importer? @relation(fields: [importerId], references: [id])
+  type        String   // EMAIL, CALL, MEETING, NOTE, TASK
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model Note {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  importerId  String
+  importer    Importer @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  importerId  String?
+  importer    Importer? @relation(fields: [importerId], references: [id])
+  title       String
+  description String?   @db.Text
+  dueDate     DateTime?
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Attachment {
+  id          String   @id @default(uuid())
+  importerId  String
+  importer    Importer @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  fileName    String
+  filePath    String
+  fileType    String
+  fileSize    Int
+  createdAt   DateTime @default(now())
+}
+
+model Country {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  code      String   @unique
+  region    String?
+  createdAt DateTime @default(now())
+}
+
+model LeadSource {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  type      String?  // SCRAPER, MANUAL, WEB_FORM
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+}

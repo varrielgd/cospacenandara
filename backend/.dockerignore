@@ -1,0 +1,9 @@
+node_modules
+dist
+logs
+uploads
+.env
+.git
+Dockerfile
+railway.json
+README.md

@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", "Georgia", serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Premium Luxury Palette */
+  --color-primary: #05190F;
+  --color-gold: #D4AF37;
+  --color-gold-hover: #bfa232;
+  --color-bg-ivory: #F6F2E8;
+  --color-text-dim: #4A5568;
+  
+  --shadow-luxury: 0 4px 20px -2px rgba(5, 25, 15, 0.04), 0 2px 10px -1px rgba(5, 25, 15, 0.02);
+  --shadow-luxury-hover: 0 10px 30px -4px rgba(5, 25, 15, 0.08), 0 4px 15px -2px rgba(5, 25, 15, 0.04);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-ivory);
+  color: var(--color-primary);
+}
+
+/* Google Translate Overrides */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+} 
+body {
+  top: 0px !important; 
+}
+#goog-gt-tt {
+  display: none !important;
+  top: 0px !important; 
+} 
+.goog-tooltip skiptranslate {
+  display: none !important;
+}
+.goog-tooltip:hover {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important; 
+  box-shadow: none !important;
+}
+
+/* Style the literal select box from Google Translate */
+.goog-te-combo {
+  background-color: transparent;
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  outline: none;
+}
+.goog-te-combo option {
+  background-color: #05190F;
+  color: #D4AF37;
+}
+
+/* Hide the powered by google logo */
+.goog-logo-link {
+  display: none !important;
+}
+.goog-te-gadget {
+  color: transparent !important;
+  font-size: 0px;
+}
+.goog-te-gadget span {
+  display: none !important;
+}
+
+/* Print Overrides */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}

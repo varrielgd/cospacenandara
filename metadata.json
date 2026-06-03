@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Coffee Importer Intelligence System",
+  "description": "Premium B2B coffee importer discovery, automated lead scoring, pipeline management, email outreach and quotation system for Nandara Nusa Montierra.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
