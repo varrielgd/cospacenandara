@@ -7,6 +7,7 @@ import EmailGeneratorView from './components/EmailGeneratorView';
 import SampleView from './components/SampleView';
 import QuotationView from './components/QuotationView';
 import SheetsIntegrationView from './components/SheetsIntegrationView';
+import AIContentStudioView from './components/AIContentStudioView';
 import BrandPortalView from './components/BrandPortalView';
 import CurriculumView from './components/CurriculumView';
 import GlossaryView from './components/GlossaryView';
@@ -24,7 +25,8 @@ import {
   Share2,
   AlertCircle,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Layout
 } from 'lucide-react';
 
 const INITIAL_LEADS: Lead[] = [];
@@ -405,6 +407,18 @@ export default function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('ai-studio')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'ai-studio' 
+                  ? 'bg-white/5 text-[#d4af37] font-semibold border-[#d4af37] opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Layout className="w-4 h-4 shrink-0 text-[#d4af37]" />
+              <span className="text-[#d4af37]">AI Content Studio</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('showroom')}
               className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
                 activeTab === 'showroom' 
@@ -531,6 +545,7 @@ export default function App() {
           <div className="space-y-1.5">
             <h2 className="text-2xl sm:text-3xl font-serif italic tracking-wide text-primary" id="active-tab-title">
               {activeTab === 'dashboard' && "Pipeline Overview"}
+              {activeTab === 'ai-studio' && "AI Content Studio & Brand Narrative"}
               {activeTab === 'showroom' && "Nandara Sourcing Showroom & Portals"}
               {activeTab === 'discovery' && "Worldwide Importer Search Engine"}
               {activeTab === 'crm' && "Indonesian Export Leads CRM Board"}
@@ -568,6 +583,10 @@ export default function App() {
               emails={emails} 
               onNavigate={setActiveTab}
             />
+          )}
+
+          {activeTab === 'ai-studio' && (
+            <AIContentStudioView />
           )}
 
           {activeTab === 'discovery' && (
