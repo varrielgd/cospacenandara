@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Lead } from '../types';
 import { 
   Search, 
@@ -15,12 +15,26 @@ import {
   Linkedin,
   Clock,
   ShieldCheck,
-  Check
+  Check,
+  RefreshCw,
+  Loader2,
+  Copy,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface DiscoveryViewProps {
   onAddLeads: (newLeads: Lead[]) => void;
   existingLeads: Lead[];
+}
+
+interface DiscoverySession {
+  id: string;
+  query: string;
+  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
+  totalFound: number;
+  totalProcessed: number;
+  importers: any[];
+  error?: string;
 }
 
 export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryViewProps) {
@@ -35,6 +49,13 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [recentSessions, setRecentSessions] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [progress, setProgress] = useState({ total: 0, processed: 0 });
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isSyncingId, setIsSyncingId] = useState<string | null>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const countries = [
     'Germany', 'United States', 'United Kingdom', 'Japan', 'South Korea', 'Taiwan',
@@ -50,20 +71,172 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     'Private Label Coffee Brand'
   ];
 
-  const handleDiscover = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Restore session from localStorage on mount and fetch recent sessions
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('discoverySessionId');
+    if (savedSessionId) {
+      setCurrentSessionId(savedSessionId);
+      setIsLoading(true);
+      setStatusMessage('Restoring discovery session...');
+    }
+    fetchRecentSessions();
+  }, []);
+
+  const fetchRecentSessions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/discovery/recent', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRecentSessions(data);
+      }
+    } catch (err) {
+      console.error('Error fetching recent sessions:', err);
+    }
+  };
+
+  const loadSession = async (sessionId: string) => {
     setIsLoading(true);
-    setStatusMessage('Querying coffee databases and scouting coordinates to verify real active entities...');
     setError(null);
     setDiscoveredLeads([]);
     setSelectedLeads({});
+    setProgress({ total: 0, processed: 0 });
+    setCurrentSessionId(sessionId);
+    localStorage.setItem('discoverySessionId', sessionId);
+    setShowHistory(false);
+    setStatusMessage('Loading session results...');
+  };
+
+  // Poll for discovery results
+  useEffect(() => {
+    if (!currentSessionId) return;
+
+    const pollStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/discovery/status/${currentSessionId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) return;
+
+        const data: DiscoverySession = await response.json();
+
+        // Update progress
+        setProgress({ total: data.totalProcessed + 5, processed: data.totalProcessed });
+        setStatusMessage(`Scouting... ${data.totalProcessed} entities processed. Found ${data.totalFound} new importers.`);
+
+        // Update discovered leads
+        if (data.importers && data.importers.length > 0) {
+          const mappedLeads: Lead[] = data.importers.map((importer: any) => ({
+            id: importer.id,
+            companyName: importer.companyName,
+            website: importer.website || '',
+            email: importer.email || '',
+            phone: importer.phone || '',
+            country: importer.country || '',
+            leadScore: importer.leadScore || 'C',
+            status: (importer.status as any) || 'New',
+            notes: importer.notes || '',
+            dateAdded: importer.createdAt || new Date().toISOString(),
+            city: importer.city || '',
+            contactPage: '',
+            linkedin: importer.linkedin || '',
+            leadType: 'Importer',
+            lastContact: ''
+          }));
+          setDiscoveredLeads(mappedLeads);
+          
+          // Auto-select new ones
+          setSelectedLeads(prev => {
+            const updated = { ...prev };
+            mappedLeads.forEach(lead => {
+              if (!prev[lead.id]) updated[lead.id] = true;
+            });
+            return updated;
+          });
+        }
+
+        // Handle completion or failure
+        if (data.status === 'COMPLETED') {
+          clearInterval(pollingRef.current!);
+          setIsLoading(false);
+          setCurrentSessionId(null);
+          localStorage.removeItem('discoverySessionId');
+          setStatusMessage(`Discovery completed! Found ${data.totalFound} new importers.`);
+          fetchRecentSessions(); // Refresh history list
+          
+          // Auto-add to CRM after 2 seconds
+          if (data.importers && data.importers.length > 0) {
+            setTimeout(() => {
+              const leadsToImport: Lead[] = data.importers.map((imp: any) => ({
+                id: imp.id,
+                companyName: imp.companyName,
+                website: imp.website || '',
+                email: imp.email || '',
+                phone: imp.phone || '',
+                country: imp.country || '',
+                leadScore: imp.leadScore || 'C',
+                status: (imp.status as any) || 'New',
+                notes: imp.notes || '',
+                dateAdded: imp.createdAt || new Date().toISOString(),
+                // Add missing properties required by Lead type
+                city: imp.city || '',
+                contactPage: '',
+                linkedin: imp.linkedin || '',
+                leadType: 'Importer',
+                lastContact: ''
+              }));
+              handleImportSelected(leadsToImport);
+            }, 2000);
+          }
+        } else if (data.status === 'FAILED') {
+          clearInterval(pollingRef.current!);
+          setIsLoading(false);
+          setCurrentSessionId(null);
+          localStorage.removeItem('discoverySessionId');
+          setError(data.error || 'Discovery failed');
+          setStatusMessage('');
+        }
+      } catch (err) {
+        console.error('Poll error:', err);
+      }
+    };
+
+    // Poll every 2 seconds
+    pollingRef.current = setInterval(pollStatus, 2000);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, [currentSessionId]);
+
+  const handleDiscover = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Stop any existing polling
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    setIsLoading(true);
+    setStatusMessage('Starting discovery session...');
+    setError(null);
+    setDiscoveredLeads([]);
+    setSelectedLeads({});
+    setProgress({ total: 0, processed: 0 });
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/discovery/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // Ensure token is sent
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           query: `${importerType} in ${country} ${region}`
@@ -76,40 +249,33 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
       }
 
       const data = await response.json();
-      // Map backend Importer model to frontend Lead type if necessary
-      const mappedLeads = (data.results || []).map((importer: any) => ({
-        id: importer.id,
-        companyName: importer.companyName,
-        website: importer.website,
-        email: importer.email,
-        phone: importer.phone,
-        country: importer.country,
-        leadScore: importer.leadScore,
-        status: importer.status,
-        notes: importer.notes,
-        dateAdded: importer.createdAt
-      }));
+      
+      // Save session ID to localStorage for persistence across tab switches
+      localStorage.setItem('discoverySessionId', data.sessionId);
+      
+      // Start polling with session ID
+      setCurrentSessionId(data.sessionId);
+      setStatusMessage('Discovery in progress. Please wait...');
+      fetchRecentSessions(); // Add to history list immediately
 
-      setDiscoveredLeads(mappedLeads);
-      
-      // Auto-select all by default
-      const initialSelected: { [key: string]: boolean } = {};
-      mappedLeads.forEach((lead: any) => {
-        initialSelected[lead.id] = true;
-      });
-      setSelectedLeads(initialSelected);
-      
-      setStatusMessage(data.message || 'Scouted and verified active coffee entities successfully saved to database.');
-      
-      // Refresh the main lead list in App.tsx
-      onAddLeads(mappedLeads);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Discovery failed. Please verify API configuration or try again.');
       setStatusMessage('');
-    } finally {
       setIsLoading(false);
+      localStorage.removeItem('discoverySessionId');
     }
+  };
+
+  const handleSelectAll = () => {
+    const allSelected = discoveredLeads.length > 0 && discoveredLeads.every(l => selectedLeads[l.id]);
+    const nextSelected: { [key: string]: boolean } = {};
+    if (!allSelected) {
+      discoveredLeads.forEach(l => {
+        nextSelected[l.id] = true;
+      });
+    }
+    setSelectedLeads(nextSelected);
   };
 
   const toggleSelectLead = (id: string) => {
@@ -119,503 +285,435 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     }));
   };
 
-  const handleImportSelected = () => {
-    const toImport = discoveredLeads.filter(lead => selectedLeads[lead.id]);
+  const handleImportSelected = async (leadsToImport?: Lead[]) => {
+    const toImport = leadsToImport || discoveredLeads.filter(lead => selectedLeads[lead.id]);
     if (toImport.length === 0) return;
 
-    // Filter duplicates by company name
-    const existingNames = existingLeads.map(l => l.companyName.toLowerCase());
-    const uniqueToImport = toImport.filter(
-      lead => !existingNames.includes(lead.companyName.toLowerCase())
-    );
-
-    if (uniqueToImport.length > 0) {
-      onAddLeads(uniqueToImport);
-      alert(`Imported ${uniqueToImport.length} new coffee leads to your CRM pipeline!`);
-      // Reset
-      setDiscoveredLeads([]);
-      setSelectedLeads({});
-      setStatusMessage('');
-    } else {
-      alert("All selected leads are already in your CRM pipeline.");
-    }
-  };
-
-  // Perform Module 3 (Website Deep dive Analysis) on the spot
-  const handleAnalyzeLead = async (lead: Lead) => {
-    setActiveAnalysisLead(lead);
-    setIsAnalyzing(true);
     try {
-      const response = await fetch('/api/leads/analyze', {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/importers/bulk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
+        body: JSON.stringify({ importers: toImport })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        onAddLeads(toImport); // Refresh main CRM list
+        
+        // Clear session and leads after import
+        setDiscoveredLeads([]);
+        setSelectedLeads({});
+        setStatusMessage('');
+        localStorage.removeItem('discoverySessionId');
+        setCurrentSessionId(null);
+      } else {
+        alert('Failed to import leads to database.');
+      }
+    } catch (err) {
+      console.error('Import error:', err);
+      alert('Error importing leads.');
+    }
+  };
+
+  const handleCopyToClipboard = (lead: Lead, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const text = `Company: ${lead.companyName}\nCountry: ${lead.country}\nWebsite: ${lead.website}\nEmail: ${lead.email}\nPhone: ${lead.phone}`;
+    navigator.clipboard.writeText(text);
+    setCopiedId(lead.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleAddToGoogleSheet = async (lead: Lead, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsSyncingId(lead.id);
+    try {
+      const scriptUrl = 'https://script.google.com/macros/s/AKfycbzWbBT0e251UaESgkaktbmsBMxstKREAt8J1_ht8l7tuTnfiTnFGRza6WyR8wiadf6Y/exec';
+      const response = await fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          companyName: lead.companyName,
-          website: lead.website,
-          leadType: lead.leadType,
-          country: lead.country,
-          notes: lead.notes
+          action: 'addLead',
+          data: {
+            companyName: lead.companyName,
+            country: lead.country,
+            website: lead.website,
+            email: lead.email,
+            phone: lead.phone,
+            leadScore: lead.leadScore,
+            dateAdded: new Date().toISOString()
+          }
         })
       });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || errData.error || 'Analysis server failed to respond.');
-      }
-
-      const data = await response.json();
-      
-      // Update discoveredLeads array with analysis results
-      setDiscoveredLeads(prev => prev.map(l => {
-        if (l.id === lead.id) {
-          return {
-            ...l,
-            leadScore: data.leadScore || l.leadScore,
-            notes: data.notes || l.notes,
-            analysisType: data.analysisType,
-            analysisFocus: data.analysisFocus,
-            analysisPotential: data.analysisPotential,
-            analysisMatch: data.analysisMatch,
-            analysisWhy: data.analysisWhy,
-            websiteConfidence: data.websiteConfidence,
-            emailConfidence: data.emailConfidence,
-            importerConfidence: data.importerConfidence,
-            importerProbability: data.importerProbability
-          };
-        }
-        return l;
-      }));
-
-      // Update active modal representation
-      setActiveAnalysisLead(prev => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          leadScore: data.leadScore || prev.leadScore,
-          notes: data.notes || prev.notes,
-          analysisType: data.analysisType,
-          analysisFocus: data.analysisFocus,
-          analysisPotential: data.analysisPotential,
-          analysisMatch: data.analysisMatch,
-          analysisWhy: data.analysisWhy,
-          websiteConfidence: data.websiteConfidence,
-          emailConfidence: data.emailConfidence,
-          importerConfidence: data.importerConfidence,
-          importerProbability: data.importerProbability
-        };
-      });
-
-    } catch (err: any) {
-      alert("AI Analysis is temporarily unavailable: " + err.message);
+      alert(`Lead ${lead.companyName} successfully pushed to Google Sheets!`);
+    } catch (err) {
+      console.error('Google Sheets error:', err);
+      alert('Failed to sync with Google Sheets. Check your script URL and permissions.');
     } finally {
-      setIsAnalyzing(false);
+      setIsSyncingId(null);
     }
   };
 
-  const getScoreColor = (score: string) => {
-    switch(score) {
-      case 'A': return 'text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/30';
-      case 'B': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+  const cancelDiscovery = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
     }
-  };
-
-  // Helper validation logic to reject standard supports
-  const isValidatedPublicEmail = (email: string) => {
-    const rejects = ["support@", "noreply@", "privacy@", "webmaster@"];
-    return !rejects.some(re => email.toLowerCase().includes(re));
+    setIsLoading(false);
+    setCurrentSessionId(null);
+    localStorage.removeItem('discoverySessionId');
+    setStatusMessage('Discovery cancelled.');
   };
 
   return (
-    <div className="space-y-6" id="discovery-root">
-      {/* Search Console Header */}
-      <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury" id="finder-panel">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 border-b border-gray-100 pb-4">
+    <div className="flex flex-col h-full bg-[#0a1a12]">
+      {/* Header */}
+      <div className="p-6 border-b border-[#1a3a2a]">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-[#d4af37]">Importer Discovery Engine</h2>
+            <p className="text-[#8fb499] text-sm mt-1">AI-powered coffee entity scout & verifier</p>
+          </div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-sm bg-primary text-gold">
-              <Compass className="w-5 h-5 text-gold" />
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                showHistory 
+                  ? 'bg-[#d4af37] text-[#0a1a12]' 
+                  : 'bg-[#1a3a2a] text-[#8fb499] hover:text-[#d4af37]'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              {showHistory ? 'New Search' : 'Discovery History'}
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="p-2 bg-[#1a3a2a] text-[#8fb499] rounded-md hover:text-[#d4af37] transition-colors"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Panel - Search Form or History */}
+        <div className="w-1/3 border-r border-[#1a3a2a] p-6 overflow-y-auto">
+          {showHistory ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-[#d4af37] mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Past Discoveries
+              </h3>
+              {recentSessions.length === 0 ? (
+                <p className="text-[#8fb499] text-sm italic">No history found.</p>
+              ) : (
+                recentSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    onClick={() => loadSession(session.id)}
+                    className="p-4 bg-[#0f2318] border border-[#1a3a2a] rounded-lg hover:border-[#d4af37] cursor-pointer transition-all group"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
+                        session.status === 'COMPLETED' ? 'bg-green-900/30 text-green-400' :
+                        session.status === 'FAILED' ? 'bg-red-900/30 text-red-400' :
+                        'bg-blue-900/30 text-blue-400 animate-pulse'
+                      }`}>
+                        {session.status}
+                      </span>
+                      <span className="text-[10px] text-[#8fb499]">
+                        {new Date(session.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-white font-medium line-clamp-2 group-hover:text-[#d4af37]">
+                      {session.query}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between text-xs text-[#8fb499]">
+                      <span>{session.totalFound || 0} Found</span>
+                      <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
+          ) : (
+            <form onSubmit={handleDiscover} className="space-y-4">
+
+            {/* Country Selection */}
             <div>
-              <h2 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">Importer Scouting Console</h2>
-              <p className="text-xs text-text-dim mt-0.5 font-sans">Discover and analyze global specialty coffee buyers</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-mono uppercase tracking-wider rounded-sm font-bold">
-            <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>Real Data Verifier Active</span>
-          </div>
-        </div>
-
-        {/* Real Data Policy Warning Label */}
-        <div className="mb-5 p-4 bg-amber-50/50 border border-amber-200/60 rounded-sm text-xs space-y-1.5 font-sans">
-          <div className="flex items-center gap-1.5 text-amber-900 font-bold uppercase tracking-wider text-[10px]">
-            <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>CIIS Security & Integration Rule</span>
-          </div>
-          <p className="text-gray-700 leading-relaxed font-light text-[11px]">
-            In compliance with our **Real-World Policy**, fake generated records are strictly blocks. Scouting targets verified B2B Green Coffee Importers, Trade Houses, and Sourcing Roasters. Small local retail cafes, coffee houses, and general restaurants are automatically filtered out.
-          </p>
-        </div>
-
-        <form onSubmit={handleDiscover} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono font-semibold text-primary uppercase tracking-widest">Target Country</label>
-            <select 
-              value={country} 
-              onChange={e => setCountry(e.target.value)}
-              className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs focus:ring-1 focus:ring-gold focus:border-gold text-primary font-sans outline-hidden"
-            >
-              {countries.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono font-semibold text-primary uppercase tracking-widest">Specific Region (Optional)</label>
-            <input 
-              type="text" 
-              placeholder="e.g. Hamburg, Bavaria, California" 
-              value={region}
-              onChange={e => setRegion(e.target.value)}
-              className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs focus:ring-1 focus:ring-gold focus:border-gold placeholder:text-gray-400 outline-hidden"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono font-semibold text-primary uppercase tracking-widest">Importer Category Type</label>
-            <select 
-              value={importerType} 
-              onChange={e => setImporterType(e.target.value)}
-              className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs focus:ring-1 focus:ring-gold focus:border-gold text-primary font-sans outline-hidden"
-            >
-              {importerTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <div className="col-span-1 space-y-1.5">
-              <label className="text-[10px] font-mono font-semibold text-primary uppercase tracking-widest">Count</label>
-              <select 
-                value={count} 
-                onChange={e => setCount(Number(e.target.value))}
-                className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs focus:ring-1 focus:ring-gold focus:border-gold text-primary font-sans outline-hidden"
+              <label className="block text-[#8fb499] text-sm mb-2">Target Country</label>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white focus:border-[#d4af37] focus:outline-none"
+                disabled={isLoading}
               >
-                {[3, 5, 8, 10, 15].map(n => (
-                  <option key={n} value={n}>{n}</option>
+                {countries.map((c) => (
+                  <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="col-span-2 py-2.5 bg-primary hover:bg-[#0c3320] text-white rounded-sm text-xs font-mono uppercase tracking-widest border border-gold/40 transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer h-[38px] font-semibold"
-            >
-              <Search className="w-4 h-4 text-gold" />
-              {isLoading ? "Searching..." : "Discover"}
-            </button>
-          </div>
-        </form>
 
-        {statusMessage && (
-          <div className="mt-4 p-3 bg-bg-ivory/60 border border-primary/5 rounded-sm flex items-center gap-2 text-xs text-gray-700 font-mono" id="discovery-status">
-            <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0 animate-pulse" />
-            <span>{statusMessage}</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-sm flex items-start gap-3 text-xs text-red-800 font-mono animate-fade-in" id="discovery-error">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-bold uppercase tracking-wider text-[10px]">Discovery Failed</p>
-              <p className="font-light leading-relaxed text-red-700">{error}</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Discovery Results */}
-      {discoveredLeads.length > 0 && (
-        <div className="space-y-4" id="discovery-results">
-          {/* Action Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-primary text-white p-5 rounded-lg border border-gold/35 shadow-luxury">
+            {/* Region (Optional) */}
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-mono">Discovered Leads Pool</p>
-              <h3 className="text-sm font-semibold tracking-wide uppercase font-serif mt-1">
-                {discoveredLeads.filter(l => selectedLeads[l.id]).length} of {discoveredLeads.length} Selected for CRM Import
-              </h3>
-            </div>
-            
-            <button
-              onClick={handleImportSelected}
-              className="px-5 py-2.5 bg-gold hover:bg-gold-hover text-primary rounded-sm text-xs font-mono uppercase tracking-widest font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-gold/30"
-            >
-              <Plus className="w-4 h-4" />
-              Import to CRM Pipeline
-            </button>
-          </div>
-
-          {/* Leads Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {discoveredLeads.map((lead) => {
-              const isSelected = selectedLeads[lead.id];
-              return (
-                <div 
-                  key={lead.id} 
-                  className={`p-6 bg-white rounded-lg border transition-all space-y-4 relative shadow-luxury ${
-                    isSelected ? 'border-primary ring-1 ring-primary' : 'border-primary/5 hover:border-gold/50'
-                  }`}
-                >
-                  {/* Select Checkbox Indicator */}
-                  <button
-                    onClick={() => toggleSelectLead(lead.id)}
-                    className={`absolute top-6 right-6 w-5 h-5 rounded-sm border flex items-center justify-center transition-all cursor-pointer ${
-                      isSelected ? 'bg-primary border-primary text-white' : 'border-primary/20 text-transparent'
-                    }`}
-                  >
-                    <Check className="w-3.5 h-3.5 text-gold" />
-                  </button>
-
-                  {/* Header */}
-                  <div className="space-y-1.5 pr-8">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="bg-primary/5 border border-primary/10 px-2 py-0.5 rounded-sm text-[9px] font-mono font-medium uppercase tracking-widest text-text-dim">
-                        {lead.leadType}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-sm text-[9px] font-mono font-medium uppercase tracking-widest border ${getScoreColor(lead.leadScore)}`}>
-                        Grade {lead.leadScore} Lead
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-serif font-medium text-primary tracking-wide leading-tight">{lead.companyName}</h3>
-                    <p className="text-xs text-text-dim flex items-center gap-1 font-mono uppercase tracking-wider">
-                      <MapPin className="w-3.5 h-3.5 text-gold shrink-0" />
-                      {lead.city}, {lead.country}
-                    </p>
-                  </div>
-
-                  {/* Extract Details */}
-                  <div className="space-y-1.5 text-xs text-gray-600 font-mono">
-                    {/* Public email check badge */}
-                    {lead.email && (
-                      <div className="flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-primary/50 shrink-0" />
-                        <span className="truncate">{lead.email}</span>
-                        {isValidatedPublicEmail(lead.email) ? (
-                          <span className="text-[9px] px-1.5 py-0.5 bg-emerald-50 border border-emerald-200 text-teal-800 rounded-sm font-mono uppercase tracking-wider font-semibold">
-                            Validated B2B
-                          </span>
-                        ) : (
-                          <span className="text-[9px] px-1.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-700 rounded-sm font-mono tracking-wider uppercase">
-                            Fallback
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    {lead.phone && (
-                      <div className="flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span>{lead.phone}</span>
-                      </div>
-                    )}
-                    {lead.linkedin && (
-                      <div className="flex items-center gap-1.5">
-                        <Linkedin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                        <a href={lead.linkedin} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline truncate">
-                          Company Profile
-                        </a>
-                      </div>
-                    )}
-                    {lead.website && (
-                      <div className="flex items-center gap-1.5 pt-1">
-                        <LinkIcon className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <a href={lead.website} target="_blank" rel="noreferrer" className="text-primary hover:underline hover:text-gold font-semibold truncate">
-                          {lead.website}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Notes / Assessment Box */}
-                  <p className="text-xs text-text-dim line-clamp-2 italic pt-2 border-t border-gray-100 pr-10 font-sans leading-relaxed">
-                    "{lead.notes}"
-                  </p>
-
-                  {/* Confidence Levels Block */}
-                  <div className="pt-2 pb-1 border-t border-gray-100/60 space-y-1.5">
-                    <p className="text-[9px] uppercase tracking-widest text-[#4A5568] font-mono font-bold">Data Confidence Score</p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`px-2 py-0.5 rounded-sm text-[8px] font-mono font-bold tracking-wider uppercase border ${
-                        lead.websiteConfidence === 'High' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-                        lead.websiteConfidence === 'Low' ? 'text-red-700 bg-red-50 border-red-200' :
-                        'text-amber-700 bg-amber-50 border-amber-200'
-                      }`}>
-                        🌐 Web: {lead.websiteConfidence || 'High'}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-sm text-[8px] font-mono font-bold tracking-wider uppercase border ${
-                        lead.emailConfidence === 'High' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-                        lead.emailConfidence === 'Low' ? 'text-red-700 bg-red-50 border-red-200' :
-                        'text-amber-700 bg-amber-50 border-amber-200'
-                      }`}>
-                        ✉ Email: {lead.emailConfidence || 'High'}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-sm text-[8px] font-mono font-bold tracking-wider uppercase border ${
-                        lead.importerConfidence === 'High' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' :
-                        lead.importerConfidence === 'Low' ? 'text-red-700 bg-red-50 border-red-200' :
-                        'text-amber-700 bg-amber-50 border-amber-200'
-                      }`}>
-                        ☕ Importer: {lead.importerConfidence || 'High'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {lead.analysisWhy && (
-                    <div className="p-3 bg-bg-ivory/50 rounded-sm border border-primary/5 text-[11px] text-gray-700 font-sans leading-relaxed">
-                      <span className="font-mono text-[9px] font-bold text-primary block uppercase tracking-wider mb-0.5">Product Match Justification:</span>
-                      {lead.analysisWhy}
-                    </div>
-                  )}
-
-                  {/* UI Actions */}
-                  <div className="flex gap-2 pt-3 border-t border-gray-100 items-center justify-between">
-                    <span className="text-[9px] uppercase tracking-widest text-[#4A5568] font-mono">Ready to analyze</span>
-                    <button
-                      onClick={() => handleAnalyzeLead(lead)}
-                      disabled={isAnalyzing}
-                      className="px-3.5 py-1.5 bg-bg-ivory/50 border border-primary/10 hover:border-gold hover:bg-white text-primary text-[10px] font-mono uppercase tracking-widest rounded-sm flex items-center gap-1.5 transition-all cursor-pointer font-semibold"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-                      Deconstruct Website
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Analysis & Scoring Modal */}
-      {activeAnalysisLead && (
-        <div className="fixed inset-0 z-50 bg-primary/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in" id="analysis-modal">
-          <div className="bg-bg-ivory border border-gold/30 max-w-lg w-full rounded-sm shadow-2xl p-7 relative space-y-6">
-            <div className="space-y-1.5 border-b border-primary/10 pb-4">
-              <span className="text-[9px] font-mono text-[#D4AF37] tracking-widest uppercase block font-semibold">Module 3 — B2B Entity Deconstruction</span>
-              <h2 className="text-2xl font-serif italic text-[#05190F]">
-                {activeAnalysisLead.companyName}
-              </h2>
-              <p className="text-[11px] text-text-dim font-mono tracking-wider">{activeAnalysisLead.website}</p>
+              <label className="block text-[#8fb499] text-sm mb-2">Region (Optional)</label>
+              <input
+                type="text"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                placeholder="e.g., Bavaria, California..."
+                className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white placeholder-gray-500 focus:border-[#d4af37] focus:outline-none"
+                disabled={isLoading}
+              />
             </div>
 
-            {isAnalyzing ? (
-              <div className="py-12 flex flex-col items-center justify-center space-y-4">
-                <Compass className="w-10 h-10 text-gold animate-spin stroke-1" />
-                <p className="text-xs font-mono text-primary uppercase tracking-widest animate-pulse">
-                  Analyzing target domains and extracting specialty coffee matches...
-                </p>
+            {/* Importer Type */}
+            <div>
+              <label className="block text-[#8fb499] text-sm mb-2">Importer Type</label>
+              <select
+                value={importerType}
+                onChange={(e) => setImporterType(e.target.value)}
+                className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white focus:border-[#d4af37] focus:outline-none"
+                disabled={isLoading}
+              >
+                {importerTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Status Message */}
+            {statusMessage && (
+              <div className={`p-3 rounded-md text-sm ${error ? 'bg-red-900/30 text-red-400' : 'bg-[#1a3a2a] text-[#8fb499]'}`}>
+                {error ? <AlertCircle className="w-4 h-4 inline mr-2" /> : <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />}
+                {statusMessage}
               </div>
-            ) : (
-              <div className="space-y-5 text-xs font-mono">
-                {/* Score section */}
-                <div className="p-4 rounded-sm bg-white border border-gold/25 flex items-center justify-between shadow-xs">
-                  <div className="space-y-1">
-                    <p className="text-[9px] text-[#4A5568] uppercase tracking-widest">Automatic Lead Rating</p>
-                    <p className="text-xs font-semibold text-primary font-sans">
-                      {activeAnalysisLead.leadScore === 'A' ? "Priority A - Premier Importer" : activeAnalysisLead.leadScore === 'B' ? "Priority B - Specialty Roaster" : "Grade C - Small Operation"}
-                    </p>
-                  </div>
-                  <span className={`w-11 h-11 rounded-full border flex items-center justify-center text-sm font-bold font-mono shadow-xs uppercase ${getScoreColor(activeAnalysisLead.leadScore)}`}>
-                    {activeAnalysisLead.leadScore}
-                  </span>
+            )}
+
+            {/* Progress Bar */}
+            {isLoading && progress.total > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-[#8fb499]">
+                  <span>Progress</span>
+                  <span>{Math.round((progress.processed / progress.total) * 100)}%</span>
                 </div>
-
-                {/* Detailed Analysis items */}
-                <div className="space-y-2.5">
-                  <div className="grid grid-cols-3 py-2 border-b border-gray-200/60 uppercase">
-                    <span className="text-[#4A5568] tracking-widest text-[9px] font-bold">Business Type</span>
-                    <span className="col-span-2 font-normal text-primary font-sans lowercase first-letter:capitalize">
-                      {activeAnalysisLead.analysisType || "Specialty Sourcing Importer"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 py-2 border-b border-gray-200/60 uppercase">
-                    <span className="text-[#4A5568] tracking-widest text-[9px] font-bold">Coffee Focus</span>
-                    <span className="col-span-2 font-normal text-primary font-sans normal-case">
-                      {activeAnalysisLead.analysisFocus || "Specialty Single-Origins / Traceability"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 py-2 border-b border-gray-200/60 uppercase">
-                    <span className="text-[#4A5568] tracking-widest text-[9px] font-bold">Import Volume</span>
-                    <span className="col-span-2 font-bold text-emerald-800">
-                      {activeAnalysisLead.analysisPotential || "High"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 py-2 border-b border-gray-200/60 uppercase">
-                    <span className="text-[#4A5568] tracking-widest text-[9px] font-bold">Product Match</span>
-                    <span className="col-span-2 font-normal text-[#05190F] font-sans normal-case">
-                      {activeAnalysisLead.analysisMatch || "Aceh Gayo G1, Sumatra Toraja"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Score Confidence metrics inside modal */}
-                <div className="p-3 bg-white border border-gray-200 rounded-sm space-y-2 font-mono">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-primary">Data Integrity Scores</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center p-2 rounded-sm bg-bg-ivory/50 border border-primary/5">
-                      <p className="text-[8px] text-gray-400 uppercase font-mono">Website</p>
-                      <p className="text-xs font-bold text-primary">{activeAnalysisLead.websiteConfidence || 'High'}</p>
-                    </div>
-                    <div className="text-center p-2 rounded-sm bg-bg-ivory/50 border border-primary/5">
-                      <p className="text-[8px] text-gray-400 uppercase font-mono">Email</p>
-                      <p className="text-xs font-bold text-primary">{activeAnalysisLead.emailConfidence || 'High'}</p>
-                    </div>
-                    <div className="text-center p-2 rounded-sm bg-bg-ivory/50 border border-primary/5">
-                      <p className="text-[8px] text-gray-400 uppercase font-mono">Importer</p>
-                      <p className="text-xs font-bold text-primary">{activeAnalysisLead.importerConfidence || 'High'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {activeAnalysisLead.analysisWhy && (
-                  <div className="p-3.5 bg-white border border-primary/5 rounded-sm space-y-1.5 font-sans">
-                    <div className="text-[9px] font-bold text-[#D4AF37] uppercase tracking-widest font-mono">
-                      Why Recommended Coffee Matches
-                    </div>
-                    <p className="text-xs text-gray-800 font-light leading-relaxed">
-                      {activeAnalysisLead.analysisWhy}
-                    </p>
-                  </div>
-                )}
-
-                {/* Score validation rules description */}
-                <div className="p-4 bg-white border border-primary/5 rounded-sm space-y-1.5 font-sans shadow-xs">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-widest font-mono">
-                    <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
-                    <span>Scoring Justification</span>
-                  </div>
-                  <p className="text-xs text-text-dim leading-relaxed font-light">
-                    {activeAnalysisLead.notes}
-                  </p>
+                <div className="h-2 bg-[#0f2318] rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[#d4af37] transition-all duration-500"
+                    style={{ width: `${Math.min(100, (progress.processed / progress.total) * 100)}%` }}
+                  />
                 </div>
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-4 border-t border-primary/10">
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
               <button
-                onClick={() => setActiveAnalysisLead(null)}
-                className="px-6 py-2.5 bg-primary hover:bg-neutral-950 text-white hover:text-gold border border-gold/40 rounded-sm text-[10px] font-mono uppercase tracking-widest cursor-pointer transition-all font-semibold"
+                type="submit"
+                disabled={isLoading}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-md font-medium transition-all ${
+                  isLoading
+                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'bg-[#d4af37] text-[#0a1a12] hover:bg-[#c4a030]'
+                }`}
               >
-                Close Analysis
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Scouting...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Discover
+                  </>
+                )}
               </button>
+
+              {isLoading && (
+                <button
+                  type="button"
+                  onClick={cancelDiscovery}
+                  className="px-4 py-3 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
+
+              {!isLoading && discoveredLeads.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleImportSelected()}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-700 text-white rounded-md hover:bg-green-600 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  Import ({Object.values(selectedLeads).filter(Boolean).length})
+                </button>
+              )}
             </div>
+            </form>
+          )}
+        </div>
+
+        {/* Right Panel - Results */}
+        <div className="flex-1 p-6 overflow-y-auto">
+          {discoveredLeads.length === 0 && !isLoading ? (
+            <div className="h-full flex flex-col items-center justify-center text-[#8fb499]">
+              <Compass className="w-16 h-16 mb-4 opacity-50" />
+              <p className="text-lg">No discoveries yet</p>
+              <p className="text-sm opacity-70 mt-2">Configure your search criteria and click Discover</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={handleSelectAll}
+                  className="text-sm text-[#d4af37] hover:underline"
+                >
+                  {discoveredLeads.length > 0 && discoveredLeads.every(l => selectedLeads[l.id]) 
+                    ? 'Deselect All' 
+                    : 'Select All'}
+                </button>
+                <span className="text-xs text-[#8fb499]">
+                  {Object.values(selectedLeads).filter(Boolean).length} selected
+                </span>
+              </div>
+              {discoveredLeads.map((lead) => (
+                <div
+                  key={lead.id}
+                  className={`bg-[#0f2318] border rounded-lg p-4 transition-all cursor-pointer ${
+                    selectedLeads[lead.id] 
+                      ? 'border-[#d4af37] shadow-lg shadow-[#d4af37]/10' 
+                      : 'border-[#1a3a2a] hover:border-[#2a4a3a]'
+                  }`}
+                  onClick={() => toggleSelectLead(lead.id)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={!!selectedLeads[lead.id]}
+                          onChange={() => {}}
+                          className="w-4 h-4 rounded border-[#1a3a2a] text-[#d4af37] focus:ring-[#d4af37]"
+                        />
+                        <h3 className="font-semibold text-white">{lead.companyName}</h3>
+                        {lead.leadScore && (
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            lead.leadScore === 'A' ? 'bg-green-900/50 text-green-400' :
+                            lead.leadScore === 'B' ? 'bg-yellow-900/50 text-yellow-400' :
+                            'bg-gray-700 text-gray-400'
+                          }`}>
+                            Score {lead.leadScore}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-3 text-sm text-[#8fb499]">
+                        {lead.website && (
+                          <a 
+                            href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-[#d4af37]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                            Website
+                          </a>
+                        )}
+                        {lead.linkedin && (
+                          <a 
+                            href={lead.linkedin.startsWith('http') ? lead.linkedin : `https://${lead.linkedin}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 hover:text-[#d4af37]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Linkedin className="w-4 h-4" />
+                            LinkedIn
+                          </a>
+                        )}
+                        {lead.email && (
+                          <a 
+                            href={`mailto:${lead.email}`} 
+                            className="flex items-center gap-1 hover:text-[#d4af37]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Mail className="w-4 h-4" />
+                            {lead.email}
+                          </a>
+                        )}
+                        {lead.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-4 h-4" />
+                            {lead.phone}
+                          </span>
+                        )}
+                        {lead.country && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-4 h-4" />
+                            {lead.country}{lead.city ? `, ${lead.city}` : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <button
+                        onClick={(e) => handleCopyToClipboard(lead, e)}
+                        className={`p-2 rounded-md transition-all flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest ${
+                          copiedId === lead.id 
+                            ? 'bg-green-900/30 text-green-400' 
+                            : 'bg-[#1a3a2a] text-[#8fb499] hover:text-[#d4af37]'
+                        }`}
+                        title="Copy to clipboard"
+                      >
+                        {copiedId === lead.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copiedId === lead.id ? 'Copied' : 'Copy'}
+                      </button>
+                      <button
+                        onClick={(e) => handleAddToGoogleSheet(lead, e)}
+                        disabled={isSyncingId === lead.id}
+                        className={`p-2 rounded-md transition-all flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest ${
+                          isSyncingId === lead.id
+                            ? 'bg-[#1a3a2a] opacity-50 cursor-not-allowed'
+                            : 'bg-[#1a3a2a] text-[#8fb499] hover:text-[#d4af37]'
+                        }`}
+                        title="Push to Google Sheets"
+                      >
+                        {isSyncingId === lead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                        {isSyncingId === lead.id ? 'Syncing' : 'Sheets'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Footer / Batch Actions */}
+      {discoveredLeads.length > 0 && (
+        <div className="p-4 bg-[#0f2318] border-t border-[#1a3a2a] flex items-center justify-between">
+          <div className="text-sm text-[#8fb499]">
+            <span className="font-bold text-[#d4af37]">{Object.values(selectedLeads).filter(Boolean).length}</span> leads selected for import
           </div>
+          <button
+            onClick={() => handleImportSelected()}
+            disabled={Object.values(selectedLeads).filter(Boolean).length === 0}
+            className="px-6 py-2 bg-[#d4af37] text-[#0a1a12] rounded-md text-sm font-bold uppercase tracking-widest hover:bg-[#b8962d] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Import Selected to CRM
+          </button>
         </div>
       )}
     </div>

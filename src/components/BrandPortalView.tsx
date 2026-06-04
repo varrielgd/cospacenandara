@@ -289,8 +289,12 @@ interface OriginTerritory {
   type: string;
   soil: string;
   elevation: string;
-  varietals: string;
-  character: string;
+
+  // These two fields are used when origins are loaded from Sheets.
+  // IndonesiaMap only guarantees a base terroir shape, so keep them optional to avoid TS mismatch.
+  varietals?: string;
+  character?: string;
+
   process: string;
   flavorNotes: string;
   availableProducts: string;
@@ -421,6 +425,19 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
   const [originsList, setOriginsList] = useState<OriginTerritory[]>(ORIGINS_DATA);
   const [activeOrigin, setActiveOrigin] = useState<OriginTerritory | null>(ORIGINS_DATA[0]); // Default to Sumatra
   const [isLoadingSheet, setIsLoadingSheet] = useState(false);
+
+  const handleSelectOrigin = (org: OriginTerritory) => {
+    setActiveOrigin(org);
+    // Automatically find a matching product in the catalogue
+    const matchingProduct = PRODUCTS_CATALOGUE.find(p => 
+      p.name.toLowerCase().includes(org.name.toLowerCase()) || 
+      org.availableProducts.toLowerCase().includes(p.name.toLowerCase()) ||
+      p.origin.toLowerCase().includes(org.name.toLowerCase().split(' ')[0])
+    );
+    if (matchingProduct) {
+      setSelectedProduct(matchingProduct);
+    }
+  };
 
   const handleSyncSheetsOrigins = async () => {
     if (!googleAppsScriptUrl) {
@@ -721,7 +738,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
             <div className="rounded-lg border border-gold/20 relative overflow-hidden min-h-[460px] sm:min-h-[480px] py-10 sm:py-16 flex items-center bg-[#05190F]" id="showcase-hero">
               {/* Fake foggy overlay decoration */}
               <div className="absolute inset-0 bg-linear-to-r from-[#05190F]/95 via-[#05190F]/80 to-transparent z-10" />
-              <div className="absolute right-0 top-0 bottom-0 w-2/3 bg-cover bg-center opacity-30 mix-blend-screen" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1200&auto=format&fit=crop')" }} referrerPolicy="no-referrer" />
+              <div className="absolute right-0 top-0 bottom-0 w-2/3 bg-cover bg-center opacity-30 mix-blend-screen" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1200&auto=format&fit=crop')" }} />
               
               <div className="max-w-2xl px-6 sm:px-12 py-4 space-y-5 relative z-20">
                 <div>
@@ -867,14 +884,14 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
 
         {/* ORIGINS INTERACTIVE MAP VIEW */}
         {portalTab === 'origins' && (
-          <div className="space-y-6 animate-fade-in" id="portal-origins">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="space-y-8 animate-fade-in" id="portal-origins">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Sourcing Map Block */}
-              <div className="lg:col-span-2 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury space-y-4">
+              <div className="lg:col-span-8">
                 <IndonesiaMap
                   origins={originsList}
                   activeOrigin={activeOrigin}
-                  onSelectOrigin={(org) => setActiveOrigin(org)}
+                  onSelectOrigin={handleSelectOrigin}
                   isLoadingSheet={isLoadingSheet}
                   onSyncSheetsOrigins={handleSyncSheetsOrigins}
                   hasSheetsUrl={!!googleAppsScriptUrl}
@@ -882,72 +899,84 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
               </div>
 
               {/* Terroir Specification Sheet: Origin Intelligence Panel */}
-              <div className="p-6 rounded-lg bg-[#F7F4EC] border border-[#05190F]/15 shadow-luxury h-fit space-y-5" id="terroir-details">
+              <div className="lg:col-span-4 p-8 rounded-2xl bg-[#F7F4EC] border border-[#05190F]/10 shadow-luxury h-fit" id="terroir-details">
                 {activeOrigin ? (
-                  <div className="space-y-4 animate-fade-in text-xs font-mono">
-                    <div className="border-b border-[#05190F]/10 pb-3">
-                      <span className="p-1 px-2.5 text-[8px] bg-[#05190F] text-[#C9A227] border border-[#C9A227]/30 rounded-sm uppercase tracking-widest font-bold inline-block">
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="border-b border-[#05190F]/10 pb-5">
+                      <span className="px-3 py-1 text-[9px] bg-[#05190F] text-[#C9A227] border border-[#C9A227]/30 rounded-full uppercase tracking-[0.2em] font-bold inline-block shadow-sm">
                         {activeOrigin.type} Terroir
                       </span>
-                      <h3 className="text-xl font-serif italic text-[#05190F] mt-2 normal-case font-bold">
+                      <h3 className="text-3xl font-serif italic text-[#05190F] mt-3 font-bold tracking-tight">
                         {activeOrigin.name}
                       </h3>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       {/* Altitude Specification */}
-                      <div>
-                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/70 block font-bold leading-none mb-1">
+                      <div className="group">
+                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/50 block font-bold mb-1.5 group-hover:text-gold transition-colors">
                           Altitude / Elevation:
                         </span>
-                        <p className="text-[#05190F] font-sans text-sm font-bold leading-relaxed">{activeOrigin.elevation}</p>
-                      </div>
-
-                      {/* Geological Sourced Soil */}
-                      <div>
-                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/70 block font-bold leading-none mb-1">
-                          Geological Soil base:
-                        </span>
-                        <p className="text-[#05190F]/80 font-sans text-xs font-medium leading-relaxed">{activeOrigin.soil}</p>
-                      </div>
-
-                      {/* Sourcing Process and Export Preparation */}
-                      <div>
-                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/70 block font-bold leading-none mb-1">
-                          Processing Method:
-                        </span>
-                        <p className="text-[#05190F]/90 font-sans text-xs font-semibold leading-relaxed p-1.5 bg-[#05190F]/5 rounded-sm border border-[#05190F]/10">{activeOrigin.process}</p>
-                      </div>
-
-                      {/* Flavor Profile and Master Cupping Notes */}
-                      <div>
-                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/70 block font-bold leading-none mb-1">
-                          Flavor Profile Notes:
-                        </span>
-                        <p className="text-[#05190F]/90 font-serif text-sm italic leading-relaxed pt-0.5">{activeOrigin.flavorNotes}</p>
-                      </div>
-
-                      {/* Sourcing Inventory Reference */}
-                      <div>
-                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/70 block font-bold leading-none mb-1">
-                          Sourcing Available Products:
-                        </span>
-                        <p className="text-[#05190F] font-sans text-xs leading-relaxed font-semibold mt-1 p-2 bg-[#C9A227]/10 text-[#05190F] border border-[#C9A227]/30 rounded-sm italic">
-                          {activeOrigin.availableProducts}
+                        <p className="text-[#05190F] font-sans text-lg font-bold leading-none tracking-tight">
+                          {activeOrigin.elevation}
                         </p>
                       </div>
 
-                      <div className="p-3 bg-[#05190F] text-white border border-[#C9A227]/20 rounded-sm font-sans text-xs leading-relaxed pt-3">
-                        <span className="font-mono text-[9px] tracking-widest text-[#C9A227] block font-bold uppercase mb-1">
-                          IMPORTER TERROIR PROFILE:
+                      {/* Geological Sourced Soil */}
+                      <div className="group">
+                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/50 block font-bold mb-1.5 group-hover:text-gold transition-colors">
+                          Geological Soil Base:
                         </span>
-                        "{activeOrigin.character}"
+                        <p className="text-[#05190F]/80 font-sans text-sm font-medium leading-relaxed">
+                          {activeOrigin.soil}
+                        </p>
+                      </div>
+
+                      {/* Sourcing Process and Export Preparation */}
+                      <div className="group">
+                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/50 block font-bold mb-2 group-hover:text-gold transition-colors">
+                          Processing Method:
+                        </span>
+                        <div className="inline-block px-4 py-2 bg-white/50 border border-[#05190F]/10 rounded-lg text-[#05190F] font-sans text-xs font-bold shadow-sm">
+                          {activeOrigin.process}
+                        </div>
+                      </div>
+
+                      {/* Flavor Profile and Master Cupping Notes */}
+                      <div className="group">
+                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/50 block font-bold mb-1.5 group-hover:text-gold transition-colors">
+                          Flavor Profile Notes:
+                        </span>
+                        <p className="text-[#05190F] font-serif text-lg italic leading-relaxed tracking-wide">
+                          {activeOrigin.flavorNotes}
+                        </p>
+                      </div>
+
+                      {/* Sourcing Inventory Reference */}
+                      <div className="group">
+                        <span className="text-[10px] uppercase tracking-widest text-[#05190F]/50 block font-bold mb-2 group-hover:text-gold transition-colors">
+                          Sourcing Available Products:
+                        </span>
+                        <div className="p-3.5 bg-[#C9A227]/10 text-[#05190F] border border-[#C9A227]/30 rounded-xl font-sans text-xs leading-relaxed font-bold italic shadow-xs">
+                          {activeOrigin.availableProducts}
+                        </div>
+                      </div>
+
+                      {/* Importer Terroir Profile Card */}
+                      <div className="p-5 bg-[#05190F] text-white rounded-2xl border border-gold/20 shadow-xl mt-8">
+                        <span className="font-mono text-[9px] tracking-[0.3em] text-gold block font-bold uppercase mb-3 border-b border-gold/10 pb-2">
+                          Importer Terroir Profile
+                        </span>
+                        <p className="text-xs font-serif italic leading-relaxed text-gray-200">
+                          "{activeOrigin.character}"
+                        </p>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#05190F]/10">
-                      <p className="text-[9px] text-[#05190F]/70 uppercase tracking-widest font-bold mb-2">Direct Trade Catalog Matchings:</p>
-                      <div className="space-y-1.5">
+                    {/* Catalog Matchings */}
+                    <div className="pt-6 border-t border-[#05190F]/10">
+                      <p className="text-[10px] text-[#05190F]/40 uppercase tracking-[0.2em] font-bold mb-4">Direct Trade Catalog Matchings</p>
+                      <div className="space-y-2">
                         {PRODUCTS_CATALOGUE.filter(p => {
                           const originNameFirstWord = activeOrigin.name.split(' ')[0].toLowerCase().trim();
                           const originIdClean = activeOrigin.id.replace('_', '').substring(0, 4);
@@ -961,19 +990,19 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                               setSelectedProduct(coffee);
                               setPortalTab('products');
                             }}
-                            className="w-full text-left p-2 hover:bg-[#05190F] hover:text-[#C9A227] bg-white border border-[#05190F]/10 rounded-sm flex justify-between items-center transition-all cursor-pointer group"
+                            className="w-full text-left p-3.5 hover:bg-[#05190F] hover:text-gold bg-white border border-[#05190F]/5 rounded-xl flex justify-between items-center transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-gold/10"
                           >
-                            <span className="font-sans font-semibold text-[#05190F] group-hover:text-[#C9A227]">{coffee.name}</span>
-                            <ChevronRight className="w-3.5 h-3.5 text-[#C9A227] group-hover:translate-x-0.5 transition-transform" />
+                            <span className="font-sans font-bold text-sm text-[#05190F] group-hover:text-gold">{coffee.name}</span>
+                            <ChevronRight className="w-4 h-4 text-gold group-hover:translate-x-1 transition-transform" />
                           </button>
                         ))}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="py-16 text-center border border-dashed border-[#05190F]/15 rounded-sm text-[#05190F]/45">
-                    <Info className="w-8 h-8 stroke-1 mx-auto text-[#C9A227]/40 mb-2" />
-                    <p className="text-xs uppercase tracking-widest">Select an Indonesia Volcanic Territorium to inspect detailed coffee intelligence</p>
+                  <div className="py-24 text-center border-2 border-dashed border-[#05190F]/10 rounded-2xl text-[#05190F]/30 bg-white/30">
+                    <Info className="w-12 h-12 stroke-[1px] mx-auto text-gold/30 mb-4" />
+                    <p className="text-[10px] font-mono uppercase tracking-[0.3em] font-bold max-w-[200px] mx-auto leading-relaxed">Select a volcanic terroir on the map to inspect intelligence matrix</p>
                   </div>
                 )}
               </div>

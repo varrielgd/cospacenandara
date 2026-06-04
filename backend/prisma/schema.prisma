@@ -89,19 +89,32 @@ enum LeadScore {
   C
 }
 
+enum DiscoveryStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
 model User {
-  id            String      @id @default(uuid())
-  email         String      @unique
-  password      String
-  firstName     String?
-  lastName      String?
-  role          String      @default("USER")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  auditLogs     AuditLog[]
-  activities    Activity[]
-  tasks         Task[]
-  notes         Note[]
+  id                String              @id @default(uuid())
+  email             String              @unique
+  password          String
+  firstName         String?
+  lastName          String?
+  role              String              @default("USER")
+  isVerified        Boolean             @default(false)
+  twoFactorSecret   String?
+  twoFactorEnabled  Boolean             @default(false)
+  verificationCode  String?
+  verificationExpiry DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  auditLogs         AuditLog[]
+  activities        Activity[]
+  tasks             Task[]
+  notes             Note[]
+  discoverySessions DiscoverySession[]
 }
 
 model Importer {
@@ -304,4 +317,21 @@ model AuditLog {
   details   String?  @db.Text
   ipAddress String?
   createdAt DateTime @default(now())
+}
+
+model DiscoverySession {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  query          String
+  status         DiscoveryStatus @default(PENDING)
+  totalFound     Int             @default(0)
+  totalProcessed Int             @default(0)
+  importerIds    String          @db.Text // JSON array of importer IDs found
+  resultsJson    String?         @db.LongText // Detailed results
+  error          String?         @db.Text
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }

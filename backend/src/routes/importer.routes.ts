@@ -10,6 +10,7 @@ router.use(authenticate);
 router.get('/', importerController.getAllImporters);
 router.get('/:id', importerController.getImporterById);
 router.post('/', importerValidator, importerController.createImporter);
+router.post('/bulk', importerController.bulkCreateImporters);
 router.put('/:id', importerValidator, importerController.updateImporter);
 router.delete('/:id', importerController.deleteImporter);
 

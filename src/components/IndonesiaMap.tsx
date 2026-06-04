@@ -1,5 +1,20 @@
-import React from 'react';
-import { MapPin } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { RefreshCw, MapPin } from 'lucide-react';
+
+// Fix for Leaflet marker icons in Vite/React
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface OriginTerritory {
   id: string;
@@ -7,6 +22,8 @@ interface OriginTerritory {
   type: string;
   soil: string;
   elevation: string;
+  varietals?: string;
+  character?: string;
   process: string;
   flavorNotes: string;
   availableProducts: string;
@@ -23,76 +40,6 @@ interface IndonesiaMapProps {
   hasSheetsUrl: boolean;
 }
 
-// Map geographical bounds
-const MIN_LNG = 94.5;
-const MAX_LNG = 141.5;
-const MIN_LAT = -11.0;
-const MAX_LAT = 6.5;
-
-// Project geo coordinates to 0-1000 X and 0-400 Y for SVG viewBox
-const projectToSvg = (lng: number, lat: number) => {
-  const x = ((lng - MIN_LNG) / (MAX_LNG - MIN_LNG)) * 1000;
-  // Latitude goes positive upwards, SVG Y goes positive downwards
-  const y = ((MAX_LAT - lat) / (MAX_LAT - MIN_LAT)) * 400;
-  return { x, y };
-};
-
-// SVG Paths for Islands (projected from actual latitude/longitude arrays)
-const SUMATRA_COORDS = [
-  [95.2, 5.5], [95.9, 5.7], [96.6, 5.0], [97.5, 4.3], [98.7, 3.5],
-  [99.8, 2.8], [101.4, 0.9], [102.6, -1.0], [103.8, -2.2], [104.8, -3.5],
-  [105.9, -5.1], [106.1, -5.9], [105.6, -5.9], [105.0, -5.6], [104.5, -5.3],
-  [103.8, -4.8], [102.7, -3.8], [101.9, -3.1], [101.0, -2.0], [100.1, -1.1],
-  [99.2, -0.3], [98.2, 0.8], [97.3, 1.8], [96.7, 2.6], [96.1, 3.2],
-  [95.2, 4.8], [95.2, 5.5]
-];
-
-const JAVA_COORDS = [
-  [105.2, -6.0], [106.0, -5.9], [106.9, -6.1], [107.8, -6.3], [109.0, -6.9],
-  [110.2, -6.8], [111.4, -6.6], [112.5, -6.9], [113.8, -7.8], [114.6, -8.1],
-  [114.4, -8.6], [113.5, -8.3], [112.5, -8.2], [111.1, -8.2], [109.9, -7.7],
-  [108.5, -7.7], [107.1, -7.4], [105.8, -6.9], [105.1, -6.8], [105.2, -6.0]
-];
-
-const KALIMANTAN_COORDS = [
-  [108.9, -0.8], [108.9, 0.4], [109.2, 1.5], [109.8, 2.1], [111.0, 3.0],
-  [112.5, 4.2], [114.0, 4.5], [115.4, 4.3], [116.8, 4.6], [118.0, 4.1],
-  [119.0, 2.2], [118.8, 1.1], [117.8, 0.8], [117.3, -0.4], [116.8, -1.2],
-  [116.2, -3.0], [115.6, -4.1], [114.6, -3.5], [113.1, -3.1], [111.5, -2.8],
-  [110.1, -2.3], [109.1, -1.7], [108.9, -0.8]
-];
-
-const SULAWESI_COORDS = [
-  [119.8, -1.0], [119.9, 0.0], [120.8, 0.7], [121.8, 1.0], [123.0, 0.8],
-  [124.0, 1.4], [125.1, 1.6], [125.2, 1.2], [124.1, 0.5], [122.9, 0.2],
-  [121.8, -0.5], [121.5, -0.9], [122.4, -0.7], [123.3, -0.8], [124.1, -1.1], 
-  [124.1, -1.5], [123.0, -1.4], [122.0, -1.2], [121.7, -1.6], [122.5, -2.5], 
-  [123.1, -4.0], [123.0, -5.3], [122.4, -5.3], [121.7, -4.0], [121.1, -2.8],
-  [120.1, -3.1], [120.4, -4.5], [120.5, -5.6], [119.5, -5.6], [119.4, -4.0],
-  [119.3, -2.0], [119.8, -1.0]
-];
-
-const PAPUA_COORDS = [
-  [130.8, -1.2], [131.5, -0.7], [132.5, -0.8], [134.1, -1.5], [134.5, -2.8],
-  [133.5, -2.9], [132.2, -2.0], [134.0, -2.2], [135.5, -2.5], [137.0, -2.3],
-  [138.5, -2.4], [140.0, -2.5], [140.7, -2.6], [141.0, -2.6], [141.0, -9.1],
-  [140.5, -9.1], [139.0, -8.3], [137.4, -7.0], [136.0, -4.9], [134.8, -4.0],
-  [130.8, -1.2]
-];
-
-const BALI_COORDS = [[114.5, -8.1], [115.7, -8.1], [115.6, -8.8], [114.4, -8.7], [114.5, -8.1]];
-const LOMBOK_COORDS = [[116.0, -8.3], [116.7, -8.3], [116.6, -9.0], [115.9, -8.9], [116.0, -8.3]];
-const SUMBAWA_COORDS = [[116.9, -8.4], [118.9, -8.4], [118.5, -9.0], [117.0, -8.9], [116.9, -8.4]];
-const FLORES_COORDS = [[119.8, -8.4], [121.5, -8.5], [123.0, -8.2], [122.8, -8.9], [119.9, -8.8], [119.8, -8.4]];
-const TIMOR_COORDS = [[123.5, -10.3], [124.5, -9.8], [125.5, -9.1], [127.3, -8.3], [127.0, -8.6], [125.0, -10.1], [124.0, -10.4], [123.5, -10.3]];
-
-const buildSvgPath = (coords: number[][]) => {
-  return coords.map((c, i) => {
-    const { x, y } = projectToSvg(c[0], c[1]);
-    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
-  }).join(' ') + ' Z';
-};
-
 export default function IndonesiaMap({
   origins,
   activeOrigin,
@@ -101,143 +48,212 @@ export default function IndonesiaMap({
   onSyncSheetsOrigins,
   hasSheetsUrl,
 }: IndonesiaMapProps) {
-  // Convert coords list to path data once
-  const sumatraPath = buildSvgPath(SUMATRA_COORDS);
-  const javaPath = buildSvgPath(JAVA_COORDS);
-  const kalimantanPath = buildSvgPath(KALIMANTAN_COORDS);
-  const sulawesiPath = buildSvgPath(SULAWESI_COORDS);
-  const papuaPath = buildSvgPath(PAPUA_COORDS);
-  const baliPath = buildSvgPath(BALI_COORDS);
-  const lombokPath = buildSvgPath(LOMBOK_COORDS);
-  const sumbawaPath = buildSvgPath(SUMBAWA_COORDS);
-  const floresPath = buildSvgPath(FLORES_COORDS);
-  const timorPath = buildSvgPath(TIMOR_COORDS);
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [filter, setFilter] = useState<'all' | 'arabica' | 'robusta'>('all');
+  const markersRef = useRef<{ [key: string]: L.Marker }>({});
+
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    // Initialize map
+    mapRef.current = L.map(mapContainerRef.current, {
+      zoomControl: false,
+    }).setView([-2.5, 118], 5);
+
+    // Using Esri World Street Map for better reliability and professional look
+    // This avoids the ERR_ABORTED issue common with standard OSM tiles
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ'
+    }).addTo(mapRef.current);
+
+    // Add custom zoom control
+    L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
+
+    // CRITICAL: Force a resize check after the map is initialized to fix gray/missing tiles
+    setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 200);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear existing markers
+    Object.values(markersRef.current).forEach(marker => marker.remove());
+    markersRef.current = {};
+
+    const filteredOrigins = origins.filter(o => {
+      if (filter === 'all') return true;
+      if (filter === 'arabica') return o.type.toLowerCase().includes('arabica');
+      if (filter === 'robusta') return o.type.toLowerCase().includes('robusta');
+      return true;
+    });
+
+    filteredOrigins.forEach(origin => {
+      const isActive = activeOrigin?.id === origin.id;
+      
+      const customIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `
+          <div class="marker-pin ${isActive ? 'active' : ''}">
+            <div class="pin-head"></div>
+            <div class="pin-label">${origin.name.split(' ')[0]}</div>
+          </div>
+        `,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42]
+      });
+
+      const marker = L.marker([origin.lat, origin.lng], { icon: customIcon }).bindPopup(`
+        <div style="font-family: 'Playfair Display', serif; width: 220px; padding: 5px;">
+          <div style="font-size: 16px; font-weight: 700; color: #05190F; margin-bottom: 2px;">${origin.name}</div>
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #C9A227; font-weight: bold; margin-bottom: 8px;">${origin.type}</div>
+          <div style="font-size: 12px; line-height: 1.4; color: #4A5568; margin-bottom: 10px;">${origin.character || origin.flavorNotes}</div>
+          <div style="border-top: 1px solid #edf2f7; pt-8px; font-size: 11px; color: #718096;">
+            <b>Altitude:</b> ${origin.elevation}<br>
+            <b>Process:</b> ${origin.process}
+          </div>
+          <button id="view-details-${origin.id}" style="width: 100%; margin-top: 12px; padding: 6px; background: #05190F; color: #D4AF37; border: none; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;">View Detail</button>
+        </div>
+      `, {
+        className: 'custom-luxury-popup'
+      });
+
+      marker.on('click', () => {
+        onSelectOrigin(origin);
+      });
+
+      marker.on('popupopen', () => {
+        const btn = document.getElementById(`view-details-${origin.id}`);
+        if (btn) {
+          btn.onclick = () => onSelectOrigin(origin);
+        }
+      });
+
+      marker.addTo(mapRef.current!);
+      markersRef.current[origin.id] = marker;
+    });
+
+    // If there's an active origin, open its popup
+    if (activeOrigin && markersRef.current[activeOrigin.id]) {
+      markersRef.current[activeOrigin.id].openPopup();
+      mapRef.current.setView([activeOrigin.lat, activeOrigin.lng], 7, { animate: true });
+    }
+  }, [filter, origins, activeOrigin]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase">Terroir Exploration</h3>
-          <h2 className="text-lg font-serif italic text-[#05190F]">Geographic Sourcing Origin Map</h2>
-        </div>
-        <div className="flex items-center gap-2">
-          {hasSheetsUrl ? (
-            <button
-              onClick={onSyncSheetsOrigins}
-              disabled={isLoadingSheet}
-              className="px-3 py-1.5 bg-white text-[#05190F] border border-[#05190F]/20 rounded-sm hover:border-[#C9A227] font-mono text-[10px] tracking-widest uppercase font-semibold transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-              title="Sync dynamic coffee origins straight from configured Google Sheets"
-              id="btn-sync-origins-sheet"
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${isLoadingSheet ? 'bg-amber-500 animate-pulse' : 'bg-green-500'}`} />
-              {isLoadingSheet ? 'Loading Sheet...' : 'Sync Sheets Origins'}
-            </button>
-          ) : (
-            <span className="text-[9px] font-mono p-1 px-2.5 bg-yellow-50 text-amber-800 border border-amber-200 rounded-sm uppercase tracking-wide">
-              Sheets Config Pending for Future Origins
-            </span>
-          )}
-        </div>
+    <div className="bg-[#05190F] rounded-2xl overflow-hidden border border-gold/20 shadow-luxury flex flex-col h-[750px]">
+      <style>{`
+        .leaflet-container { background: #f8f5f0 !important; }
+        .custom-luxury-popup .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          border: 1px solid #D4AF37;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .custom-luxury-popup .leaflet-popup-tip { background: #D4AF37; }
+        .leaflet-popup-content { margin: 12px 15px; }
+
+        .custom-div-icon { background: none; border: none; }
+        .marker-pin {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transition: all 0.3s ease;
+        }
+        .pin-head {
+          width: 14px;
+          height: 14px;
+          background: #05190F;
+          border: 2px solid #D4AF37;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+        .pin-label {
+          margin-top: 4px;
+          font-size: 8px;
+          font-family: monospace;
+          font-weight: bold;
+          text-transform: uppercase;
+          color: #05190F;
+          background: rgba(212, 175, 55, 0.9);
+          padding: 1px 4px;
+          border-radius: 2px;
+          white-space: nowrap;
+          pointer-events: none;
+        }
+        .marker-pin.active .pin-head {
+          background: #D4AF37;
+          border-color: #fff;
+          width: 18px;
+          height: 18px;
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+        }
+        .marker-pin.active .pin-label {
+          background: #05190F;
+          color: #D4AF37;
+          font-size: 9px;
+          transform: scale(1.1);
+        }
+      `}</style>
+
+      {/* Luxury Header */}
+      <div className="p-8 text-center bg-[radial-gradient(circle_at_top,#0a2a1a,transparent)] border-b border-gold/10">
+        <h2 className="text-3xl font-serif italic text-gold tracking-wider mb-2">Indonesian Coffee Origins</h2>
+        <p className="text-xs font-mono text-gold/60 uppercase tracking-[0.3em]">Curated Specialty Collection • Nandara Nusa Montierra</p>
       </div>
 
-      <p className="text-xs text-[#4A5568] leading-relaxed max-w-2xl">
-        Select volcanic terroir markers below to analyze custom altitude specifications, export processing methods, precise flavor compositions, and direct product pairings.
-      </p>
+      {/* Aesthetic Filter Bar */}
+      <div className="flex justify-center gap-4 py-6 bg-primary/50">
+        {[
+          { id: 'all', label: 'All Origins' },
+          { id: 'arabica', label: 'Arabica' },
+          { id: 'robusta', label: 'Robusta' }
+        ].map((btn) => (
+          <button
+            key={btn.id}
+            onClick={() => setFilter(btn.id as any)}
+            className={`px-6 py-2.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all duration-500 border ${
+              filter === btn.id 
+                ? 'bg-gold text-primary border-gold shadow-lg shadow-gold/20 font-bold' 
+                : 'bg-transparent text-gold/70 border-gold/30 hover:border-gold hover:text-gold'
+            }`}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Map Board */}
-      <div 
-        className="relative border border-[#05190F]/10 rounded-lg overflow-hidden bg-[#F7F4EC] select-none shadow-luxury md:aspect-[5/2]" 
-        id="indonesia-coffee-origin-map"
-      >
-        {/* Sea background and grid lines */}
-        <div className="absolute inset-0 bg-[radial-gradient(#05190f_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-10" />
+      {/* Map View */}
+      <div ref={mapContainerRef} className="flex-1 w-full relative z-10" />
+
+      {/* Floating Action Bar */}
+      <div className="p-4 bg-primary border-t border-gold/10 flex justify-between items-center px-8">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-[10px] font-mono text-gold/50 uppercase tracking-widest">Live Terroir Intelligence Active</span>
+        </div>
         
-        {/* Equator Line */}
-        <div className="absolute inset-x-0 top-[28%] border-t border-[#05190F]/15 border-dashed z-0 flex justify-between px-4 text-[8px] font-mono text-[#05190F]/30 uppercase tracking-widest pt-0.5 pointer-events-none">
-          <span>Equator 0°</span>
-          <span>Indonesian Coffee Belt</span>
-        </div>
-
-        {/* Dynamic Map SVG */}
-        <svg 
-          viewBox="0 0 1000 400" 
-          className="w-full h-auto min-h-[220px] md:min-h-0 block relative z-10"
-        >
-          {/* Main island paths rendered in luxurious Dark Green #05190F */}
-          <g fill="#05190F" fillOpacity="0.9" stroke="#C9A227" strokeOpacity="0.25" strokeWidth="1.2" strokeLinejoin="round">
-            <path d={sumatraPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={javaPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={kalimantanPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={sulawesiPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={papuaPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            {/* Lesser Sunda Chain & Maluku */}
-            <path d={baliPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={lombokPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={sumbawaPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={floresPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-            <path d={timorPath} className="transition-all hover:fill-emerald-950 hover:stroke-[#C9A227] cursor-pointer" />
-          </g>
-        </svg>
-
-        {/* Overlay Pins on Top (using percentage layout derived from real coordinates) */}
-        <div className="absolute inset-0 z-20 pointer-events-none">
-          {origins.map((org) => {
-            const isActive = activeOrigin?.id === org.id;
-            // project coordinates
-            const { x, y } = projectToSvg(org.lng, org.lat);
-            
-            // X and Y in percentages
-            const xPercent = (x / 1000) * 100;
-            const yPercent = (y / 400) * 100;
-
-            const isCustom = !['aceh_gayo', 'mandheling', 'lintong', 'flores_bajawa', 'toraja', 'temanggung', 'lampung'].includes(org.id);
-
-            return (
-              <div
-                key={org.id}
-                className="absolute pointer-events-auto"
-                style={{ 
-                  left: `${xPercent}%`, 
-                  top: `${yPercent}%`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => onSelectOrigin(org)}
-                  className="relative group cursor-pointer flex flex-col items-center select-none"
-                  id={`pin-${org.id}`}
-                >
-                  {/* Ripple wave effect around active/inactive pins */}
-                  <span className={`absolute -inset-2 rounded-full animate-ping opacity-35 ${
-                    isActive ? 'bg-[#C9A227] scale-150' : 'bg-[#05190F] group-hover:bg-[#C9A227]'
-                  }`} />
-
-                  {/* Marker Circle */}
-                  <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
-                    isActive 
-                      ? 'bg-[#C9A227] border-white scale-125 shadow-[0_0_12px_rgba(201,162,39,0.8)]' 
-                      : 'bg-[#05190F] border-[#C9A227] group-hover:bg-[#C9A227] group-hover:border-white shadow-md'
-                  }`}>
-                    <MapPin className={`w-2 h-2 shrink-0 ${isActive ? 'text-[#05190F]' : 'text-[#C9A227] group-hover:text-white'}`} />
-                  </div>
-
-                  {/* High Quality Minimalist Tooltip label */}
-                  <div className={`mt-1 bg-[#05190F] text-white border border-[#C9A227]/30 p-1 px-2 rounded-sm font-mono text-[8px] tracking-wider uppercase font-semibold text-center leading-none pointer-events-none shadow-md transition-all whitespace-nowrap ${
-                    isActive 
-                      ? 'opacity-100 scale-100 border-[#C9A227]' 
-                      : 'opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0.5'
-                  }`}>
-                    <span className="flex items-center gap-0.5">
-                      {isCustom && <span className="text-[#C9A227]">★</span>}
-                      {org.name}
-                    </span>
-                  </div>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+        {hasSheetsUrl && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onSyncSheetsOrigins(); }}
+            disabled={isLoadingSheet}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-gold/30 rounded-md text-gold hover:bg-gold hover:text-primary transition-all duration-300 disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={isLoadingSheet ? 'animate-spin' : ''} />
+            <span className="text-[9px] font-mono uppercase tracking-widest font-bold">Sync Origin Matrix</span>
+          </button>
+        )}
       </div>
     </div>
   );

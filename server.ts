@@ -2,7 +2,9 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
+import { spawn } from "child_process";
 import { GoogleGenAI, Type } from "@google/genai";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 // Load environment variables
 dotenv.config();
@@ -274,14 +276,21 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Proxy all /api requests to the backend server on port 4000
+  // Place this BEFORE any other app.use or app.get/post for /api
+  app.use("/api", createProxyMiddleware({
+    target: "http://localhost:4000",
+    changeOrigin: true,
+    ws: true, // support websockets
+    logLevel: 'debug',
+    onError: (err, req, res) => {
+      console.error("Proxy error:", err);
+      res.status(502).send("Bad Gateway: Backend server might be down.");
+    }
+  }));
+
   app.use(express.json());
 
-  // API Route: Healthcheck
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", time: new Date().toISOString() });
-  });
-
-  // API Route: Discovery of Leads
   app.post("/api/leads/discover", async (req, res) => {
     const { country, region, importerType, count = 5 } = req.body;
 
@@ -594,6 +603,25 @@ Return standard JSON output matching the responseSchema format. No markdown tags
       res.sendFile(path.join(distPath, "index.html"));
     });
     console.log("Serving production static assets from /dist.");
+  }
+
+  // Start backend server in development mode
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Starting backend server on port 4000...");
+    const backendProcess = spawn("npm", ["run", "dev"], {
+      cwd: path.join(process.cwd(), "backend"),
+      stdio: "inherit",
+      shell: true,
+      env: { ...process.env, PORT: "4000" }
+    });
+
+    backendProcess.on("error", (err) => {
+      console.error("Failed to start backend server:", err);
+    });
+
+    process.on("exit", () => {
+      backendProcess.kill();
+    });
   }
 
   app.listen(PORT, "0.0.0.0", () => {

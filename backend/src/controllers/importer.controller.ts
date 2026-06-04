@@ -109,3 +109,65 @@ export const deleteImporter = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
+  try {
+    const { importers } = req.body;
+    if (!importers || !Array.isArray(importers)) {
+      return res.status(400).json({ message: 'Importers array is required' });
+    }
+
+    const createdImporters = [];
+    for (const data of importers) {
+      // Basic check for existing
+      const existing = await prisma.importer.findFirst({
+        where: {
+          OR: [
+            { companyName: data.companyName },
+            { website: data.website || undefined },
+            { email: data.email || undefined }
+          ].filter(cond => cond.companyName || cond.website || cond.email) as any
+        }
+      });
+
+      if (!existing) {
+        const created = await prisma.importer.create({
+          data: {
+            companyName: data.companyName,
+            website: data.website,
+            email: data.email,
+            phone: data.phone,
+            country: data.country,
+            city: data.city,
+            leadScore: data.leadScore,
+            status: data.status || 'NEW',
+            notes: data.notes,
+            linkedin: data.linkedin
+          }
+        });
+        createdImporters.push(created);
+        
+        // Activity log
+        await prisma.activity.create({
+          data: {
+            userId: req.user!.id,
+            importerId: created.id,
+            type: 'SYSTEM',
+            description: `Importer ${created.companyName} added via Discovery.`
+          }
+        });
+        
+        // Sheets sync
+        await GoogleSheetsService.syncImporter(created).catch(() => {});
+      }
+    }
+
+    return res.status(201).json({ 
+      message: `Successfully processed ${importers.length} importers. ${createdImporters.length} new records created.`,
+      count: createdImporters.length 
+    });
+  } catch (error) {
+    logger.error('Error bulk creating importers:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -10,8 +10,8 @@ const transporter = nodemailer.createTransport({
   port: parseInt(process.env.SMTP_PORT || '465'),
   secure: process.env.SMTP_SECURE === 'true',
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
+    pass: process.env.SMTP_PASS || 'Ghfso#!@!5246!#!@g7',
   },
 });
 
@@ -29,7 +29,7 @@ export const generateDraft = async (req: AuthRequest, res: Response) => {
         importerId: importerId as string,
         subject: draft.subject,
         body: draft.body,
-        from: process.env.SMTP_FROM || '',
+        from: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
         to: importer.email || '',
         status: 'DRAFT',
         direction: 'OUTBOUND',
@@ -77,7 +77,7 @@ export const sendEmail = async (req: AuthRequest, res: Response) => {
 
     // Send actual email via Hostinger SMTP
     const info = await transporter.sendMail({
-      from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER}>`,
+      from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
       to: email.to,
       subject: email.subject,
       text: email.body,
@@ -93,18 +93,71 @@ export const sendEmail = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    await prisma.activity.create({
+    if (email.importerId) {
+      await prisma.activity.create({
+        data: {
+          userId: req.user!.id,
+          importerId: email.importerId,
+          type: 'EMAIL',
+          description: `Email sent to ${email.importer?.companyName || 'Unknown'}: ${email.subject}`
+        }
+      });
+    }
+
+    return res.json({ message: 'Email sent successfully', messageId: info.messageId });
+  } catch (error) {
+    logger.error('Email sending error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const { to, subject, body } = req.body;
+
+    if (!to || !subject || !body) {
+      return res.status(400).json({ message: 'To, subject, and body are required' });
+    }
+
+    const info = await transporter.sendMail({
+      from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
+      to,
+      subject,
+      text: body,
+      html: body.replace(/\n/g, '<br>'),
+    });
+
+    // Log the sent email in DB
+    await prisma.email.create({
       data: {
-        userId: req.user!.id,
-        importerId: email.importerId,
-        type: 'EMAIL',
-        description: `Email sent to ${email.importer?.companyName || 'Unknown'}: ${email.subject}`
+        subject,
+        body,
+        from: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
+        to,
+        status: 'SENT',
+        direction: 'OUTBOUND',
+        sentAt: new Date(),
+        messageId: info.messageId
       }
     });
 
     return res.json({ message: 'Email sent successfully', messageId: info.messageId });
   } catch (error) {
-    logger.error('Email sending error:', error);
+    logger.error('Direct email sending error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getInbox = async (req: AuthRequest, res: Response) => {
+  try {
+    const emails = await prisma.email.findMany({
+      where: { direction: 'INBOUND' },
+      orderBy: { receivedAt: 'desc' },
+      take: 50
+    });
+    return res.json(emails);
+  } catch (error) {
+    logger.error('Error fetching inbox:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

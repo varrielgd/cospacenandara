@@ -11,6 +11,7 @@ import AIContentStudioView from './components/AIContentStudioView';
 import BrandPortalView from './components/BrandPortalView';
 import CurriculumView from './components/CurriculumView';
 import GlossaryView from './components/GlossaryView';
+import EmailManagementView from './components/EmailManagementView';
 import { 
   Compass, 
   Users, 
@@ -26,7 +27,8 @@ import {
   AlertCircle,
   GraduationCap,
   BookOpen,
-  Layout
+  Layout,
+  Inbox
 } from 'lucide-react';
 
 const INITIAL_LEADS: Lead[] = [];
@@ -59,7 +61,24 @@ export default function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        let token = localStorage.getItem('token');
+        
+        // Auto-login with demo user if no token exists
+        if (!token) {
+          try {
+            const demoRes = await fetch('/api/auth/demo-login', { method: 'POST' });
+            if (demoRes.ok) {
+              const demoData = await demoRes.json();
+              token = demoData.token;
+              localStorage.setItem('token', token);
+              console.log('Auto-logged in as demo user');
+            }
+          } catch (err) {
+            console.warn('Demo login failed:', err);
+            return;
+          }
+        }
+
         if (!token) return;
 
         const headers = { 'Authorization': `Bearer ${token}` };
@@ -90,16 +109,40 @@ export default function App() {
   }, []);
 
   // Database update helpers
-  const refreshLeads = async () => {
-    const token = localStorage.getItem('token');
-    const res = await fetch('/api/importers', { 
-      headers: { 'Authorization': `Bearer ${token}` } 
-    });
-    if (res.ok) setLeads(await res.json());
-  };
+   const refreshLeads = async () => {
+     const token = localStorage.getItem('token');
+     const res = await fetch('/api/importers', { 
+       headers: { 'Authorization': `Bearer ${token}` } 
+     });
+     if (res.ok) setLeads(await res.json());
+   };
+
+   const refreshEmails = async () => {
+     const token = localStorage.getItem('token');
+     const res = await fetch('/api/emails', { 
+       headers: { 'Authorization': `Bearer ${token}` } 
+     });
+     if (res.ok) setEmails(await res.json());
+   };
+
+   const refreshSamples = async () => {
+     const token = localStorage.getItem('token');
+     const res = await fetch('/api/samples', { 
+       headers: { 'Authorization': `Bearer ${token}` } 
+     });
+     if (res.ok) setSamples(await res.json());
+   };
+
+   const refreshQuotations = async () => {
+     const token = localStorage.getItem('token');
+     const res = await fetch('/api/quotations', { 
+       headers: { 'Authorization': `Bearer ${token}` } 
+     });
+     if (res.ok) setQuotations(await res.json());
+   };
 
   // State manipulation triggers
-  const handleAddDiscoveryLeads = (newLeads: any[]) => {
+  const handleAddDiscoveryLeads = () => {
     // Discovery results are already saved to DB by backend
     // Just refresh the frontend list
     refreshLeads();
@@ -168,93 +211,138 @@ export default function App() {
     }
   };
 
-  const handleSaveOrUpdateEmail = (emailData: EmailLog) => {
-    const exists = emails.some(e => e.id === emailData.id);
-    let updatedLists: EmailLog[];
-    if (exists) {
-      updatedLists = emails.map(e => e.id === emailData.id ? emailData : e);
-    } else {
-      updatedLists = [...emails, emailData];
-    }
-    updateEmails(updatedLists);
+  const handleSaveOrUpdateEmail = async (emailData: EmailLog) => {
+    try {
+      const token = localStorage.getItem('token');
+      const isNew = !emailData.id || emailData.id.includes('draft');
+      const url = isNew ? '/api/emails' : `/api/emails/${emailData.id}`;
+      const method = isNew ? 'POST' : 'PUT';
 
-    // Update status to 'Contacted' automatically if sent
-    if (emailData.status === 'Sent') {
-      handleUpdateLeadStatus(emailData.leadId, 'Contacted');
-    }
-  };
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(emailData)
+      });
 
-  const handleAddSample = (sampleData: Omit<Sample, 'id' | 'sampleRequestDate'>) => {
-    const fresh: Sample = {
-      ...sampleData,
-      id: `sample_pkg_${Date.now()}`,
-      sampleRequestDate: new Date().toISOString().split('T')[0]
-    };
-    updateSamples([...samples, fresh]);
-
-    // Mark status on CRM as "Sample Requested" or "Sample Sent"
-    const leadMatch = leads.find(l => l.id === sampleData.leadId);
-    if (leadMatch) {
-      const targetState = sampleData.status === 'Shipped' ? 'Sample Sent' : 'Sample Requested';
-      handleUpdateLeadStatus(sampleData.leadId, targetState);
+      if (response.ok) {
+        refreshEmails();
+        // Update status to 'Contacted' automatically if sent
+        if (emailData.status === 'Sent') {
+          handleUpdateLeadStatus(emailData.leadId, 'Contacted');
+        }
+      }
+    } catch (err) {
+      console.error('Error saving email:', err);
     }
   };
 
-  const handleUpdateSampleStatus = (sampleId: string, targetStatus: Sample['status'], trackingNumber?: string) => {
-    const updated = samples.map(s => {
-      if (s.id === sampleId) {
-        return {
-          ...s,
-          status: targetStatus,
-          trackingNumber: trackingNumber !== undefined ? trackingNumber : s.trackingNumber
-        };
-      }
-      return s;
-    });
-    updateSamples(updated);
+  const handleAddSample = async (sampleData: Omit<Sample, 'id' | 'sampleRequestDate'>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/samples', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(sampleData)
+      });
 
-    // Update crm state matching shipped/delivered if relevant
-    const sample = samples.find(s => s.id === sampleId);
-    if (sample) {
-      if (targetStatus === 'Shipped') {
-        handleUpdateLeadStatus(sample.leadId, 'Sample Sent');
-      } else if (targetStatus === 'Delivered') {
-        handleUpdateLeadStatus(sample.leadId, 'Replied'); // Promotes state
+      if (response.ok) {
+        refreshSamples();
+        // Mark status on CRM as "Sample Requested" or "Sample Sent"
+        const targetState = sampleData.status === 'Shipped' ? 'Sample Sent' : 'Sample Requested';
+        handleUpdateLeadStatus(sampleData.leadId, targetState);
       }
+    } catch (err) {
+      console.error('Error adding sample:', err);
     }
   };
 
-  const handleAddQuotation = (quoteData: Omit<Quotation, 'quoteNumber' | 'dateCreated'>) => {
-    const fresh: Quotation = {
-      ...quoteData,
-      quoteNumber: `QT-2026-${Math.floor(10000 + Math.random() * 90000)}`,
-      dateCreated: new Date().toISOString().split('T')[0]
-    };
-    updateQuotations([...quotations, fresh]);
+  const handleUpdateSampleStatus = async (sampleId: string, targetStatus: Sample['status'], trackingNumber?: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/samples/${sampleId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: targetStatus, trackingNumber })
+      });
 
-    // Automatically advance CRM status to "Quotation Sent" if draft isn't default
-    const targetStatus = quoteData.status === 'Sent' ? 'Quotation Sent' : 'Negotiation';
-    handleUpdateLeadStatus(quoteData.leadId, targetStatus);
+      if (response.ok) {
+        refreshSamples();
+        
+        // Find leadId for the sample to update status
+        const sample = samples.find(s => s.id === sampleId);
+        if (sample) {
+          if (targetStatus === 'Shipped') {
+            handleUpdateLeadStatus(sample.leadId, 'Sample Sent');
+          } else if (targetStatus === 'Delivered') {
+            handleUpdateLeadStatus(sample.leadId, 'Replied');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error updating sample status:', err);
+    }
   };
 
-  const handleUpdateQuotationStatus = (number: string, targetStatus: Quotation['status']) => {
-    const updated = quotations.map(q => {
-      if (q.quoteNumber === number) {
-        return { ...q, status: targetStatus };
-      }
-      return q;
-    });
-    updateQuotations(updated);
+  const handleAddQuotation = async (quoteData: Omit<Quotation, 'quoteNumber' | 'dateCreated'>) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/quotations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(quoteData)
+      });
 
-    const quote = quotations.find(q => q.quoteNumber === number);
-    if (quote) {
-      if (targetStatus === 'Accepted') {
-        handleUpdateLeadStatus(quote.leadId, 'Order Confirmed');
-      } else if (targetStatus === 'Sent') {
-        handleUpdateLeadStatus(quote.leadId, 'Quotation Sent');
-      } else if (targetStatus === 'Declined') {
-        handleUpdateLeadStatus(quote.leadId, 'Closed Lost');
+      if (response.ok) {
+        refreshQuotations();
+        // Automatically advance CRM status to "Quotation Sent" if draft isn't default
+        const targetStatus = quoteData.status === 'Sent' ? 'Quotation Sent' : 'Negotiation';
+        handleUpdateLeadStatus(quoteData.leadId, targetStatus);
       }
+    } catch (err) {
+      console.error('Error adding quotation:', err);
+    }
+  };
+
+  const handleUpdateQuotationStatus = async (number: string, targetStatus: Quotation['status']) => {
+    try {
+      const token = localStorage.getItem('token');
+      // Need to find ID by quotation number or update API to accept number
+      const quote = quotations.find(q => q.quoteNumber === number)!
+      if (!quote) return;
+
+const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: targetStatus })
+      });
+
+      if (response.ok) {
+        refreshQuotations();
+        if (targetStatus === 'Accepted') {
+          handleUpdateLeadStatus(quote.leadId, 'Order Confirmed');
+        } else if (targetStatus === 'Sent') {
+          handleUpdateLeadStatus(quote.leadId, 'Quotation Sent');
+        } else if (targetStatus === 'Declined') {
+          handleUpdateLeadStatus(quote.leadId, 'Closed Lost');
+        }
+      }
+    } catch (err) {
+      console.error('Error updating quotation status:', err);
     }
   };
 
@@ -433,6 +521,18 @@ export default function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('email-management')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'email-management' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Inbox className="w-4 h-4 shrink-0 text-gold" />
+              <span>Mail Management</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('samples')}
               className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
                 activeTab === 'samples' 
@@ -516,6 +616,7 @@ export default function App() {
               {activeTab === 'discovery' && "Worldwide Importer Search Engine"}
               {activeTab === 'crm' && "Indonesian Export Leads CRM Board"}
               {activeTab === 'email' && "AI Personalized B2B Pitch Suite"}
+              {activeTab === 'email-management' && "Direct Mail Management (Hostinger)"}
               {activeTab === 'samples' && "Specialty Physical Samples Dispatch"}
               {activeTab === 'quotation' && "Export Quota and Commercial Terms"}
               {activeTab === 'curriculum' && "Premium Export Academy & Curriculum"}
@@ -592,6 +693,10 @@ export default function App() {
               emailLogs={emails}
               quotations={quotations}
             />
+          )}
+
+          {activeTab === 'email-management' && (
+            <EmailManagementView />
           )}
 
           {activeTab === 'samples' && (
