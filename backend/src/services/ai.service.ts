@@ -84,7 +84,7 @@ export class AiService {
       logger.info('Attempting AI generation with Groq...');
       const completion = await this.groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: process.env.GROQ_MODEL || 'llama3-70b-8192',
+        model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
         response_format: responseMimeType === 'application/json' ? { type: 'json_object' } : undefined
       });
 
@@ -103,8 +103,10 @@ export class AiService {
   private static async tryGemini(prompt: string, responseMimeType?: string) {
     try {
       logger.info('Attempting AI generation with Gemini...');
+      // Use the standard model name without explicit version if possible
+      const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
       const model = this.genAI.getGenerativeModel({ 
-        model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+        model: modelName,
         generationConfig: responseMimeType === 'application/json' ? { responseMimeType: 'application/json' } : undefined
       });
       const result = await model.generateContent(prompt);

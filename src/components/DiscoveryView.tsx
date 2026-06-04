@@ -3,18 +3,15 @@ import { Lead } from '../types';
 import { 
   Search, 
   MapPin, 
-  CheckCircle, 
   Plus, 
   Mail, 
   AlertCircle, 
   Compass, 
   ArrowRight,
-  Sparkles,
   Link as LinkIcon,
   Phone,
   Linkedin,
   Clock,
-  ShieldCheck,
   Check,
   RefreshCw,
   Loader2,
@@ -24,7 +21,6 @@ import {
 
 interface DiscoveryViewProps {
   onAddLeads: (newLeads: Lead[]) => void;
-  existingLeads: Lead[];
 }
 
 interface DiscoverySession {
@@ -37,16 +33,13 @@ interface DiscoverySession {
   error?: string;
 }
 
-export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryViewProps) {
+export default function DiscoveryView({ onAddLeads }: DiscoveryViewProps) {
   const [country, setCountry] = useState('Germany');
   const [region, setRegion] = useState('');
   const [importerType, setImporterType] = useState('Green Coffee Importer');
-  const [count, setCount] = useState(5);
   const [isLoading, setIsLoading] = useState(false);
   const [discoveredLeads, setDiscoveredLeads] = useState<Lead[]>([]);
   const [selectedLeads, setSelectedLeads] = useState<{ [key: string]: boolean }>({});
-  const [activeAnalysisLead, setActiveAnalysisLead] = useState<Lead | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -71,16 +64,31 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     'Private Label Coffee Brand'
   ];
 
-  // Restore session from localStorage on mount and fetch recent sessions
+  // Restore session and leads from localStorage on mount
   useEffect(() => {
     const savedSessionId = localStorage.getItem('discoverySessionId');
+    const savedLeads = localStorage.getItem('discoveryLastResults');
+    
     if (savedSessionId) {
       setCurrentSessionId(savedSessionId);
       setIsLoading(true);
       setStatusMessage('Restoring discovery session...');
+    } else if (savedLeads) {
+      try {
+        setDiscoveredLeads(JSON.parse(savedLeads));
+      } catch (e) {
+        console.error('Error parsing saved leads:', e);
+      }
     }
     fetchRecentSessions();
   }, []);
+
+  // Save results to localStorage whenever they change
+  useEffect(() => {
+    if (discoveredLeads.length > 0) {
+      localStorage.setItem('discoveryLastResults', JSON.stringify(discoveredLeads));
+    }
+  }, [discoveredLeads]);
 
   const fetchRecentSessions = async () => {
     try {
@@ -232,6 +240,10 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+      
       const response = await fetch('/api/discovery/start', {
         method: 'POST',
         headers: {
@@ -442,121 +454,134 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
               )}
             </div>
           ) : (
-            <form onSubmit={handleDiscover} className="space-y-4">
+            <div className="space-y-6">
 
-            {/* Country Selection */}
-            <div>
-              <label className="block text-[#8fb499] text-sm mb-2">Target Country</label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white focus:border-[#d4af37] focus:outline-none"
-                disabled={isLoading}
-              >
-                {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
+            {/* Progress Bar or Status */}
+            {currentSessionId && (
+              <div className="space-y-4 p-4 bg-[#1a3a2a] rounded-lg border border-[#d4af37]/20">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-mono uppercase tracking-widest text-[#d4af37]">Session Active</span>
+                  <span className="text-[10px] text-[#8fb499]">{currentSessionId.substring(0, 8)}...</span>
+                </div>
+                
+                {progress.total > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] text-[#8fb499] uppercase tracking-widest">
+                      <span>Analyzing Market</span>
+                      <span>{Math.round((progress.processed / progress.total) * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 bg-[#0f2318] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#d4af37] transition-all duration-500"
+                        style={{ width: `${Math.min(100, (progress.processed / progress.total) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
 
-            {/* Region (Optional) */}
-            <div>
-              <label className="block text-[#8fb499] text-sm mb-2">Region (Optional)</label>
-              <input
-                type="text"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="e.g., Bavaria, California..."
-                className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white placeholder-gray-500 focus:border-[#d4af37] focus:outline-none"
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Importer Type */}
-            <div>
-              <label className="block text-[#8fb499] text-sm mb-2">Importer Type</label>
-              <select
-                value={importerType}
-                onChange={(e) => setImporterType(e.target.value)}
-                className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white focus:border-[#d4af37] focus:outline-none"
-                disabled={isLoading}
-              >
-                {importerTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Message */}
-            {statusMessage && (
-              <div className={`p-3 rounded-md text-sm ${error ? 'bg-red-900/30 text-red-400' : 'bg-[#1a3a2a] text-[#8fb499]'}`}>
-                {error ? <AlertCircle className="w-4 h-4 inline mr-2" /> : <Loader2 className="w-4 h-4 inline mr-2 animate-spin" />}
-                {statusMessage}
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentSessionId(null);
+                      localStorage.removeItem('discoverySessionId');
+                      setIsLoading(false);
+                      setStatusMessage('');
+                    }}
+                    className="flex-1 py-2 bg-white/5 border border-white/10 text-white rounded text-[10px] font-mono uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    New Search
+                  </button>
+                  {isLoading && (
+                    <button
+                      type="button"
+                      onClick={cancelDiscovery}
+                      className="px-4 py-2 bg-red-900/30 text-red-400 rounded text-[10px] font-mono uppercase tracking-widest hover:bg-red-900/50 transition-all"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Progress Bar */}
-            {isLoading && progress.total > 0 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-[#8fb499]">
-                  <span>Progress</span>
-                  <span>{Math.round((progress.processed / progress.total) * 100)}%</span>
+            {!currentSessionId && (
+              <form onSubmit={handleDiscover} className="space-y-4">
+                {/* Country Selection */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-[#8fb499] mb-2">Target Country</label>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white focus:border-[#d4af37] focus:outline-none text-sm"
+                    disabled={isLoading}
+                  >
+                    {countries.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="h-2 bg-[#0f2318] rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-[#d4af37] transition-all duration-500"
-                    style={{ width: `${Math.min(100, (progress.processed / progress.total) * 100)}%` }}
+
+                {/* Region (Optional) */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-[#8fb499] mb-2">Region (Optional)</label>
+                  <input
+                    type="text"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    placeholder="e.g., Bavaria, California..."
+                    className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white placeholder-gray-500 focus:border-[#d4af37] focus:outline-none text-sm"
+                    disabled={isLoading}
                   />
                 </div>
-              </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-md font-medium transition-all ${
-                  isLoading
-                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-[#d4af37] text-[#0a1a12] hover:bg-[#c4a030]'
-                }`}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Scouting...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5" />
-                    Discover
-                  </>
+                {/* Importer Type */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-[#8fb499] mb-2">Importer Type</label>
+                  <select
+                    value={importerType}
+                    onChange={(e) => setImporterType(e.target.value)}
+                    className="w-full bg-[#0f2318] border border-[#1a3a2a] rounded-md px-4 py-3 text-white focus:border-[#d4af37] focus:outline-none text-sm"
+                    disabled={isLoading}
+                  >
+                    {importerTypes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Status Message */}
+                {statusMessage && (
+                  <div className={`p-3 rounded-md text-[10px] font-mono uppercase tracking-widest ${error ? 'bg-red-900/30 text-red-400' : 'bg-[#1a3a2a] text-[#8fb499]'}`}>
+                    {error ? <AlertCircle className="w-3 h-3 inline mr-2" /> : <Loader2 className="w-3 h-3 inline mr-2 animate-spin" />}
+                    {statusMessage}
+                  </div>
                 )}
-              </button>
 
-              {isLoading && (
                 <button
-                  type="button"
-                  onClick={cancelDiscovery}
-                  className="px-4 py-3 bg-red-900/30 text-red-400 rounded-md hover:bg-red-900/50 transition-colors"
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full flex items-center justify-center gap-2 px-4 py-4 rounded-md font-bold uppercase tracking-[0.2em] text-[11px] transition-all ${
+                    isLoading
+                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#d4af37] text-[#0a1a12] hover:bg-[#c4a030] shadow-lg shadow-gold/10'
+                  }`}
                 >
-                  Cancel
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Scouting...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4" />
+                      Start AI Discovery
+                    </>
+                  )}
                 </button>
-              )}
-
-              {!isLoading && discoveredLeads.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => handleImportSelected()}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-700 text-white rounded-md hover:bg-green-600 transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  Import ({Object.values(selectedLeads).filter(Boolean).length})
-                </button>
-              )}
-            </div>
-            </form>
+              </form>
+            )}
+          </div>
           )}
         </div>
 
