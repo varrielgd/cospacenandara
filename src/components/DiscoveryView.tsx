@@ -242,9 +242,10 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     setIsLoading(true);
     setStatusMessage('Starting discovery session...');
     setError(null);
-    setDiscoveredLeads([]);
+    setDiscoveredLeads([]); // Clear previous leads immediately
     setSelectedLeads({});
     setProgress({ total: 0, processed: 0 });
+    localStorage.removeItem('discoveryLastResults'); // Clear cache
 
     try {
       const token = localStorage.getItem('token');
