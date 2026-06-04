@@ -1,0 +1,171 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.bulkCreateImporters = exports.deleteImporter = exports.updateImporter = exports.createImporter = exports.getImporterById = exports.getAllImporters = void 0;
+const index_1 = require("../index");
+const google_sheets_service_1 = require("../services/google-sheets.service");
+const getAllImporters = async (req, res) => {
+    try {
+        const importers = await index_1.prisma.importer.findMany({
+            include: {
+                contacts: true,
+                _count: {
+                    select: { samples: true, quotations: true, emails: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        return res.json(importers);
+    }
+    catch (error) {
+        index_1.logger.error('Error fetching importers:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllImporters = getAllImporters;
+const getImporterById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id)
+            return res.status(400).json({ message: 'ID is required' });
+        const importer = await index_1.prisma.importer.findUnique({
+            where: { id: id },
+            include: {
+                contacts: true,
+                samples: true,
+                quotations: true,
+                emails: true,
+                activities: {
+                    orderBy: { createdAt: 'desc' }
+                },
+                importerNotes: true,
+                tasks: true,
+                attachments: true
+            }
+        });
+        if (!importer) {
+            return res.status(404).json({ message: 'Importer not found' });
+        }
+        return res.json(importer);
+    }
+    catch (error) {
+        index_1.logger.error('Error fetching importer:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getImporterById = getImporterById;
+const createImporter = async (req, res) => {
+    try {
+        const importerData = req.body;
+        const importer = await index_1.prisma.importer.create({
+            data: importerData
+        });
+        // Log activity
+        await index_1.prisma.activity.create({
+            data: {
+                userId: req.user.id,
+                importerId: importer.id,
+                type: 'SYSTEM',
+                description: `Importer ${importer.companyName} created manually.`
+            }
+        });
+        // Sync to Google Sheets
+        await google_sheets_service_1.GoogleSheetsService.syncImporter(importer);
+        return res.status(201).json(importer);
+    }
+    catch (error) {
+        index_1.logger.error('Error creating importer:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.createImporter = createImporter;
+const updateImporter = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id)
+            return res.status(400).json({ message: 'ID is required' });
+        const importerData = req.body;
+        const importer = await index_1.prisma.importer.update({
+            where: { id: id },
+            data: importerData
+        });
+        return res.json(importer);
+    }
+    catch (error) {
+        index_1.logger.error('Error updating importer:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.updateImporter = updateImporter;
+const deleteImporter = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id)
+            return res.status(400).json({ message: 'ID is required' });
+        await index_1.prisma.importer.delete({ where: { id: id } });
+        return res.status(204).send();
+    }
+    catch (error) {
+        index_1.logger.error('Error deleting importer:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.deleteImporter = deleteImporter;
+const bulkCreateImporters = async (req, res) => {
+    try {
+        const { importers } = req.body;
+        if (!importers || !Array.isArray(importers)) {
+            return res.status(400).json({ message: 'Importers array is required' });
+        }
+        const createdImporters = [];
+        for (const data of importers) {
+            // Basic check for existing
+            const existing = await index_1.prisma.importer.findFirst({
+                where: {
+                    OR: [
+                        { companyName: data.companyName },
+                        { website: data.website || undefined },
+                        { email: data.email || undefined }
+                    ].filter(cond => cond.companyName || cond.website || cond.email)
+                }
+            });
+            if (!existing) {
+                const created = await index_1.prisma.importer.create({
+                    data: {
+                        companyName: data.companyName,
+                        website: data.website,
+                        email: data.email,
+                        phone: data.phone,
+                        country: data.country,
+                        city: data.city,
+                        leadScore: data.leadScore,
+                        status: data.status || 'NEW',
+                        notes: data.notes,
+                        linkedin: data.linkedin
+                    }
+                });
+                createdImporters.push(created);
+                // Activity log
+                await index_1.prisma.activity.create({
+                    data: {
+                        userId: req.user.id,
+                        importerId: created.id,
+                        type: 'SYSTEM',
+                        description: `Importer ${created.companyName} added via Discovery.`
+                    }
+                });
+                // Sheets sync
+                await google_sheets_service_1.GoogleSheetsService.syncImporter(created).catch(() => { });
+            }
+        }
+        return res.status(201).json({
+            message: `Successfully processed ${importers.length} importers. ${createdImporters.length} new records created.`,
+            count: createdImporters.length
+        });
+    }
+    catch (error) {
+        index_1.logger.error('Error bulk creating importers:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.bulkCreateImporters = bulkCreateImporters;
+//# sourceMappingURL=importer.controller.js.map

@@ -206,33 +206,59 @@ export const me = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const demoLogin = async (req: Request, res: Response) => {
+export const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
-    const demoEmail = 'demo@nandaracoffee.com';
-    
-    const user = await prisma.user.findUnique({ where: { email: demoEmail } });
-    if (!user) {
-      return res.status(404).json({ message: 'Demo user not found. Server may not be initialized.' });
-    }
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '24h' }
-    );
-
-    return res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isVerified: true,
+        createdAt: true
       }
     });
+    return res.json(users);
   } catch (error) {
-    logger.error('Demo login error:', error);
+    logger.error('Get all users error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteUser = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    // Prevent self-deletion
+    if (id === req.user?.id) {
+      return res.status(400).json({ message: 'Cannot delete your own account' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Protect permanent admins (from index.ts)
+    const permanentEmails = ['nandaranusamontierra@gmail.com', 'nandalatifanibudiarti97@gmail.com'];
+    if (permanentEmails.includes(user.email)) {
+      return res.status(403).json({ message: 'Cannot delete a permanent system administrator' });
+    }
+
+    // Delete related data first (cascading manual delete for SQLite compatibility if needed, 
+    // but schema uses onDelete: Cascade mostly)
+    await prisma.activity.deleteMany({ where: { userId: id } });
+    await prisma.note.deleteMany({ where: { userId: id } });
+    await prisma.task.deleteMany({ where: { userId: id } });
+    await prisma.discoverySession.deleteMany({ where: { userId: id } });
+    await prisma.auditLog.deleteMany({ where: { userId: id } });
+
+    await prisma.user.delete({ where: { id } });
+    
+    return res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    logger.error('Delete user error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

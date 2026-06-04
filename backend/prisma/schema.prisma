@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -127,14 +127,14 @@ model Importer {
   linkedin             String?
   country              String?
   city                 String?
-  address              String?              @db.Text
+  address              String?
   coffeeType           String?
   greenBeanInterest    Boolean              @default(false)
   roastedBeanInterest  Boolean              @default(false)
   leadScore            LeadScore?
   confidenceScore      Float?
   status               ImporterStatus       @default(NEW)
-  notes                String?              @db.Text
+  notes                String?
   emailValidation      EmailValidationStatus @default(UNKNOWN)
   emailValidatedAt     DateTime?
   createdAt            DateTime             @default(now())
@@ -184,7 +184,7 @@ model Email {
   importer      Importer?      @relation(fields: [importerId], references: [id], onDelete: Cascade)
   messageId     String?        @unique // From Hostinger
   subject       String
-  body          String         @db.LongText
+  body          String
   from          String
   to            String
   status        EmailStatus    @default(DRAFT)
@@ -210,8 +210,8 @@ model Sample {
   paymentStatus  String       @default("PENDING") // PENDING, CONFIRMED
   shipmentDate   DateTime?
   deliveryDate   DateTime?
-  feedback       String?      @db.Text
-  notes          String?      @db.Text
+  feedback       String?
+  notes          String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
@@ -245,7 +245,7 @@ model Activity {
   importerId  String?
   importer    Importer? @relation(fields: [importerId], references: [id])
   type        String   // EMAIL, CALL, MEETING, NOTE, TASK
-  description String   @db.Text
+  description String
   createdAt   DateTime @default(now())
 }
 
@@ -255,7 +255,7 @@ model Note {
   user        User     @relation(fields: [userId], references: [id])
   importerId  String
   importer    Importer @relation(fields: [importerId], references: [id], onDelete: Cascade)
-  content     String   @db.Text
+  content     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -267,7 +267,7 @@ model Task {
   importerId  String?
   importer    Importer? @relation(fields: [importerId], references: [id])
   title       String
-  description String?   @db.Text
+  description String?
   dueDate     DateTime?
   completed   Boolean   @default(false)
   createdAt   DateTime  @default(now())
@@ -303,7 +303,7 @@ model LeadSource {
 model Setting {
   id        String   @id @default(uuid())
   key       String   @unique
-  value     String   @db.Text
+  value     String
   updatedAt DateTime @updatedAt
 }
 
@@ -314,7 +314,7 @@ model AuditLog {
   action    String
   entity    String
   entityId  String?
-  details   String?  @db.Text
+  details   String?
   ipAddress String?
   createdAt DateTime @default(now())
 }
@@ -327,9 +327,9 @@ model DiscoverySession {
   status         DiscoveryStatus @default(PENDING)
   totalFound     Int             @default(0)
   totalProcessed Int             @default(0)
-  importerIds    String          @db.Text // JSON array of importer IDs found
-  resultsJson    String?         @db.LongText // Detailed results
-  error          String?         @db.Text
+  importerIds    String // JSON array of importer IDs found
+  resultsJson    String? // Detailed results
+  error          String?
   startedAt      DateTime?
   completedAt    DateTime?
   createdAt      DateTime        @default(now())

@@ -21,6 +21,7 @@ import {
 
 interface DiscoveryViewProps {
   onAddLeads: (newLeads: Lead[]) => void;
+  existingLeads: Lead[];
 }
 
 interface DiscoverySession {
@@ -33,7 +34,7 @@ interface DiscoverySession {
   error?: string;
 }
 
-export default function DiscoveryView({ onAddLeads }: DiscoveryViewProps) {
+export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryViewProps) {
   const [country, setCountry] = useState('Germany');
   const [region, setRegion] = useState('');
   const [importerType, setImporterType] = useState('Green Coffee Importer');
@@ -173,7 +174,14 @@ export default function DiscoveryView({ onAddLeads }: DiscoveryViewProps) {
           setIsLoading(false);
           setCurrentSessionId(null);
           localStorage.removeItem('discoverySessionId');
-          setStatusMessage(`Discovery completed! Found ${data.totalFound} new importers.`);
+          
+          if (data.totalFound === 0) {
+            setError('The AI was unable to find specific data for this region. Please try a broader search or a different country.');
+            setStatusMessage('');
+          } else {
+            setStatusMessage(`Discovery completed! Found ${data.totalFound} new importers.`);
+          }
+          
           fetchRecentSessions(); // Refresh history list
           
           // Auto-add to CRM after 2 seconds
@@ -257,7 +265,8 @@ export default function DiscoveryView({ onAddLeads }: DiscoveryViewProps) {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || errData.error || 'API server returned error state.');
+        console.error('API Error Data:', errData);
+        throw new Error(errData.message || errData.error || `Server error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -317,12 +326,10 @@ export default function DiscoveryView({ onAddLeads }: DiscoveryViewProps) {
         alert(data.message);
         onAddLeads(toImport); // Refresh main CRM list
         
-        // Clear session and leads after import
-        setDiscoveredLeads([]);
+        // Don't clear leads immediately so the user can still see what they just imported
+        // Only clear the selection
         setSelectedLeads({});
-        setStatusMessage('');
-        localStorage.removeItem('discoverySessionId');
-        setCurrentSessionId(null);
+        setStatusMessage('Importers successfully added to CRM.');
       } else {
         alert('Failed to import leads to database.');
       }
@@ -629,6 +636,11 @@ export default function DiscoveryView({ onAddLeads }: DiscoveryViewProps) {
                           className="w-4 h-4 rounded border-[#1a3a2a] text-[#d4af37] focus:ring-[#d4af37]"
                         />
                         <h3 className="font-semibold text-white">{lead.companyName}</h3>
+                        {existingLeads.some(ex => (lead.email && ex.email === lead.email) || (ex.companyName.toLowerCase() === lead.companyName.toLowerCase())) && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-900/30 text-blue-400 border border-blue-400/20">
+                            Already in CRM
+                          </span>
+                        )}
                         {lead.leadScore && (
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                             lead.leadScore === 'A' ? 'bg-green-900/50 text-green-400' :

@@ -1,5 +1,5 @@
 import Groq from 'groq-sdk';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { logger } from '../index';
 
 export class AiService {
@@ -18,29 +18,31 @@ export class AiService {
   static async generateContent(prompt: string, options: { systemPrompt?: string; responseMimeType?: string } = {}) {
     const fullPrompt = options.systemPrompt ? `${options.systemPrompt}\n\nUser Query: ${prompt}` : prompt;
 
+    logger.info(`AI Request initiated using ${this.primaryProvider} provider`);
+
     if (this.primaryProvider === 'gemini') {
       try {
         return await this.tryGemini(fullPrompt, options.responseMimeType);
-      } catch (error) {
-        logger.warn('Gemini failed or limited, falling back to Groq');
+      } catch (error: any) {
+        logger.warn(`Gemini failed (${error.message}), falling back to Groq`);
         this.primaryProvider = 'groq';
         try {
           return await this.tryGroq(fullPrompt, options.responseMimeType);
-        } catch (groqError) {
-          logger.error('Both AI providers failed');
+        } catch (groqError: any) {
+          logger.error(`Both AI providers failed. Groq error: ${groqError.message}`);
           throw groqError;
         }
       }
     } else {
       try {
         return await this.tryGroq(fullPrompt, options.responseMimeType);
-      } catch (error) {
-        logger.warn('Groq failed or limited, falling back to Gemini');
+      } catch (error: any) {
+        logger.warn(`Groq failed (${error.message}), falling back to Gemini`);
         this.primaryProvider = 'gemini';
         try {
           return await this.tryGemini(fullPrompt, options.responseMimeType);
-        } catch (geminiError) {
-          logger.error('Both AI providers failed');
+        } catch (geminiError: any) {
+          logger.error(`Both AI providers failed. Gemini error: ${geminiError.message}`);
           throw geminiError;
         }
       }
@@ -85,17 +87,23 @@ export class AiService {
       const completion = await this.groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
         model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-        response_format: responseMimeType === 'application/json' ? { type: 'json_object' } : undefined
+        response_format: responseMimeType === 'application/json' ? { type: 'json_object' } : undefined,
+        temperature: 0.2,
+        max_tokens: 2000
       });
 
       const content = completion.choices[0]?.message?.content;
       if (content) {
+        logger.info('Groq response received successfully');
         return content;
       }
       throw new Error('Groq returned empty response');
     } catch (error: any) {
       const isRateLimit = error?.status === 429 || error?.message?.includes('rate limit');
       logger.warn(`Groq ${isRateLimit ? 'rate limited' : 'failed'}: ${error.message}`);
+      if (error.response?.data) {
+        logger.debug('Groq error details:', JSON.stringify(error.response.data));
+      }
       throw error;
     }
   }
@@ -103,19 +111,41 @@ export class AiService {
   private static async tryGemini(prompt: string, responseMimeType?: string) {
     try {
       logger.info('Attempting AI generation with Gemini...');
-      // Use the standard model name without explicit version if possible
       const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+      
+      const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ];
+
       const model = this.genAI.getGenerativeModel({ 
         model: modelName,
-        generationConfig: responseMimeType === 'application/json' ? { responseMimeType: 'application/json' } : undefined
+        generationConfig: {
+          temperature: 0.2,
+          topP: 0.8,
+          topK: 40,
+          maxOutputTokens: 2048,
+          responseMimeType: responseMimeType === 'application/json' ? 'application/json' : 'text/plain',
+        },
+        safetySettings
       });
+
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
       if (text) {
+        logger.info('Gemini response received successfully');
         return text;
       }
+      
+      // If no text, check if it was blocked
+      if (response.promptFeedback?.blockReason) {
+        throw new Error(`Gemini blocked the request: ${response.promptFeedback.blockReason}`);
+      }
+
       throw new Error('Gemini returned empty response');
     } catch (error: any) {
       const isRateLimit = error?.message?.includes('429') || error?.message?.includes('rate limit');

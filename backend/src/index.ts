@@ -92,56 +92,39 @@ const initializeAdminUser = async () => {
     const adminEmail = 'nandaranusamontierra@gmail.com';
     const adminPassword = 'Ghfso#!@!5246!#!@g7';
     
-    // Check if permanent admin exists
-    const existingAdmin = await prisma.user.findUnique({
-      where: { email: adminEmail }
-    });
-    
-    if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      // @ts-ignore - isVerified exists in DB but client might need regeneration
-      await prisma.user.create({
-        data: {
-          email: adminEmail,
-          password: hashedPassword,
-          firstName: 'Permanent',
-          lastName: 'Admin',
-          role: 'ADMIN',
-          isVerified: true,
-          twoFactorEnabled: false
-        }
-      });
-      logger.info('Permanent admin user created successfully');
-    } else if (!(existingAdmin as any).isVerified) {
-      // Ensure permanent admin is always verified
-      // @ts-ignore
-      await prisma.user.update({
-        where: { email: adminEmail },
-        data: { isVerified: true }
-      });
-    }
+    // Check and create permanent admins
+    const permanentAdmins = [
+      { email: 'nandaranusamontierra@gmail.com', firstName: 'Nandara', lastName: 'Admin' },
+      { email: 'nandalatifanibudiarti97@gmail.com', firstName: 'Nanda', lastName: 'Latifani' }
+    ];
 
-    // Initialize demo user if needed
-    const demoEmail = 'demo@nandaracoffee.com';
-    const demoPassword = 'demo123456';
-    const existingDemo = await prisma.user.findUnique({
-      where: { email: demoEmail }
-    });
-    
-    if (!existingDemo) {
-      const hashedDemoPassword = await bcrypt.hash(demoPassword, 10);
-      // @ts-ignore
-      await prisma.user.create({
-        data: {
-          email: demoEmail,
-          password: hashedDemoPassword,
-          firstName: 'Demo',
-          lastName: 'User',
-          role: 'ADMIN',
-          isVerified: true
-        }
+    for (const admin of permanentAdmins) {
+      const existing = await prisma.user.findUnique({
+        where: { email: admin.email }
       });
-      logger.info('Demo user created successfully');
+
+      if (!existing) {
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        // @ts-ignore
+        await prisma.user.create({
+          data: {
+            email: admin.email,
+            password: hashedPassword,
+            firstName: admin.firstName,
+            lastName: admin.lastName,
+            role: 'ADMIN',
+            isVerified: true,
+            twoFactorEnabled: false
+          }
+        });
+        logger.info(`Permanent admin ${admin.email} created successfully`);
+      } else if (!(existing as any).isVerified) {
+        // @ts-ignore
+        await prisma.user.update({
+          where: { email: admin.email },
+          data: { isVerified: true }
+        });
+      }
     }
   } catch (error) {
     logger.error('Error initializing users:', error);

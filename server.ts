@@ -14,7 +14,8 @@ async function startServer() {
 
   // Proxy all /api requests to the backend server on port 4000
   // This ensures frontend calls to /api reach the real backend
-  app.use("/api", createProxyMiddleware({
+  app.use(createProxyMiddleware({
+    pathFilter: "/api",
     target: "http://127.0.0.1:4000",
     changeOrigin: true,
     ws: true,

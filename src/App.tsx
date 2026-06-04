@@ -12,6 +12,8 @@ import BrandPortalView from './components/BrandPortalView';
 import CurriculumView from './components/CurriculumView';
 import GlossaryView from './components/GlossaryView';
 import EmailManagementView from './components/EmailManagementView';
+import LoginView from './components/LoginView';
+import UserManagementView from './components/UserManagementView';
 import { 
   Compass, 
   Users, 
@@ -28,7 +30,10 @@ import {
   GraduationCap,
   BookOpen,
   Layout,
-  Inbox
+  Inbox,
+  LogOut,
+  User,
+  ShieldCheck
 } from 'lucide-react';
 
 const INITIAL_LEADS: Lead[] = [];
@@ -37,6 +42,9 @@ const INITIAL_EMAILS: EmailLog[] = [];
 const INITIAL_QUOTES: Quotation[] = [];
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [activeTab, setActiveTabState] = useState<string>('dashboard');
   const [activeLang, setActiveLang] = useState<string>('id');
   
@@ -57,50 +65,72 @@ export default function App() {
   const [selectedLeadForSample, setSelectedLeadForSample] = useState<Lead | null>(null);
   const [selectedLeadForQuote, setSelectedLeadForQuote] = useState<Lead | null>(null);
 
+  const handleLoginSuccess = (token: string, user: any) => {
+    localStorage.setItem('token', token);
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+    fetchData(token);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setLeads([]);
+    setEmails([]);
+    setSamples([]);
+    setQuotations([]);
+  };
+
+  const fetchData = async (token: string) => {
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      
+      const [leadsRes, samplesRes, quotesRes, emailsRes] = await Promise.all([
+        fetch('/api/importers', { headers }),
+        fetch('/api/samples', { headers }),
+        fetch('/api/quotations', { headers }),
+        fetch('/api/emails', { headers })
+      ]);
+
+      if (leadsRes.ok) setLeads(await leadsRes.json());
+      if (samplesRes.ok) setSamples(await samplesRes.json());
+      if (quotesRes.ok) setQuotations(await quotesRes.json());
+      if (emailsRes.ok) setEmails(await emailsRes.json());
+
+    } catch (err) {
+      console.error('Error fetching data from database:', err);
+    }
+  };
+
   // Load from Database
   useEffect(() => {
-    const fetchData = async () => {
+    const initializeAuth = async () => {
       try {
-        let token = localStorage.getItem('token');
-        
-        // Auto-login with demo user if no token exists
-        if (!token) {
-          try {
-            const demoRes = await fetch('/api/auth/demo-login', { method: 'POST' });
-            if (demoRes.ok) {
-              const demoData = await demoRes.json();
-              token = demoData.token;
-              localStorage.setItem('token', token);
-              console.log('Auto-logged in as demo user');
-            }
-          } catch (err) {
-            console.warn('Demo login failed:', err);
-            return;
+        const token = localStorage.getItem('token');
+        if (token) {
+          // Verify token and get user info
+          const res = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (res.ok) {
+            const userData = await res.json();
+            setCurrentUser(userData);
+            setIsAuthenticated(true);
+            fetchData(token);
+          } else {
+            localStorage.removeItem('token');
           }
         }
-
-        if (!token) return;
-
-        const headers = { 'Authorization': `Bearer ${token}` };
-        
-        const [leadsRes, samplesRes, quotesRes, emailsRes] = await Promise.all([
-          fetch('/api/importers', { headers }),
-          fetch('/api/samples', { headers }),
-          fetch('/api/quotations', { headers }),
-          fetch('/api/emails', { headers })
-        ]);
-
-        if (leadsRes.ok) setLeads(await leadsRes.json());
-        if (samplesRes.ok) setSamples(await samplesRes.json());
-        if (quotesRes.ok) setQuotations(await quotesRes.json());
-        if (emailsRes.ok) setEmails(await emailsRes.json());
-
       } catch (err) {
-        console.error('Error fetching data from database:', err);
+        console.error('Initialization error:', err);
+      } finally {
+        setIsInitializing(false);
       }
     };
 
-    fetchData();
+    initializeAuth();
 
     const savedActiveTab = localStorage.getItem('nandara_ciis_active_tab');
     if (savedActiveTab) setActiveTabState(savedActiveTab);
@@ -392,6 +422,21 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
     setActiveTab('quotation');
   };
 
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="inline-block w-12 h-12 border-4 border-[#C9A227] border-t-transparent rounded-full animate-spin"></div>
+          <p className="font-serif italic text-primary tracking-widest uppercase text-xs">Initializing Secure Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-bg-ivory flex text-primary font-sans" id="application-container">
       {/* Premium Dark Side Menu */}
@@ -406,6 +451,19 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               CIIS • EXPORT INTELLIGENCE
             </div>
           </div>
+
+          {/* User Profile Mini Card */}
+          {currentUser && (
+            <div className="px-7 py-4 border-b border-white/5 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center">
+                <User className="w-4 h-4 text-gold" />
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-[10px] font-bold text-white truncate">{currentUser.firstName} {currentUser.lastName}</p>
+                <p className="text-[8px] text-gold/60 font-mono uppercase tracking-tighter truncate">{currentUser.role}</p>
+              </div>
+            </div>
+          )}
 
           {/* Navigation Links and icons */}
           <nav className="py-6 space-y-1 text-[11px] font-sans uppercase tracking-widest">
@@ -591,15 +649,40 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               <FileSpreadsheet className="w-4 h-4 shrink-0 text-gold" />
               <span>Sheets Sync Config</span>
             </button>
+
+            {/* Super Admin Only Tab */}
+            {currentUser && ['nandaranusamontierra@gmail.com', 'nandalatifanibudiarti97@gmail.com'].includes(currentUser.email) && (
+              <button
+                onClick={() => setActiveTab('personnel')}
+                className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                  activeTab === 'personnel' 
+                    ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                    : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4 shrink-0 text-gold" />
+                <span>Personnel Control</span>
+              </button>
+            )}
           </nav>
         </div>
 
         {/* Static signature bottom */}
-        <div className="p-[30px] border-t border-white/5 space-y-2 text-[10px] font-mono text-gray-500">
-          <p>System Version 2.4.1</p>
-          <div className="flex gap-1.5 pt-1 uppercase text-[9px] items-center text-[#D4AF37]">
-            <Globe className="w-3" />
-            <span>Nandara Global Control</span>
+        <div className="p-[30px] border-t border-white/5 space-y-4 text-[10px] font-mono text-gray-500">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 text-gold/60 hover:text-gold transition-colors uppercase tracking-widest text-[9px] font-bold py-2 px-1 border border-gold/10 hover:border-gold/30 rounded"
+          >
+            <LogOut className="w-3 h-3" />
+            <span>Terminate Session</span>
+          </button>
+          
+          <div className="space-y-2">
+            <p>System Version 2.4.1</p>
+            <div className="flex gap-1.5 pt-1 uppercase text-[9px] items-center text-[#D4AF37]">
+              <Globe className="w-3" />
+              <span>Nandara Global Control</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -621,6 +704,7 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               {activeTab === 'quotation' && "Export Quota and Commercial Terms"}
               {activeTab === 'curriculum' && "Premium Export Academy & Curriculum"}
               {activeTab === 'sheets' && "Google Sheet Automation Config"}
+              {activeTab === 'personnel' && "Admin Hierarchy & Access Control"}
             </h2>
             <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">
               Coffee Importer Intelligence System • Java, Gayo, Toraja Premium Specialties
@@ -735,6 +819,10 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               onUpdateConfig={handleUpdateConfig}
               onSyncAll={handleSyncAll}
             />
+          )}
+
+          {activeTab === 'personnel' && (
+            <UserManagementView />
           )}
         </div>
       </main>
