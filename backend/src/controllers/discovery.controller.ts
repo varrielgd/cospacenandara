@@ -5,7 +5,7 @@ import { logger, prisma } from '../index';
 
 export const startDiscovery = async (req: AuthRequest, res: Response) => {
   try {
-    const { query } = req.body;
+    const { query, country, region, importerType } = req.body;
     if (!query) {
       return res.status(400).json({ message: 'Query is required' });
     }
@@ -22,7 +22,7 @@ export const startDiscovery = async (req: AuthRequest, res: Response) => {
     });
 
     // Run discovery in background (don't await)
-    DiscoveryService.discoverImporters(query, session.id).catch((error) => {
+    DiscoveryService.discoverImporters(query, session.id, { country, region, importerType }).catch((error) => {
       logger.error('Background discovery error:', error);
       prisma.discoverySession.update({
         where: { id: session.id },

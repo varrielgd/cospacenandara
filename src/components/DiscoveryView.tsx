@@ -134,8 +134,11 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
         const data: DiscoverySession = await response.json();
 
         // Update progress
-        setProgress({ total: data.totalProcessed + 5, processed: data.totalProcessed });
-        setStatusMessage(`Scouting... ${data.totalProcessed} entities processed. Found ${data.totalFound} new importers.`);
+        setProgress({ total: 30, processed: data.totalProcessed });
+        const isSimulated = data.importers.some(imp => imp.notes && imp.notes.includes('Simulated'));
+        setStatusMessage(isSimulated 
+          ? `AI is currently using deep knowledge fallback. Found ${data.totalFound} importers.`
+          : `AI Deep Scouting... ${data.totalProcessed} real entities found in ${country}.`);
 
         // Update discovered leads
         if (data.importers && data.importers.length > 0) {
@@ -260,7 +263,10 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          query: `${importerType} in ${country} ${region}`
+          query: `${importerType} in ${country} ${region}`,
+          country,
+          region,
+          importerType
         })
       });
 
