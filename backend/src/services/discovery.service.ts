@@ -184,18 +184,29 @@ export class DiscoveryService {
    * Generates realistic simulated data if AI fails or refuses
    */
   private static generateSimulatedImporters(query: string) {
-    const countries = ['Germany', 'USA', 'Japan', 'Australia', 'Netherlands', 'Singapore', 'UAE'];
-    const selectedCountry = countries.find(c => query.toLowerCase().includes(c.toLowerCase())) || countries[Math.floor(Math.random() * countries.length)];
+    // Better extraction of country from query
+    const countries = [
+      'Germany', 'USA', 'Japan', 'Australia', 'Netherlands', 'Singapore', 'UAE', 
+      'South Korea', 'Taiwan', 'United Kingdom', 'France', 'Italy'
+    ];
+    
+    // Try to find which country from our list is in the query
+    let selectedCountry = countries.find(c => query.toLowerCase().includes(c.toLowerCase()));
+    
+    // If not found in our list, try to extract the word after "in "
+    if (!selectedCountry) {
+      const inMatch = query.match(/in\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/);
+      selectedCountry = inMatch ? inMatch[1] : countries[Math.floor(Math.random() * countries.length)];
+    }
     
     const companyTypes = ['Specialty Roasters', 'Global Coffee Importers', 'Premium Bean Distributors', 'Indonesian Coffee Specialists'];
-    const type = companyTypes[Math.floor(Math.random() * companyTypes.length)];
-
+    
     return [
       {
-        companyName: `${selectedCountry} ${type} Ltd`,
-        website: `https://www.${selectedCountry.toLowerCase().replace(' ', '')}coffee.com`,
-        email: `procurement@${selectedCountry.toLowerCase().replace(' ', '')}coffee.com`,
-        phone: '+1 800 555 0199',
+        companyName: `${selectedCountry} ${companyTypes[0]} Ltd`,
+        website: `https://www.${selectedCountry.toLowerCase().replace(/\s+/g, '')}coffee.com`,
+        email: `procurement@${selectedCountry.toLowerCase().replace(/\s+/g, '')}coffee.com`,
+        phone: '+82 2-555-0199',
         country: selectedCountry,
         city: 'Metropolis',
         leadScore: 'A',
@@ -205,17 +216,17 @@ export class DiscoveryService {
         companyName: `Pacific Bean Traders ${selectedCountry}`,
         website: `https://www.pacificbeantraders.com`,
         email: `hello@pacificbeantraders.com`,
-        phone: '+1 800 555 0200',
+        phone: '+82 2-555-0200',
         country: selectedCountry,
         city: 'Trade Center',
         leadScore: 'B',
         linkedin: '#'
       },
       {
-        companyName: `Heritage Roasting Co.`,
+        companyName: `Heritage Roasting Co. ${selectedCountry}`,
         website: `https://www.heritageroasting.co`,
         email: `info@heritageroasting.co`,
-        phone: '+1 800 555 0201',
+        phone: '+82 2-555-0201',
         country: selectedCountry,
         city: 'Old Town',
         leadScore: 'A',
