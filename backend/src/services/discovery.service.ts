@@ -186,8 +186,8 @@ export class DiscoveryService {
   private static generateSimulatedImporters(query: string) {
     // Better extraction of country from query
     const countries = [
-      'Germany', 'USA', 'Japan', 'Australia', 'Netherlands', 'Singapore', 'UAE', 
-      'South Korea', 'Taiwan', 'United Kingdom', 'France', 'Italy'
+      'Germany', 'United States', 'United Kingdom', 'Japan', 'South Korea', 'Taiwan',
+      'Australia', 'Netherlands', 'France', 'Italy', 'Singapore', 'New Zealand'
     ];
     
     // Try to find which country from our list is in the query
