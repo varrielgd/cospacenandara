@@ -28,13 +28,13 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
 
     const token = authHeader.split(' ')[1];
     
+    // DEBUG LOGS REQUESTED BY USER
+    console.log("JWT_SECRET length:", process.env.JWT_SECRET?.length);
+    console.log("TOKEN RECEIVED:", token);
+
     // PHASE 6: RENDER ENVIRONMENT AUDIT
     const secret = process.env.JWT_SECRET || 'nandara_secret_fallback_2026';
-    logger.info('JWT VERIFY ATTEMPT', {
-      jwtSecretExists: !!process.env.JWT_SECRET,
-      tokenLength: token.length
-    });
-
+    
     try {
       const decoded = jwt.verify(token, secret) as {
         id: string;
@@ -43,6 +43,9 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
         iat?: number;
         exp?: number;
       };
+
+      console.log("JWT PAYLOAD:", decoded);
+      console.log("USER LOOKUP ID:", decoded.id);
 
       logger.info('JWT VERIFY SUCCESS', {
         userId: decoded.id,
