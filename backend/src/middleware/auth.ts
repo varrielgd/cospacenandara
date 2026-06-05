@@ -4,7 +4,11 @@ import { JWT_SECRET } from '../config/auth';
 import { prisma, logger } from '../index';
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {

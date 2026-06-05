@@ -9,6 +9,7 @@ import compression from 'compression';
 import { rateLimit } from 'express-rate-limit';
 import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
+import { Request, Response, NextFunction } from 'express';
 import authRoutes from './routes/auth.routes';
 import importerRoutes from './routes/importer.routes';
 import sampleRoutes from './routes/sample.routes';
@@ -83,7 +84,7 @@ app.use('/api/emails', emailRoutes);
 app.use('/api/audit', auditRoutes);
 
 // Basic Health Check
-app.get('/health', (req, res) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 

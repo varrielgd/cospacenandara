@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import * as dashboardController from '../controllers/dashboard.controller';
 import { authenticate } from '../middleware/auth';
 import { GoogleSheetsService } from '../services/google-sheets.service';
@@ -10,7 +10,7 @@ router.use(authenticate);
 
 router.get('/stats', dashboardController.getDashboardStats);
 
-router.post('/sync-sheets', async (req, res) => {
+router.post('/sync-sheets', async (_req: Request, res: Response) => {
   try {
     const [importers, samples, quotations] = await Promise.all([
       prisma.importer.findMany(),

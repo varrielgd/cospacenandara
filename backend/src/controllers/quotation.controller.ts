@@ -1,9 +1,9 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { prisma, logger } from '../index';
 import { AuthRequest } from '../middleware/auth';
 import { PdfService } from '../services/pdf.service';
 
-export const getAllQuotations = async (req: AuthRequest, res: Response) => {
+export const getAllQuotations = async (_req: AuthRequest, res: Response) => {
   try {
     const quotations = await prisma.quotation.findMany({
       include: { importer: { select: { companyName: true } } },
@@ -76,14 +76,16 @@ export const createQuotation = async (req: AuthRequest, res: Response) => {
       logger.error('Failed to generate PDF during quotation creation:', pdfError);
     }
 
-    await prisma.activity.create({
-      data: {
-        userId: req.user!.id,
-        importerId: quotation.importerId,
-        type: 'QUOTATION',
-        description: `Quotation ${quotationNumber} created for ${product}.`
-      }
-    });
+    if (req.user) {
+      await prisma.activity.create({
+        data: {
+          userId: req.user.id,
+          importerId: quotation.importerId,
+          type: 'QUOTATION',
+          description: `Quotation ${quotationNumber} created for ${product}.`
+        }
+      });
+    }
 
     return res.status(201).json(quotation);
   } catch (error) {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import * as authController from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 import { authValidator } from '../validators';
@@ -10,7 +10,7 @@ router.post('/verify-2fa', authController.verify2FA);
 router.post('/login', authValidator, authController.login);
 router.get('/me', authenticate, authController.me);
 router.get('/debug', authController.debugAuth);
-router.get('/headers', (req, res) => {
+router.get('/headers', (req: Request, res: Response) => {
   res.json({
     headers: req.headers,
     method: req.method,

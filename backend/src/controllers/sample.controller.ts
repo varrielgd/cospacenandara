@@ -1,8 +1,8 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { prisma, logger } from '../index';
 import { AuthRequest } from '../middleware/auth';
 
-export const getAllSamples = async (req: AuthRequest, res: Response) => {
+export const getAllSamples = async (_req: AuthRequest, res: Response) => {
   try {
     const samples = await prisma.sample.findMany({
       include: { importer: { select: { companyName: true } } },
@@ -23,14 +23,16 @@ export const createSample = async (req: AuthRequest, res: Response) => {
       include: { importer: { select: { companyName: true } } }
     });
 
-    await prisma.activity.create({
-      data: {
-        userId: req.user!.id,
-        importerId: sample.importerId,
-        type: 'SAMPLE',
-        description: `New sample process started for ${sample.importer.companyName} (${sample.product}). Current stage: ${sample.status}.`
-      }
-    });
+    if (req.user) {
+      await prisma.activity.create({
+        data: {
+          userId: req.user.id,
+          importerId: sample.importerId,
+          type: 'SAMPLE',
+          description: `New sample process started for ${sample.importer.companyName} (${sample.product}). Current stage: ${sample.status}.`
+        }
+      });
+    }
 
     return res.status(201).json(sample);
   } catch (error) {
@@ -54,10 +56,10 @@ export const updateSample = async (req: AuthRequest, res: Response) => {
       include: { importer: { select: { companyName: true } } }
     });
 
-    if (oldSample.status !== sample.status) {
+    if (req.user && oldSample.status !== sample.status) {
       await prisma.activity.create({
         data: {
-          userId: req.user!.id,
+          userId: req.user.id,
           importerId: sample.importerId,
           type: 'SAMPLE',
           description: `Sample stage updated for ${sample.importer.companyName}: ${oldSample.status} -> ${sample.status}.`
