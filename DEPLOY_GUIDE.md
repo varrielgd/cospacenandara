@@ -44,16 +44,16 @@ Frontend akan dihosting di Vercel yang sangat cepat untuk aplikasi React.
     *   **Build Command**: `npm run build`
     *   **Output Directory**: `dist`
 5.  **Environment Variables**: Masukkan variabel dari file `.env` root:
-    *   `VITE_API_URL`: `https://nandara-backend.onrender.com/api` (Gunakan URL Backend Render Anda)
+    *   `VITE_API_URL`: `https://nandara-backend.onrender.com/api` (Sudah diperbarui dengan URL riil Anda)
     *   `DISABLE_HMR`: `true`
 6.  **Deploy**: Klik **Deploy**.
 
 ---
 
-## 4. Penyesuaian Terakhir (Proxy)
-Saya telah membuat file [vercel.json](file:///d:/AI/app/nandaraoffice/vercel.json) di root project. File ini berfungsi sebagai "jembatan" agar Frontend Vercel bisa berbicara dengan Backend Render tanpa masalah CORS.
+## 4. Penyesuaian Terakhir (Proxy & CORS)
+Saya telah memperbarui file [vercel.json](file:///d:/AI/app/nandaraoffice/vercel.json) di root project. File ini sekarang secara khusus mengarah ke URL backend Anda yang baru: `https://nandara-backend.onrender.com`.
 
-**PENTING**: Buka file [vercel.json](file:///d:/AI/app/nandaraoffice/vercel.json) dan pastikan bagian `destination` mengarah ke URL Backend Render Anda yang baru.
+**PENTING**: Jika nanti Anda mengganti URL backend di Render, Anda **wajib** mengubah alamat `destination` di file `vercel.json` dan melakukan `git push` ulang agar Vercel mengenali alamat barunya.
 
 ---
 
