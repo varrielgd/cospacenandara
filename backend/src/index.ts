@@ -152,7 +152,7 @@ const initializeAdminUser = async () => {
   }
 };
 
-// Start server
+// Start server (Triggering re-deploy to ensure latest changes are active)
 app.listen(port, async () => {
   try {
     const dbUrl = process.env.DATABASE_URL || '';
