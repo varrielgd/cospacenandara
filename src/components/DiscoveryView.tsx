@@ -53,7 +53,9 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
   const countries = [
     'Germany', 'United States', 'United Kingdom', 'Japan', 'South Korea', 'Taiwan',
-    'Australia', 'Netherlands', 'France', 'Italy', 'Singapore', 'New Zealand'
+    'Australia', 'Netherlands', 'France', 'Italy', 'Singapore', 'New Zealand',
+    'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Oman', 'Bahrain',
+    'Egypt', 'Jordan', 'Turkey'
   ];
 
   const importerTypes = [
@@ -135,10 +137,13 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
         // Update progress
         setProgress({ total: 30, processed: data.totalProcessed });
-        const isSimulated = data.importers.some(imp => imp.notes && imp.notes.includes('Simulated'));
-        setStatusMessage(isSimulated 
-          ? `AI is currently using deep knowledge fallback. Found ${data.totalFound} importers.`
-          : `AI Deep Scouting... ${data.totalProcessed} real entities found in ${country}.`);
+        const isSimulated = data.importers && data.importers.some(imp => imp.notes && imp.notes.includes('Simulated'));
+        
+        if (data.status === 'RUNNING') {
+          setStatusMessage(isSimulated 
+            ? `AI is currently using deep knowledge fallback. Found ${data.totalFound} importers.`
+            : `AI Deep Scouting... ${data.totalProcessed} real entities found.`);
+        }
 
         // Update discovered leads
         if (data.importers && data.importers.length > 0) {
@@ -159,32 +164,41 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
             leadType: 'Importer',
             lastContact: ''
           }));
-          setDiscoveredLeads(mappedLeads);
+          
+          // Only update if the data has actually changed or increased
+          setDiscoveredLeads(prev => {
+            if (prev.length === mappedLeads.length) return prev;
+            return mappedLeads;
+          });
           
           // Auto-select new ones
           setSelectedLeads(prev => {
             const updated = { ...prev };
+            let hasNew = false;
             mappedLeads.forEach(lead => {
-              if (!prev[lead.id]) updated[lead.id] = true;
+              if (prev[lead.id] === undefined) {
+                updated[lead.id] = true;
+                hasNew = true;
+              }
             });
-            return updated;
+            return hasNew ? updated : prev;
           });
         }
 
         // Handle completion or failure
         if (data.status === 'COMPLETED') {
           clearInterval(pollingRef.current!);
-          setIsLoading(false);
-          setCurrentSessionId(null);
-          localStorage.removeItem('discoverySessionId');
           
           if (data.totalFound === 0) {
             setError('The AI was unable to find specific data for this region. Please try a broader search or a different country.');
             setStatusMessage('');
           } else {
-            setStatusMessage(`Discovery completed! Found ${data.totalFound} new importers.`);
+            setStatusMessage(`DISCOVERY COMPLETED! FOUND ${data.totalFound} NEW IMPORTERS.`);
           }
           
+          setIsLoading(false);
+          setCurrentSessionId(null);
+          localStorage.removeItem('discoverySessionId');
           fetchRecentSessions(); // Refresh history list
           
           // Auto-add to CRM after 2 seconds
@@ -201,7 +215,6 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                 status: (imp.status as any) || 'New',
                 notes: imp.notes || '',
                 dateAdded: imp.createdAt || new Date().toISOString(),
-                // Add missing properties required by Lead type
                 city: imp.city || '',
                 contactPage: '',
                 linkedin: imp.linkedin || '',
@@ -347,42 +360,103 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
   };
 
   const handleCopyToClipboard = (lead: Lead, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const text = `Company: ${lead.companyName}\nCountry: ${lead.country}\nWebsite: ${lead.website}\nEmail: ${lead.email}\nPhone: ${lead.phone}`;
-    navigator.clipboard.writeText(text);
-    setCopiedId(lead.id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+      e.stopPropagation();
+      const text = `Company: ${lead.companyName}\nCountry: ${lead.country}\nWebsite: ${lead.website}\nEmail: ${lead.email}\nPhone: ${lead.phone}`;
+      
+      // Method 1: execCommand (most reliable on localhost/non-secure)
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      textArea.style.top = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        if (successful) {
+          setCopiedId(lead.id);
+          setTimeout(() => setCopiedId(null), 2000);
+          return;
+        }
+      } catch (err) {
+        document.body.removeChild(textArea);
+      }
 
-  const handleAddToGoogleSheet = async (lead: Lead, e: React.MouseEvent) => {
-    e.stopPropagation();
+      // Method 2: Navigator API (backup)
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            setCopiedId(lead.id);
+            setTimeout(() => setCopiedId(null), 2000);
+          })
+          .catch(err => {
+            console.error('Final copy failure:', err);
+            alert('Gagal menyalin. Silakan pilih teks secara manual.');
+          });
+      } else {
+        alert('Browser Anda tidak mendukung fitur salin otomatis.');
+      }
+    };
+
+  const handleAddToGoogleSheet = async (lead: Lead, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setIsSyncingId(lead.id);
     try {
-      const scriptUrl = 'https://script.google.com/macros/s/AKfycbzWbBT0e251UaESgkaktbmsBMxstKREAt8J1_ht8l7tuTnfiTnFGRza6WyR8wiadf6Y/exec';
-      const response = await fetch(scriptUrl, {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/importers/sync-sheets', {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'addLead',
-          data: {
-            companyName: lead.companyName,
-            country: lead.country,
-            website: lead.website,
-            email: lead.email,
-            phone: lead.phone,
-            leadScore: lead.leadScore,
-            dateAdded: new Date().toISOString()
-          }
-        })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ importerId: lead.id })
       });
-      alert(`Lead ${lead.companyName} successfully pushed to Google Sheets!`);
+      
+      if (response.ok) {
+        alert(`Lead ${lead.companyName} successfully pushed to Google Sheets!`);
+      } else {
+        throw new Error('Failed to sync');
+      }
     } catch (err) {
       console.error('Google Sheets error:', err);
-      alert('Failed to sync with Google Sheets. Check your script URL and permissions.');
+      alert('Failed to sync with Google Sheets. Please try again.');
     } finally {
       setIsSyncingId(null);
     }
+  };
+
+  const handleBulkExportToSheets = async () => {
+    const selected = discoveredLeads.filter(lead => selectedLeads[lead.id]);
+    if (selected.length === 0) return;
+
+    setIsLoading(true);
+    setStatusMessage(`Exporting ${selected.length} leads to Google Sheets...`);
+    
+    let successCount = 0;
+    for (const lead of selected) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/importers/sync-sheets', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ importerId: lead.id })
+        });
+        if (response.ok) successCount++;
+      } catch (e) {
+        console.error(`Failed to export ${lead.companyName}`, e);
+      }
+    }
+
+    setIsLoading(false);
+    setStatusMessage(`Successfully exported ${successCount} of ${selected.length} leads to Google Sheets.`);
+    alert(`Export complete: ${successCount} leads added to Google Sheets.`);
   };
 
   const cancelDiscovery = () => {
@@ -750,14 +824,24 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
           <div className="text-sm text-[#8fb499]">
             <span className="font-bold text-[#d4af37]">{Object.values(selectedLeads).filter(Boolean).length}</span> leads selected for import
           </div>
-          <button
-            onClick={() => handleImportSelected()}
-            disabled={Object.values(selectedLeads).filter(Boolean).length === 0}
-            className="px-6 py-2 bg-[#d4af37] text-[#0a1a12] rounded-md text-sm font-bold uppercase tracking-widest hover:bg-[#b8962d] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Import Selected to CRM
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleBulkExportToSheets}
+              disabled={isLoading || Object.values(selectedLeads).filter(Boolean).length === 0}
+              className="flex items-center gap-2 px-6 py-2 bg-[#1a3a2a] text-[#8fb499] rounded-md hover:text-[#d4af37] transition-all font-bold uppercase tracking-widest text-xs disabled:opacity-50"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Export to Sheets
+            </button>
+            <button
+              onClick={() => handleImportSelected()}
+              disabled={isLoading || Object.values(selectedLeads).filter(Boolean).length === 0}
+              className="flex items-center gap-2 px-6 py-2 bg-[#d4af37] text-[#0a1a12] rounded-md hover:bg-[#c4a030] transition-all font-bold uppercase tracking-widest text-xs disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+              Add to CRM
+            </button>
+          </div>
         </div>
       )}
     </div>

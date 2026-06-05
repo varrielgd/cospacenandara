@@ -171,3 +171,22 @@ export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const syncToSheets = async (req: AuthRequest, res: Response) => {
+  try {
+    const { importerId } = req.body;
+    if (!importerId) return res.status(400).json({ message: 'Importer ID is required' });
+
+    const importer = await prisma.importer.findUnique({
+      where: { id: importerId }
+    });
+
+    if (!importer) return res.status(404).json({ message: 'Importer not found' });
+
+    await GoogleSheetsService.syncImporter(importer);
+    return res.json({ message: 'Successfully synced to Google Sheets' });
+  } catch (error) {
+    logger.error('Error syncing to sheets:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
