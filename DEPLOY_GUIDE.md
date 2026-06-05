@@ -1,6 +1,5 @@
-# Panduan Deploy Nandara Corporation (CIIS)
-
-Dokumen ini berisi langkah-langkah detail untuk mendeploy aplikasi Nandara Corporation ke Vercel (Frontend) dan Render (Backend) menggunakan Database Supabase (PostgreSQL).
+# Pandaran Deployment Guide (Last Update: 2026-06-05)
+Aplikasi Nandara Corporation sekarang dikonfigurasi untuk koneksi langsung ke backend.
 
 ## 1. Persiapan Database (Supabase)
 Anda sudah memiliki database di Supabase. Pastikan URL berikut tersimpan:
