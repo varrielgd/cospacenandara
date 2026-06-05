@@ -384,14 +384,14 @@ export class DiscoveryService {
     const matchedProducts = this.uniqueStrings([...(ai.matchedProducts || []), ...this.matchProducts(intel.text, context.products)]);
     const companyName = this.cleanCompanyName(ai.companyName || this.inferCompanyName(intel, result));
     const isCountryMatch = this.isCountryMatch(country, intel.text, context.targetCountry);
-    const isCoffeeBusiness = ai.isCoffeeBusiness !== false && this.containsAny(intel.text, ['coffee', 'cafe', 'roaster', 'roastery', 'arabica', 'robusta']);
-    const isBuyer = ai.isPotentialBuyer !== false && this.containsAny(intel.text, this.BUYER_KEYWORDS);
-    const hasContact = intel.emails.length > 0 || intel.phones.length > 0 || intel.sourceUrls.some(url => this.CONTACT_PATH_HINTS.some(hint => url.toLowerCase().includes(hint)));
+    const isCoffeeBusiness = ai.isCoffeeBusiness !== false && (this.containsAny(intel.text, ['coffee', 'cafe', 'roaster', 'roastery', 'arabica', 'robusta', 'espresso', 'green bean']) || this.containsAny(intel.title, ['coffee', 'roaster']));
+    const isBuyer = ai.isPotentialBuyer !== false && (this.containsAny(intel.text, this.BUYER_KEYWORDS) || this.containsAny(intel.title, this.BUYER_KEYWORDS));
+    const hasContact = intel.emails.length > 0 || intel.phones.length > 0 || intel.linkedin.length > 0 || intel.sourceUrls.some(url => this.CONTACT_PATH_HINTS.some(hint => url.toLowerCase().includes(hint)));
 
     let verificationStatus: VerificationStatus = 'REJECTED';
-    if (confidenceScore >= 78 && isCountryMatch && isCoffeeBusiness && isBuyer && hasContact) {
+    if (confidenceScore >= 65 && isCountryMatch && isCoffeeBusiness && isBuyer) {
       verificationStatus = 'VERIFIED';
-    } else if (confidenceScore >= 58 && isCoffeeBusiness && (isBuyer || matchedProducts.length > 0) && isCountryMatch) {
+    } else if (confidenceScore >= 45 && isCoffeeBusiness && (isBuyer || matchedProducts.length > 0) && isCountryMatch) {
       verificationStatus = 'LIKELY';
     }
 
@@ -634,7 +634,7 @@ Output only JSON:
 `;
 
     const aiResponse = await AiService.generateContent(
-      `Find up to ${this.MAX_SEARCH_RESULTS_PER_QUERY} official company website seed URLs for this B2B coffee buyer query: ${query}`,
+      `Find up to ${this.MAX_SEARCH_RESULTS_PER_QUERY} real official company website seed URLs (NOT directories/portals) for this B2B coffee buyer query: ${query}. Focus on actual coffee importers, roasteries, and trading houses.`,
       { systemPrompt, responseMimeType: 'application/json' }
     );
 
