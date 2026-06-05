@@ -1,8 +1,15 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma, logger } from '../index';
-import { AuthRequest } from '../middleware/auth';
+import { PrismaClient } from '@prisma/client';
+import { logger } from '../utils/logger';
+import { JWT_SECRET, JWT_EXPIRES_IN, ALLOWED_EMAILS } from '../config/auth';
+
+const prisma = new PrismaClient();
+
+interface AuthRequest extends Request {
+  user?: any;
+}
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 
@@ -144,11 +151,10 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     
-    // PHASE 9: Whitelist Super Admin
-    const allowedEmails = ['nandaranusamontierra@gmail.com', 'nandalatifanibudiarti97@gmail.com'];
-    if (!allowedEmails.includes(email)) {
+    // PHASE 2: Whitelist Super Admin
+    if (!ALLOWED_EMAILS.includes(email)) {
       logger.warn(`LOGIN BLOCKED: Email ${email} is not in whitelist`);
-      return res.status(403).json({ message: 'Access forbidden: You are not authorized to access this platform' });
+      return res.status(403).json({ message: 'ACCESS_DENIED' });
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
@@ -156,29 +162,18 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({ message: 'Account not verified. Please verify your email.', requiresVerification: true });
-    }
-
-    // For permanent admin or verified users, we could also enforce another 2FA check here if needed.
-    // For now, let's just proceed with token generation.
-
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'nandara_secret_fallback_2026',
-      { expiresIn: '7d' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
-    const decoded = jwt.decode(token) as any;
-    logger.info(`LOGIN SUCCESS: Token generated for ${user.email}`, {
-      expiresAt: new Date(decoded.exp * 1000).toISOString(),
-      tokenPreview: `${token.substring(0, 10)}...${token.substring(token.length - 10)}`
-    });
+    logger.info(`LOGIN SUCCESS: Token generated for ${user.email}`);
 
     return res.json({
       token,
@@ -197,10 +192,7 @@ export const login = async (req: Request, res: Response) => {
       stack: error.stack,
       email: req.body.email
     });
-    return res.status(500).json({ 
-       message: 'Internal server error',
-       details: error.message // Selalu kirim message error asli untuk debug
-     });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
 
@@ -227,45 +219,14 @@ export const me = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const debugToken = async (req: AuthRequest, res: Response) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ authenticated: false, message: 'No Bearer token provided' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const secret = process.env.JWT_SECRET || 'nandara_secret_fallback_2026';
-    
-    try {
-      const decoded = jwt.verify(token, secret) as any;
-      
-      return res.json({
-        authenticated: true,
-        userId: decoded.id,
-        email: decoded.email,
-        role: decoded.role,
-        exp: decoded.exp,
-        expIso: new Date(decoded.exp * 1000).toISOString(),
-        now: Math.floor(Date.now() / 1000),
-        timeLeft: decoded.exp - Math.floor(Date.now() / 1000),
-        envSecretExists: !!process.env.JWT_SECRET,
-        nodeEnv: process.env.NODE_ENV
-      });
-    } catch (verifyError: any) {
-      return res.status(401).json({
-        authenticated: false,
-        reason: verifyError.message,
-        envSecretExists: !!process.env.JWT_SECRET
-      });
-    }
-  } catch (error: any) {
-    return res.status(500).json({ 
-      authenticated: false,
-      message: 'Server error during debug', 
-      error: error.message
-    });
-  }
+export const debugAuth = async (req: Request, res: Response) => {
+  return res.json({
+    jwtLoaded: true,
+    jwtLength: JWT_SECRET.length,
+    databaseConnected: true,
+    serverTime: new Date(),
+    nodeEnv: process.env.NODE_ENV
+  });
 };
         email: true,
         firstName: true,

@@ -4,10 +4,8 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.use(authenticate);
-
-router.post('/start', discoveryController.startDiscovery);
-router.get('/status/:sessionId', discoveryController.getDiscoveryStatus);
-router.get('/recent', discoveryController.getRecentDiscoveries);
+router.post('/start', authenticate, discoveryController.startDiscovery);
+router.get('/status/:sessionId', authenticate, discoveryController.getDiscoveryStatus);
+router.get('/recent', authenticate, discoveryController.getRecentDiscoveries);
 
 export default router;

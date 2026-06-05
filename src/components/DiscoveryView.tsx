@@ -131,6 +131,15 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
+        if (response.status === 401) {
+          setIsLoading(false);
+          setCurrentSessionId(null);
+          setError('Session expired. Please login again.');
+          localStorage.removeItem('token');
+          setTimeout(() => window.location.href = '/', 2000);
+          return;
+        }
+
         if (!response.ok) return;
 
         const data: DiscoverySession = await response.json();
@@ -273,7 +282,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
           targetCountry: country,
@@ -282,6 +291,13 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
           maxResults: 30
         }),
       });
+
+      if (response.status === 401) {
+        setError('Session expired. Please login again.');
+        localStorage.removeItem('token');
+        setTimeout(() => window.location.href = '/', 2000);
+        return;
+      }
 
       if (!response.ok) {
         if (response.status === 401) {

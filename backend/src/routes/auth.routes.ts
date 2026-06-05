@@ -9,7 +9,7 @@ router.post('/register', authValidator, authController.register);
 router.post('/verify-2fa', authController.verify2FA);
 router.post('/login', authValidator, authController.login);
 router.get('/me', authenticate, authController.me);
-router.get('/debug-auth', authController.debugToken);
+router.get('/debug', authController.debugAuth);
 router.get('/users', authenticate, authController.getAllUsers);
 router.delete('/users/:id', authenticate, authController.deleteUser);
 

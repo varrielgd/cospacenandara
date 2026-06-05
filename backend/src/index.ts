@@ -46,20 +46,12 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
-  'https://nandaracorporation.vercel.app',
-  'https://nandaracorporation-git-main-nanmontierras-projects.vercel.app'
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [
+    'https://nandaracorporation.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
   credentials: true
 }));
 
@@ -99,34 +91,36 @@ app.get('/health', (req, res) => {
 app.use(errorHandler);
 
 // Initialize permanent admin user and handle demo users
+import { ALLOWED_EMAILS } from './config/auth';
+
 async function initializeAdminUser() {
   try {
-    const permanentAdmins = [
-      { email: 'nandaranusamontierra@gmail.com', firstName: 'Nandara', lastName: 'Nusa' },
-      { email: 'nandalatifanibudiarti97@gmail.com', firstName: 'Nanda', lastName: 'Latifani' }
-    ];
-
     const hashedPassword = await bcrypt.hash('Ghfso#!@!5246!#!@g7', 10);
 
-    for (const admin of permanentAdmins) {
-      const existing = await prisma.user.findUnique({ where: { email: admin.email } });
+    for (const email of ALLOWED_EMAILS) {
+      const existing = await prisma.user.findUnique({ where: { email } });
+      
+      const firstName = email.includes('nandara') ? 'Nandara' : 'Nanda';
+      const lastName = email.includes('nandara') ? 'Nusa' : 'Latifani';
+
       if (!existing) {
         await prisma.user.create({
           data: {
-            ...admin,
+            email,
+            firstName,
+            lastName,
             password: hashedPassword,
-            role: 'ADMIN',
+            role: 'SUPER_ADMIN',
             isVerified: true
           }
         });
-        logger.info(`Permanent admin ${admin.email} created`);
+        logger.info(`SUPER_ADMIN ${email} created`);
       } else {
-        // Ensure role and password are correct even if user existed
         await prisma.user.update({
-          where: { email: admin.email },
-          data: { role: 'ADMIN', password: hashedPassword }
+          where: { email },
+          data: { role: 'SUPER_ADMIN', password: hashedPassword, isVerified: true }
         });
-        logger.info(`Permanent admin ${admin.email} credentials synchronized`);
+        logger.info(`SUPER_ADMIN ${email} credentials synchronized`);
       }
     }
   } catch (error) {
