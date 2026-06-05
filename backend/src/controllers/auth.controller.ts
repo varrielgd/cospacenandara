@@ -235,7 +235,7 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Cannot delete your own account' });
     }
 
-    const user = await prisma.user.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id: id as string } });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -248,13 +248,13 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 
     // Delete related data first (cascading manual delete for SQLite compatibility if needed, 
     // but schema uses onDelete: Cascade mostly)
-    await prisma.activity.deleteMany({ where: { userId: id } });
-    await prisma.note.deleteMany({ where: { userId: id } });
-    await prisma.task.deleteMany({ where: { userId: id } });
-    await prisma.discoverySession.deleteMany({ where: { userId: id } });
-    await prisma.auditLog.deleteMany({ where: { userId: id } });
+    await prisma.activity.deleteMany({ where: { userId: id as string } });
+    await prisma.note.deleteMany({ where: { userId: id as string } });
+    await prisma.task.deleteMany({ where: { userId: id as string } });
+    await prisma.discoverySession.deleteMany({ where: { userId: id as string } });
+    await prisma.auditLog.deleteMany({ where: { userId: id as string } });
 
-    await prisma.user.delete({ where: { id } });
+    await prisma.user.delete({ where: { id: id as string } });
     
     return res.json({ message: 'User deleted successfully' });
   } catch (error) {
