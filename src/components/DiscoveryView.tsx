@@ -638,11 +638,11 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                   </select>
                 </div>
 
-                {/* Status Message */}
-                {statusMessage && (
+                {/* Status or Error Message */}
+                {(statusMessage || error) && (
                   <div className={`p-3 rounded-md text-[10px] font-mono uppercase tracking-widest ${error ? 'bg-red-900/30 text-red-400' : 'bg-[#1a3a2a] text-[#8fb499]'}`}>
                     {error ? <AlertCircle className="w-3 h-3 inline mr-2" /> : <Loader2 className="w-3 h-3 inline mr-2 animate-spin" />}
-                    {statusMessage}
+                    {error || statusMessage}
                   </div>
                 )}
 
