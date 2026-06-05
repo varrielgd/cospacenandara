@@ -278,13 +278,17 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
         throw new Error('Authentication required. Please login again.');
       }
 
+      // Construct a query if it's not explicitly provided
+      const discoveryQuery = `${importerType} in ${region ? `${region}, ` : ''}${country}`;
+
       const response = await fetch('/api/discovery/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
+          query: discoveryQuery,
           targetCountry: country,
           region,
           importerType,

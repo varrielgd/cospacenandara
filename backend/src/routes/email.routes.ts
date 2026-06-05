@@ -4,8 +4,12 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
+// Apply authentication to all email routes
 router.use(authenticate);
 
+router.get('/debug', (req, res) => res.json({ message: 'Email routes reachable' }));
+router.get('/', emailController.getAllEmails);
+router.get('', emailController.getAllEmails);
 router.post('/generate', emailController.generateDraft);
 router.post('/approve/:id', emailController.approveEmail);
 router.post('/send/:id', emailController.sendEmail);

@@ -85,7 +85,9 @@ enum EmailValidationStatus {
 }
 
 enum LeadScore {
+  APLUS @map("A+")
   A
+  BPLUS @map("B+")
   B
   C
 }

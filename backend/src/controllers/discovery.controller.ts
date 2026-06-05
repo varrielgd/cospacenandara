@@ -5,13 +5,22 @@ import { logger, prisma } from '../index';
 
 export const startDiscovery = async (req: AuthRequest, res: Response) => {
   try {
-    const { query, country, region, importerType } = req.body;
+    let { query, country, targetCountry, region, importerType } = req.body;
+    
+    // Normalize country field (frontend sends targetCountry)
+    const finalCountry = country || targetCountry || 'Global';
+    
+    // Auto-construct query if missing but parameters are present
+    if (!query && (finalCountry || importerType)) {
+      query = `${importerType || 'Coffee Importer'} in ${region ? `${region}, ` : ''}${finalCountry}`;
+    }
+
     if (!query) {
       return res.status(400).json({ message: 'Query is required' });
     }
 
     // Create a discovery session to track progress
-    const session = await (prisma.discoverySession as any).create({
+    const session = await prisma.discoverySession.create({
       data: {
         userId: String(req.user!.id),
         query,
@@ -22,7 +31,7 @@ export const startDiscovery = async (req: AuthRequest, res: Response) => {
     });
 
     // Run discovery in background (don't await)
-    DiscoveryService.discoverImporters(query, session.id, { country, region, importerType }).catch((error) => {
+    DiscoveryService.discoverImporters(query, session.id, { country: finalCountry, region, importerType }).catch((error) => {
       logger.error('Background discovery error:', error);
       prisma.discoverySession.update({
         where: { id: session.id },
@@ -52,7 +61,7 @@ export const getDiscoveryStatus = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'Session ID is required' });
     }
 
-    const session = await (prisma.discoverySession as any).findUnique({
+    const session = await prisma.discoverySession.findUnique({
       where: { id: normalizedSessionId },
       include: {
         user: { select: { firstName: true, lastName: true } }
@@ -65,9 +74,9 @@ export const getDiscoveryStatus = async (req: AuthRequest, res: Response) => {
 
     // Get the importers found in this session
     let importers: any[] = [];
-    if ((session as any).importerIds) {
+    if (session.importerIds) {
       try {
-        const importerIds = JSON.parse((session as any).importerIds);
+        const importerIds = JSON.parse(session.importerIds as string);
         importers = await prisma.importer.findMany({
           where: { id: { in: importerIds } }
         });
@@ -78,14 +87,14 @@ export const getDiscoveryStatus = async (req: AuthRequest, res: Response) => {
 
     return res.json({
       id: session.id,
-      query: (session as any).query,
-      status: (session as any).status,
-      totalFound: (session as any).totalFound,
-      totalProcessed: (session as any).totalProcessed,
+      query: session.query,
+      status: session.status,
+      totalFound: session.totalFound,
+      totalProcessed: session.totalProcessed,
       importers,
-      error: (session as any).error,
-      startedAt: (session as any).startedAt,
-      completedAt: (session as any).completedAt
+      error: session.error,
+      startedAt: session.startedAt,
+      completedAt: session.completedAt
     });
   } catch (error) {
     logger.error('Get discovery status error:', error);
@@ -95,8 +104,8 @@ export const getDiscoveryStatus = async (req: AuthRequest, res: Response) => {
 
 export const getRecentDiscoveries = async (req: AuthRequest, res: Response) => {
   try {
-    const sessions = await (prisma.discoverySession as any).findMany({
-      where: { userId: req.user!.id },
+    const sessions = await prisma.discoverySession.findMany({
+      where: { userId: String(req.user!.id) },
       orderBy: { createdAt: 'desc' },
       take: 10,
       include: {

@@ -1,26 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 import { JWT_SECRET } from '../config/auth';
+import { prisma, logger } from '../index';
 
-const prisma = new PrismaClient();
-
-// Simple logger implementation
-const logger = {
-  info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ''),
-  error: (msg: string, meta?: any) => console.error(`[ERROR] ${msg}`, meta || ''),
-  warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || '')
-};
-
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: any;
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
+    // Standardize header access (Express does this but being explicit helps)
+    const authHeader = req.headers.authorization || req.headers.Authorization as string;
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader) {
+      logger.warn(`AUTH MISSING: No authorization header for ${req.method} ${req.originalUrl}`);
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    if (!authHeader.startsWith('Bearer ')) {
+      logger.warn(`AUTH INVALID FORMAT: Header does not start with Bearer for ${req.method} ${req.originalUrl}`);
       return res.status(401).json({ message: 'Authentication required' });
     }
 
@@ -47,12 +45,14 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       req.user = user;
       return next();
     } catch (jwtError: any) {
+      logger.error(`JWT VERIFY ERROR for ${req.method} ${req.originalUrl}:`, jwtError.message);
       if (jwtError.name === 'TokenExpiredError') {
         return res.status(401).json({ message: 'Token expired' });
       }
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
   } catch (error: any) {
+    logger.error(`AUTH MIDDLEWARE ERROR:`, error);
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };

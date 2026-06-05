@@ -111,6 +111,19 @@ export const sendEmail = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const getAllEmails = async (_req: AuthRequest, res: Response) => {
+  try {
+    const emails = await prisma.email.findMany({
+      include: { importer: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    return res.json(emails);
+  } catch (error) {
+    logger.error('Get all emails error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
   try {
     const { to, subject, body } = req.body;
@@ -148,7 +161,7 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getInbox = async (req: AuthRequest, res: Response) => {
+export const getInbox = async (_req: AuthRequest, res: Response) => {
   try {
     const emails = await prisma.email.findMany({
       where: { direction: 'INBOUND' },
@@ -162,7 +175,7 @@ export const getInbox = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const syncInbox = async (req: AuthRequest, res: Response) => {
+export const syncInbox = async (_req: AuthRequest, res: Response) => {
   try {
     await EmailSyncService.syncInbox();
     return res.json({ message: 'Inbox sync completed successfully' });

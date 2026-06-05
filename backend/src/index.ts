@@ -1,9 +1,12 @@
+import dotenv from 'dotenv';
+// Load environment variables immediately
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { rateLimit } from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import winston from 'winston';
 import authRoutes from './routes/auth.routes';
@@ -17,9 +20,6 @@ import auditRoutes from './routes/audit.routes';
 import { errorHandler } from './middleware/error';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 4000;

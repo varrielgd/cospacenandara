@@ -5,6 +5,7 @@ import { importerValidator } from '../validators';
 
 const router = Router();
 
+// Apply authentication to all importer routes
 router.use(authenticate);
 
 router.get('/', importerController.getAllImporters);
