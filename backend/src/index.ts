@@ -152,7 +152,7 @@ const initializeAdminUser = async () => {
   }
 };
 
-// Start server (Final trigger for database connection update)
+// Start server (Final stabilization for Supabase Pooler)
 app.listen(port, async () => {
   try {
     let dbUrl = process.env.DATABASE_URL || '';
