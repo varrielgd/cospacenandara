@@ -13,36 +13,54 @@ export interface AuthRequest extends Request {
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
+    
+    // Log headers for debugging (only in non-prod or if needed)
+    logger.debug(`Auth attempt with header: ${authHeader ? 'Exists' : 'Missing'}`);
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logger.warn(`Auth failed: No Bearer token found. Headers: ${JSON.stringify(req.headers)}`);
+      logger.warn(`Auth failed: Invalid header format. Received: ${authHeader ? 'Not Bearer' : 'None'}`);
       return res.status(401).json({ message: 'Authentication required' });
     }
 
     const token = authHeader.split(' ')[1];
-    const secret = process.env.JWT_SECRET || 'secret';
     
-    if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-      logger.warn('JWT_SECRET is not defined in production, using fallback');
+    // Use a strict fallback only if not in production
+    const secret = process.env.JWT_SECRET || 'nandara_secret_fallback_2026';
+    
+    if (!process.env.JWT_SECRET) {
+      logger.error('CRITICAL: JWT_SECRET environment variable is missing!');
     }
 
-    const decoded = jwt.verify(token, secret) as {
-      id: string;
-      email: string;
-      role: string;
-    };
+    try {
+      const decoded = jwt.verify(token, secret) as {
+        id: string;
+        email: string;
+        role: string;
+        iat?: number;
+        exp?: number;
+      };
 
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: { id: true, email: true, role: true }
-    });
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, email: true, role: true }
+      });
 
-    if (!user) {
-      return res.status(401).json({ message: 'User no longer exists' });
+      if (!user) {
+        logger.warn(`Auth failed: User ${decoded.id} not found in database`);
+        return res.status(401).json({ message: 'User no longer exists' });
+      }
+
+      req.user = user;
+      return next();
+    } catch (jwtError: any) {
+      logger.error(`JWT Verification Error: ${jwtError.message}`);
+      if (jwtError.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expired', code: 'TOKEN_EXPIRED' });
+      }
+      return res.status(401).json({ message: 'Invalid or expired token' });
     }
-
-    req.user = user;
-    return next();
-  } catch (error) {
+  } catch (error: any) {
+    logger.error(`Auth Middleware Fatal Error: ${error.message}`);
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };

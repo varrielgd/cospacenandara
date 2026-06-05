@@ -284,6 +284,11 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          window.location.reload(); // Force reload to trigger App.tsx logout logic
+          return;
+        }
         const errData = await response.json().catch(() => ({}));
         console.error('API Error Data:', errData);
         throw new Error(errData.message || errData.error || `Server error: ${response.status}`);

@@ -86,12 +86,21 @@ export default function App() {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
       
-      const [leadsRes, samplesRes, quotesRes, emailsRes] = await Promise.all([
+      const responses = await Promise.all([
         fetch('/api/importers', { headers }),
         fetch('/api/samples', { headers }),
         fetch('/api/quotations', { headers }),
         fetch('/api/emails', { headers })
       ]);
+
+      // Global 401 interceptor
+      if (responses.some(r => r.status === 401)) {
+        console.warn('Unauthorized detected in batch fetch. Logging out.');
+        handleLogout();
+        return;
+      }
+
+      const [leadsRes, samplesRes, quotesRes, emailsRes] = responses;
 
       if (leadsRes.ok) setLeads(await leadsRes.json());
       if (samplesRes.ok) setSamples(await samplesRes.json());

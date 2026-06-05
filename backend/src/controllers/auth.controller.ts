@@ -119,8 +119,8 @@ export const verify2FA = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { id: updatedUser.id, email: updatedUser.email, role: updatedUser.role },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '24h' }
+      process.env.JWT_SECRET || 'nandara_secret_fallback_2026',
+      { expiresIn: '7d' }
     );
 
     return res.json({
@@ -163,8 +163,8 @@ export const login = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'secret',
-      { expiresIn: '24h' }
+      process.env.JWT_SECRET || 'nandara_secret_fallback_2026',
+      { expiresIn: '7d' } // Extended to 7 days as requested
     );
 
     return res.json({
@@ -198,6 +198,48 @@ export const me = async (req: AuthRequest, res: Response) => {
       where: { id: req.user.id },
       select: {
         id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isVerified: true
+      }
+    });
+
+    return res.json(user);
+  } catch (error) {
+    logger.error('Me error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const debugToken = async (req: AuthRequest, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No Bearer token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const secret = process.env.JWT_SECRET || 'nandara_secret_fallback_2026';
+    
+    const decoded = jwt.verify(token, secret) as any;
+    
+    return res.json({
+      decoded,
+      now: Math.floor(Date.now() / 1000),
+      timeLeft: decoded.exp - Math.floor(Date.now() / 1000),
+      envSecretExists: !!process.env.JWT_SECRET,
+      nodeEnv: process.env.NODE_ENV
+    });
+  } catch (error: any) {
+    return res.status(401).json({ 
+      message: 'Token verification failed', 
+      error: error.message,
+      envSecretExists: !!process.env.JWT_SECRET 
+    });
+  }
+};
         email: true,
         firstName: true,
         lastName: true,
