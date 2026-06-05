@@ -4,13 +4,18 @@ import { logger } from '../index';
 
 export class AiService {
   private static readonly MASTER_BUSINESS_CONTEXT = `
-CONTEXT BISNIS UTAMA:
+KONTEKS BISNIS UTAMA (MASTER CONTEXT):
 Perusahaan: PT. Nandara Nusa Montierra
 Nama Brand: Nandara Nusa Montierra
-Core Product: Kopi Premium Indonesia (Specialty & Commercial Grade)
-Varian Produk: Mandheling, Toraja, Gayo, Arabica, Robusta (Green Beans & Roasted)
-Target Market: Buyer Internasional, Importer Kopi, Roastery Global, Distributor Horeca.
-Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pasar ekspor global.
+Produk Utama: Kopi Premium Indonesia (Mandheling, Toraja, Gayo, Arabica, Robusta).
+Target: Buyer Internasional, Importer, Roastery Global, Distributor Horeca.
+
+TUGAS AI (ULTIMATE SCOUT):
+1. Anda adalah pakar intelijen pasar kopi global.
+2. Anda harus mencari entitas NYATA (perusahaan yang benar-benar ada).
+3. Untuk tugas Discovery, berikan URL official yang paling akurat.
+4. Jangan pernah mengarang URL atau perusahaan.
+5. Pahami bahwa target adalah buyer yang memiliki kapasitas untuk mengimpor kopi dari Indonesia.
 `;
 
   private static groq = new Groq({
@@ -26,23 +31,20 @@ Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pas
    * Generates content using available AI providers with automatic fallback
    */
   static async generateContent(prompt: string, options: { systemPrompt?: string; responseMimeType?: string } = {}) {
-    // Inject Master Business Context to ensure the AI always understands the core business
-    const contextEnhancedSystemPrompt = options.systemPrompt 
+    const systemInstruction = options.systemPrompt 
       ? `${this.MASTER_BUSINESS_CONTEXT}\n${options.systemPrompt}`
       : this.MASTER_BUSINESS_CONTEXT;
-
-    const fullPrompt = `${contextEnhancedSystemPrompt}\n\nUser Query: ${prompt}`;
 
     logger.info(`AI Request initiated using ${this.primaryProvider} provider`);
 
     if (this.primaryProvider === 'gemini') {
       try {
-        return await this.tryGemini(fullPrompt, options.responseMimeType);
+        return await this.tryGemini(prompt, systemInstruction, options.responseMimeType);
       } catch (error: any) {
         logger.warn(`Gemini failed (${error.message}), falling back to Groq`);
         this.primaryProvider = 'groq';
         try {
-          return await this.tryGroq(fullPrompt, options.responseMimeType);
+          return await this.tryGroq(prompt, systemInstruction, options.responseMimeType);
         } catch (groqError: any) {
           logger.error(`Both AI providers failed. Groq error: ${groqError.message}`);
           throw groqError;
@@ -50,12 +52,12 @@ Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pas
       }
     } else {
       try {
-        return await this.tryGroq(fullPrompt, options.responseMimeType);
+        return await this.tryGroq(prompt, systemInstruction, options.responseMimeType);
       } catch (error: any) {
         logger.warn(`Groq failed (${error.message}), falling back to Gemini`);
         this.primaryProvider = 'gemini';
         try {
-          return await this.tryGemini(fullPrompt, options.responseMimeType);
+          return await this.tryGemini(prompt, systemInstruction, options.responseMimeType);
         } catch (geminiError: any) {
           logger.error(`Both AI providers failed. Gemini error: ${geminiError.message}`);
           throw geminiError;
@@ -96,11 +98,14 @@ Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pas
     };
   }
 
-  private static async tryGroq(prompt: string, responseMimeType?: string) {
+  private static async tryGroq(prompt: string, systemInstruction: string, responseMimeType?: string) {
     try {
       logger.info('Attempting AI generation with Groq...');
       const completion = await this.groq.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: prompt }
+        ],
         model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
         response_format: responseMimeType === 'application/json' ? { type: 'json_object' } : undefined,
         temperature: 0.2,
@@ -123,7 +128,7 @@ Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pas
     }
   }
 
-  private static async tryGemini(prompt: string, responseMimeType?: string) {
+  private static async tryGemini(prompt: string, systemInstruction: string, responseMimeType?: string) {
     try {
       logger.info('Attempting AI generation with Gemini...');
       const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
@@ -137,6 +142,7 @@ Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pas
 
       const model = this.genAI.getGenerativeModel({ 
         model: modelName,
+        systemInstruction: systemInstruction,
         generationConfig: {
           temperature: 0.2,
           topP: 0.8,
