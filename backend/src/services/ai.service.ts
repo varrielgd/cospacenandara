@@ -3,6 +3,16 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { logger } from '../index';
 
 export class AiService {
+  private static readonly MASTER_BUSINESS_CONTEXT = `
+CONTEXT BISNIS UTAMA:
+Perusahaan: PT. Nandara Nusa Montierra
+Nama Brand: Nandara Nusa Montierra
+Core Product: Kopi Premium Indonesia (Specialty & Commercial Grade)
+Varian Produk: Mandheling, Toraja, Gayo, Arabica, Robusta (Green Beans & Roasted)
+Target Market: Buyer Internasional, Importer Kopi, Roastery Global, Distributor Horeca.
+Visi: Menjadi penghubung intelijen utama antara petani kopi Indonesia dengan pasar ekspor global.
+`;
+
   private static groq = new Groq({
     apiKey: process.env.GROQ_API_KEY || ''
   });
@@ -16,7 +26,12 @@ export class AiService {
    * Generates content using available AI providers with automatic fallback
    */
   static async generateContent(prompt: string, options: { systemPrompt?: string; responseMimeType?: string } = {}) {
-    const fullPrompt = options.systemPrompt ? `${options.systemPrompt}\n\nUser Query: ${prompt}` : prompt;
+    // Inject Master Business Context to ensure the AI always understands the core business
+    const contextEnhancedSystemPrompt = options.systemPrompt 
+      ? `${this.MASTER_BUSINESS_CONTEXT}\n${options.systemPrompt}`
+      : this.MASTER_BUSINESS_CONTEXT;
+
+    const fullPrompt = `${contextEnhancedSystemPrompt}\n\nUser Query: ${prompt}`;
 
     logger.info(`AI Request initiated using ${this.primaryProvider} provider`);
 
