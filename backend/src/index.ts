@@ -155,7 +155,14 @@ const initializeAdminUser = async () => {
 // Start server (Final trigger for database connection update)
 app.listen(port, async () => {
   try {
-    const dbUrl = process.env.DATABASE_URL || '';
+    let dbUrl = process.env.DATABASE_URL || '';
+    
+    // Robust cleanup: Remove "DATABASE_URL=" prefix if accidentally included
+    if (dbUrl.startsWith('DATABASE_URL=')) {
+      dbUrl = dbUrl.replace('DATABASE_URL=', '');
+      process.env.DATABASE_URL = dbUrl;
+    }
+
     const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ':****@');
     logger.info(`Attempting to connect to database: ${maskedUrl}`);
 
