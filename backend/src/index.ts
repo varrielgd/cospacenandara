@@ -118,12 +118,18 @@ const initializeAdminUser = async () => {
           }
         });
         logger.info(`Permanent admin ${admin.email} created successfully`);
-      } else if (!(existing as any).isVerified) {
+      } else {
+        // Always ensure password matches the one in .env and account is verified
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
         // @ts-ignore
         await prisma.user.update({
           where: { email: admin.email },
-          data: { isVerified: true }
+          data: { 
+            password: hashedPassword,
+            isVerified: true 
+          }
         });
+        logger.info(`Permanent admin ${admin.email} credentials synchronized`);
       }
     }
   } catch (error) {
