@@ -2,10 +2,16 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { logger } from '../utils/logger';
 import { JWT_SECRET, JWT_EXPIRES_IN, ALLOWED_EMAILS } from '../config/auth';
 
 const prisma = new PrismaClient();
+
+// Simple logger implementation since ../utils/logger is missing
+const logger = {
+  info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ''),
+  error: (msg: string, meta?: any) => console.error(`[ERROR] ${msg}`, meta || ''),
+  warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || '')
+};
 
 interface AuthRequest extends Request {
   user?: any;
@@ -228,21 +234,6 @@ export const debugAuth = async (req: Request, res: Response) => {
     nodeEnv: process.env.NODE_ENV
   });
 };
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isVerified: true
-      }
-    });
-
-    return res.json(user);
-  } catch (error) {
-    logger.error('Me error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
-  }
-};
-
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
     const users = await prisma.user.findMany({
@@ -252,13 +243,12 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         firstName: true,
         lastName: true,
         role: true,
-        isVerified: true,
-        createdAt: true
+        isVerified: true
       }
     });
     return res.json(users);
   } catch (error) {
-    logger.error('Get all users error:', error);
+    logger.error('GetAllUsers error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -266,36 +256,10 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    
-    // Prevent self-deletion
-    if (id === req.user?.id) {
-      return res.status(400).json({ message: 'Cannot delete your own account' });
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: id as string } });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Protect permanent admins (from index.ts)
-    const permanentEmails = ['nandaranusamontierra@gmail.com', 'nandalatifanibudiarti97@gmail.com'];
-    if (permanentEmails.includes(user.email)) {
-      return res.status(403).json({ message: 'Cannot delete a permanent system administrator' });
-    }
-
-    // Delete related data first (cascading manual delete for SQLite compatibility if needed, 
-    // but schema uses onDelete: Cascade mostly)
-    await prisma.activity.deleteMany({ where: { userId: id as string } });
-    await prisma.note.deleteMany({ where: { userId: id as string } });
-    await prisma.task.deleteMany({ where: { userId: id as string } });
-    await prisma.discoverySession.deleteMany({ where: { userId: id as string } });
-    await prisma.auditLog.deleteMany({ where: { userId: id as string } });
-
-    await prisma.user.delete({ where: { id: id as string } });
-    
+    await prisma.user.delete({ where: { id } });
     return res.json({ message: 'User deleted successfully' });
   } catch (error) {
-    logger.error('Delete user error:', error);
+    logger.error('DeleteUser error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

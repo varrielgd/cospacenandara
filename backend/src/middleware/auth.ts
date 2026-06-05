@@ -1,10 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { logger } from '../utils/logger';
 import { JWT_SECRET } from '../config/auth';
 
 const prisma = new PrismaClient();
+
+// Simple logger implementation
+const logger = {
+  info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ''),
+  error: (msg: string, meta?: any) => console.error(`[ERROR] ${msg}`, meta || ''),
+  warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || '')
+};
 
 interface AuthRequest extends Request {
   user?: any;
