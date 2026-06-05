@@ -15,7 +15,7 @@ import discoveryRoutes from './routes/discovery.routes';
 import emailRoutes from './routes/email.routes';
 import auditRoutes from './routes/audit.routes';
 import { errorHandler } from './middleware/error';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 // Load environment variables
@@ -154,9 +154,20 @@ const initializeAdminUser = async () => {
 
 // Start server
 app.listen(port, async () => {
-  await initializeAdminUser();
-  console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
-  logger.info(`Server started on port ${port}`);
+  try {
+    const dbUrl = process.env.DATABASE_URL || '';
+    const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ':****@');
+    logger.info(`Attempting to connect to database: ${maskedUrl}`);
+
+    await prisma.$connect();
+    logger.info('Database connection established successfully');
+    await initializeAdminUser();
+    console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
+    logger.info(`Server started on port ${port}`);
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
 });
 
 export { app, prisma, logger };

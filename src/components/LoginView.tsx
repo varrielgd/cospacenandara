@@ -33,7 +33,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
           setError('Account needs verification. Please check your email.');
           return;
         }
-        throw new Error(data.message || 'Login failed');
+        // Tampilkan detail error dari backend jika ada
+        const errorMessage = data.details || data.message || 'Login failed';
+        throw new Error(errorMessage);
       }
 
       onLoginSuccess(data.token, data.user);

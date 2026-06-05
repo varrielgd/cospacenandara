@@ -2,8 +2,12 @@
 Aplikasi Nandara Corporation sekarang dikonfigurasi untuk koneksi langsung ke backend.
 
 ## 1. Persiapan Database (Supabase)
-Anda sudah memiliki database di Supabase. Pastikan URL berikut tersimpan:
-`postgresql://postgres:zAbEMHyW7nA0uTdR@db.cavaopitgwwxfpptnwcw.supabase.co:5432/postgres`
+Sangat disarankan menggunakan **Connection Pooling** untuk deployment cloud agar koneksi lebih stabil.
+
+1.  Buka Dashboard Supabase > Settings > Database.
+2.  Cari bagian **Connection String** dan pilih tab **Transaction** (Bukan Session).
+3.  URL-nya akan menggunakan port **6543**. Contoh:
+    `postgresql://postgres.cavaopitgwwxfpptnwcw:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require`
 
 ---
 
@@ -17,15 +21,21 @@ Backend akan dihosting di Render karena mendukung proses Node.js yang berjalan t
     *   **Name**: `nandara-backend`
     *   **Root Directory**: `backend` (Sangat Penting!)
     *   **Environment**: `Node`
-    *   **Build Command**: `npm install && npx prisma generate && npm run build`
+    *   **Build Command**: `npm install && npx prisma generate && npx prisma db push && npm run build`
     *   **Start Command**: `npm start`
-5.  **Environment Variables**: Klik tombol **Advanced** > **Add Environment Variable**. Masukkan semua isi dari file `backend/.env` Anda:
-    *   `DATABASE_URL`: (URL Supabase Anda)
-    *   `PORT`: `10000` (Render menggunakan port dinamis, atau biarkan kosong)
+5.  **Environment Variables**:
+    *   `DATABASE_URL`: (Gunakan URL Transaction/Pooler dari langkah 1 di atas, port 6543)
+    *   **PENTING**: Tambahkan `?sslmode=require` jika belum ada di akhir URL.
+    *   `PORT`: `10000`
+    *   `NODE_ENV`: `production`
     *   `JWT_SECRET`: (Rahasia Anda)
     *   `GEMINI_API_KEY`: (Key Anda)
     *   `GROQ_API_KEY`: (Key Anda)
     *   (Masukkan juga config SMTP & IMAP Hostinger Anda)
+6.  **PENTING (Whitelist IP)**:
+    Jika masih muncul error "Can't reach database", Anda harus mengizinkan akses dari semua IP di Supabase sementara waktu:
+    *   Dashboard Supabase > Settings > Database > Network Restrictions.
+    *   Klik **Disable Restrictions** atau tambahkan `0.0.0.0/0`. (Render memiliki IP yang berubah-ubah).
 6.  **Deploy**: Klik **Create Web Service**. Tunggu hingga muncul status "Live".
 7.  **Catat URL**: Ambil URL backend Anda (misal: `https://nandara-backend.onrender.com`).
 

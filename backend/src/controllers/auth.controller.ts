@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma, logger } from '../index';
 import { AuthRequest } from '../middleware/auth';
@@ -177,9 +177,16 @@ export const login = async (req: Request, res: Response) => {
         role: user.role
       }
     });
-  } catch (error) {
-    logger.error('Login error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+  } catch (error: any) {
+    logger.error('Login error details:', {
+      message: error.message,
+      stack: error.stack,
+      email: req.body.email
+    });
+    return res.status(500).json({ 
+       message: 'Internal server error',
+       details: error.message // Selalu kirim message error asli untuk debug
+     });
   }
 };
 
