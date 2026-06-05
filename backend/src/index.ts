@@ -99,47 +99,32 @@ app.get('/health', (req, res) => {
 app.use(errorHandler);
 
 // Initialize permanent admin user and handle demo users
-const initializeAdminUser = async () => {
+async function initializeAdminUser() {
   try {
-    const adminEmail = 'nandaranusamontierra@gmail.com';
-    const adminPassword = 'Ghfso#!@!5246!#!@g7';
-    
-    // Check and create permanent admins
     const permanentAdmins = [
-      { email: 'nandaranusamontierra@gmail.com', firstName: 'Nandara', lastName: 'Admin' },
+      { email: 'nandaranusamontierra@gmail.com', firstName: 'Nandara', lastName: 'Nusa' },
       { email: 'nandalatifanibudiarti97@gmail.com', firstName: 'Nanda', lastName: 'Latifani' }
     ];
 
-    for (const admin of permanentAdmins) {
-      const existing = await prisma.user.findUnique({
-        where: { email: admin.email }
-      });
+    const hashedPassword = await bcrypt.hash('Ghfso#!@!5246!#!@g7', 10);
 
+    for (const admin of permanentAdmins) {
+      const existing = await prisma.user.findUnique({ where: { email: admin.email } });
       if (!existing) {
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
-        // @ts-ignore
         await prisma.user.create({
           data: {
-            email: admin.email,
+            ...admin,
             password: hashedPassword,
-            firstName: admin.firstName,
-            lastName: admin.lastName,
             role: 'ADMIN',
-            isVerified: true,
-            twoFactorEnabled: false
+            isVerified: true
           }
         });
-        logger.info(`Permanent admin ${admin.email} created successfully`);
+        logger.info(`Permanent admin ${admin.email} created`);
       } else {
-        // Always ensure password matches the one in .env and account is verified
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
-        // @ts-ignore
+        // Ensure role and password are correct even if user existed
         await prisma.user.update({
           where: { email: admin.email },
-          data: { 
-            password: hashedPassword,
-            isVerified: true 
-          }
+          data: { role: 'ADMIN', password: hashedPassword }
         });
         logger.info(`Permanent admin ${admin.email} credentials synchronized`);
       }
@@ -147,7 +132,7 @@ const initializeAdminUser = async () => {
   } catch (error) {
     logger.error('Error initializing users:', error);
   }
-};
+}
 
 // Start server (Final stabilization for Supabase Pooler)
 app.listen(port, async () => {

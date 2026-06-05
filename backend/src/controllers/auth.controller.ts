@@ -143,6 +143,13 @@ export const verify2FA = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    
+    // PHASE 9: Whitelist Super Admin
+    const allowedEmails = ['nandaranusamontierra@gmail.com', 'nandalatifanibudiarti97@gmail.com'];
+    if (!allowedEmails.includes(email)) {
+      logger.warn(`LOGIN BLOCKED: Email ${email} is not in whitelist`);
+      return res.status(403).json({ message: 'Access forbidden: You are not authorized to access this platform' });
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -168,9 +175,9 @@ export const login = async (req: Request, res: Response) => {
     );
 
     const decoded = jwt.decode(token) as any;
-    logger.info(`Token generated for user: ${user.email}`, {
+    logger.info(`LOGIN SUCCESS: Token generated for ${user.email}`, {
       expiresAt: new Date(decoded.exp * 1000).toISOString(),
-      secretUsed: process.env.JWT_SECRET ? 'ENV_SECRET' : 'FALLBACK_SECRET'
+      tokenPreview: `${token.substring(0, 10)}...${token.substring(token.length - 10)}`
     });
 
     return res.json({
@@ -180,7 +187,8 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role
+        role: user.role,
+        isVerified: user.isVerified
       }
     });
   } catch (error: any) {
@@ -229,26 +237,33 @@ export const debugToken = async (req: AuthRequest, res: Response) => {
     const token = authHeader.split(' ')[1];
     const secret = process.env.JWT_SECRET || 'nandara_secret_fallback_2026';
     
-    const decoded = jwt.verify(token, secret) as any;
-    
-    return res.json({
-      authenticated: true,
-      userId: decoded.id,
-      email: decoded.email,
-      role: decoded.role,
-      exp: decoded.exp,
-      expIso: new Date(decoded.exp * 1000).toISOString(),
-      now: Math.floor(Date.now() / 1000),
-      timeLeft: decoded.exp - Math.floor(Date.now() / 1000),
-      envSecretExists: !!process.env.JWT_SECRET,
-      nodeEnv: process.env.NODE_ENV
-    });
+    try {
+      const decoded = jwt.verify(token, secret) as any;
+      
+      return res.json({
+        authenticated: true,
+        userId: decoded.id,
+        email: decoded.email,
+        role: decoded.role,
+        exp: decoded.exp,
+        expIso: new Date(decoded.exp * 1000).toISOString(),
+        now: Math.floor(Date.now() / 1000),
+        timeLeft: decoded.exp - Math.floor(Date.now() / 1000),
+        envSecretExists: !!process.env.JWT_SECRET,
+        nodeEnv: process.env.NODE_ENV
+      });
+    } catch (verifyError: any) {
+      return res.status(401).json({
+        authenticated: false,
+        reason: verifyError.message,
+        envSecretExists: !!process.env.JWT_SECRET
+      });
+    }
   } catch (error: any) {
-    return res.status(401).json({ 
+    return res.status(500).json({ 
       authenticated: false,
-      message: 'Token verification failed', 
-      error: error.message,
-      envSecretExists: !!process.env.JWT_SECRET 
+      message: 'Server error during debug', 
+      error: error.message
     });
   }
 };

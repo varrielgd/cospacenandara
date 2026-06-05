@@ -266,9 +266,9 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('Authentication token not found. Please log in again.');
+        throw new Error('Authentication required. Please login again.');
       }
-      
+
       const response = await fetch('/api/discovery/start', {
         method: 'POST',
         headers: {
@@ -276,11 +276,11 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          query: `${importerType} in ${country} ${region}`,
-          country,
+          targetCountry: country,
           region,
-          importerType
-        })
+          importerType,
+          maxResults: 30
+        }),
       });
 
       if (!response.ok) {
