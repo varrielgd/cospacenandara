@@ -74,12 +74,15 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('discoverySessionId');
+    localStorage.removeItem('discoveryLastResults');
     setIsAuthenticated(false);
     setCurrentUser(null);
     setLeads([]);
     setEmails([]);
     setSamples([]);
     setQuotations([]);
+    window.location.href = '/'; // Hard redirect to clear state
   };
 
   const fetchData = async (token: string) => {

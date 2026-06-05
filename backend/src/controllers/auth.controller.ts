@@ -164,8 +164,14 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'nandara_secret_fallback_2026',
-      { expiresIn: '7d' } // Extended to 7 days as requested
+      { expiresIn: '7d' }
     );
+
+    const decoded = jwt.decode(token) as any;
+    logger.info(`Token generated for user: ${user.email}`, {
+      expiresAt: new Date(decoded.exp * 1000).toISOString(),
+      secretUsed: process.env.JWT_SECRET ? 'ENV_SECRET' : 'FALLBACK_SECRET'
+    });
 
     return res.json({
       token,
@@ -217,7 +223,7 @@ export const debugToken = async (req: AuthRequest, res: Response) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No Bearer token provided' });
+      return res.status(401).json({ authenticated: false, message: 'No Bearer token provided' });
     }
 
     const token = authHeader.split(' ')[1];
@@ -226,7 +232,12 @@ export const debugToken = async (req: AuthRequest, res: Response) => {
     const decoded = jwt.verify(token, secret) as any;
     
     return res.json({
-      decoded,
+      authenticated: true,
+      userId: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      exp: decoded.exp,
+      expIso: new Date(decoded.exp * 1000).toISOString(),
       now: Math.floor(Date.now() / 1000),
       timeLeft: decoded.exp - Math.floor(Date.now() / 1000),
       envSecretExists: !!process.env.JWT_SECRET,
@@ -234,6 +245,7 @@ export const debugToken = async (req: AuthRequest, res: Response) => {
     });
   } catch (error: any) {
     return res.status(401).json({ 
+      authenticated: false,
       message: 'Token verification failed', 
       error: error.message,
       envSecretExists: !!process.env.JWT_SECRET 
