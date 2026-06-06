@@ -24,6 +24,9 @@ Ikuti langkah-langkah ini untuk mendeploy aplikasi Coffee Importer Intelligence 
    - `SMTP_PASS`: `Ghfso#!@!5246!#!@g7`
    - `FRONTEND_URL`: `https://support.nandaranusamontierra.com`
 5. Railway akan mendeteksi `package.json` dan menjalankan `npm install && npm run build && npm start`.
+   
+   Catatan: Pastikan `npm run build` di folder backend melakukan `prisma generate` (saat ini ada di `backend/package.json` sebagai `prisma generate && tsc`).
+
 
 ## 3. Deploy Frontend
 1. Klik **New Service** -> **GitHub Repo**.
