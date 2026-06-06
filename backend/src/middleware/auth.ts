@@ -1,7 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config/auth';
-import { prisma, logger } from '../index';
+import { prisma } from '../prisma';
+
+// Avoid importing `logger` from `index` to prevent circular imports during startup.
+const logger = {
+  warn: (...args: any[]) => console.warn(...args),
+  error: (...args: any[]) => console.error(...args),
+  info: (...args: any[]) => console.log(...args),
+};
 
 export interface AuthRequest extends Request {
   user?: {
