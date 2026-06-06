@@ -7,7 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { rateLimit } from 'express-rate-limit';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma';
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
 import authRoutes from './routes/auth.routes';
@@ -24,7 +24,6 @@ import jwt from 'jsonwebtoken';
 
 const app = express();
 const port = process.env.PORT || 4000;
-const prisma = new PrismaClient();
 
 // Logger configuration
 const logger = winston.createLogger({

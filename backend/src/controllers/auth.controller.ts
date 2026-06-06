@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../prisma';
 import { JWT_SECRET, JWT_EXPIRES_IN, ALLOWED_EMAILS } from '../config/auth';
 import type { AuthRequest } from '../middleware/auth';
-
-const prisma = new PrismaClient();
 
 // Simple logger implementation since ../utils/logger is missing
 const logger = {
