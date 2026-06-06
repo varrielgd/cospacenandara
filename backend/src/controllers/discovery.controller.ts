@@ -1,7 +1,18 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { DiscoveryService } from '../services/discovery.service';
-import { logger, prisma } from '../index';
+import { prisma } from '../prisma';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple()
+    })
+  ]
+});
 
 export const startDiscovery = async (req: AuthRequest, res: Response) => {
   try {

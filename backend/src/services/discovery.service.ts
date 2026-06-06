@@ -1,6 +1,17 @@
 import { ImporterStatus } from '@prisma/client';
-import { prisma, logger } from '../index';
+import { prisma } from '../prisma';
 import { AiService } from './ai.service';
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple()
+    })
+  ]
+});
 
 type LeadScore = 'A+' | 'A' | 'B+' | 'B' | 'C';
 type VerificationStatus = 'VERIFIED' | 'LIKELY' | 'REJECTED';
