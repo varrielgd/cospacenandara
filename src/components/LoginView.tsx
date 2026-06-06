@@ -98,7 +98,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                 GLOBAL COFFEE EXPORT INTELLIGENCE PLATFORM
               </p>
               <p className="text-[9px] font-mono text-white/40 tracking-wider">
-                support.nandaranusamontierra.com
+                cospace.nandaranusamontierra.com
               </p>
             </div>
           </div>
