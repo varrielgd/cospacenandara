@@ -1,9 +1,8 @@
 import { DiscoveryService } from './src/services/discovery.service';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './src/prisma';
 
 dotenv.config();
-const prisma = new PrismaClient();
 
 async function test() {
   console.log('Testing REAL AI discovery...');
