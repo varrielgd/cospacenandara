@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import * as dashboardController from '../controllers/dashboard.controller';
 import { authenticate } from '../middleware/auth';
 import { GoogleSheetsService } from '../services/google-sheets.service';
-import { prisma } from '../index';
+import { prisma } from '../prisma';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import { prisma } from '../index';
+import { prisma } from '../prisma';
 
 export class AuditService {
   static async log(userId: string | null, action: string, entity: string, entityId?: string, details?: string, ipAddress?: string) {
