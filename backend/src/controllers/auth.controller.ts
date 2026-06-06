@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { JWT_SECRET, JWT_EXPIRES_IN, ALLOWED_EMAILS } from '../config/auth';
+import type { AuthRequest } from '../middleware/auth';
 
 const prisma = new PrismaClient();
 
@@ -13,11 +14,9 @@ const logger = {
   warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || '')
 };
 
-interface AuthRequest extends Request {
-  user?: any;
-}
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.hostinger.com',
@@ -255,7 +254,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
 
 export const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     await prisma.user.delete({ where: { id } });
     return res.json({ message: 'User deleted successfully' });
   } catch (error) {
