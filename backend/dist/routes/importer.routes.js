@@ -38,11 +38,13 @@ const importerController = __importStar(require("../controllers/importer.control
 const auth_1 = require("../middleware/auth");
 const validators_1 = require("../validators");
 const router = (0, express_1.Router)();
+// Apply authentication to all importer routes
 router.use(auth_1.authenticate);
 router.get('/', importerController.getAllImporters);
 router.get('/:id', importerController.getImporterById);
 router.post('/', validators_1.importerValidator, importerController.createImporter);
 router.post('/bulk', importerController.bulkCreateImporters);
+router.post('/sync-sheets', importerController.syncToSheets);
 router.put('/:id', validators_1.importerValidator, importerController.updateImporter);
 router.delete('/:id', importerController.deleteImporter);
 exports.default = router;

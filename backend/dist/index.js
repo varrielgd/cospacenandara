@@ -4,13 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logger = exports.prisma = exports.app = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
+// Load environment variables immediately
+dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = require("express-rate-limit");
-const dotenv_1 = __importDefault(require("dotenv"));
-const client_1 = require("@prisma/client");
+const prisma_1 = require("./prisma");
+Object.defineProperty(exports, "prisma", { enumerable: true, get: function () { return prisma_1.prisma; } });
 const winston_1 = __importDefault(require("winston"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const importer_routes_1 = __importDefault(require("./routes/importer.routes"));
@@ -21,14 +24,10 @@ const discovery_routes_1 = __importDefault(require("./routes/discovery.routes"))
 const email_routes_1 = __importDefault(require("./routes/email.routes"));
 const audit_routes_1 = __importDefault(require("./routes/audit.routes"));
 const error_1 = require("./middleware/error");
-const bcrypt_1 = __importDefault(require("bcrypt"));
-// Load environment variables
-dotenv_1.default.config();
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const app = (0, express_1.default)();
 exports.app = app;
 const port = process.env.PORT || 4000;
-const prisma = new client_1.PrismaClient();
-exports.prisma = prisma;
 // Logger configuration
 const logger = winston_1.default.createLogger({
     level: 'info',
@@ -36,18 +35,22 @@ const logger = winston_1.default.createLogger({
     transports: [
         new winston_1.default.transports.File({ filename: 'logs/error.log', level: 'error' }),
         new winston_1.default.transports.File({ filename: 'logs/combined.log' }),
+        new winston_1.default.transports.Console({
+            format: winston_1.default.format.simple(),
+        })
     ],
 });
 exports.logger = logger;
-if (process.env.NODE_ENV !== 'production') {
-    logger.add(new winston_1.default.transports.Console({
-        format: winston_1.default.format.simple(),
-    }));
-}
 // Security Middleware
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [
+        'https://nandaracorporation.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:5173'
+    ],
     credentials: true
 }));
 // Rate limiting
@@ -74,74 +77,66 @@ app.use('/api/discovery', discovery_routes_1.default);
 app.use('/api/emails', email_routes_1.default);
 app.use('/api/audit', audit_routes_1.default);
 // Basic Health Check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 // Error handling
 app.use(error_1.errorHandler);
 // Initialize permanent admin user and handle demo users
-const initializeAdminUser = async () => {
+const auth_1 = require("./config/auth");
+async function initializeAdminUser() {
     try {
-        const adminEmail = 'nandaranusamontierra@gmail.com';
-        const adminPassword = 'Ghfso#!@!5246!#!@g7';
-        // Check if permanent admin exists
-        const existingAdmin = await prisma.user.findUnique({
-            where: { email: adminEmail }
-        });
-        if (!existingAdmin) {
-            const hashedPassword = await bcrypt_1.default.hash(adminPassword, 10);
-            // @ts-ignore - isVerified exists in DB but client might need regeneration
-            await prisma.user.create({
-                data: {
-                    email: adminEmail,
-                    password: hashedPassword,
-                    firstName: 'Permanent',
-                    lastName: 'Admin',
-                    role: 'ADMIN',
-                    isVerified: true,
-                    twoFactorEnabled: false
-                }
-            });
-            logger.info('Permanent admin user created successfully');
-        }
-        else if (!existingAdmin.isVerified) {
-            // Ensure permanent admin is always verified
-            // @ts-ignore
-            await prisma.user.update({
-                where: { email: adminEmail },
-                data: { isVerified: true }
-            });
-        }
-        // Initialize demo user if needed
-        const demoEmail = 'demo@nandaracoffee.com';
-        const demoPassword = 'demo123456';
-        const existingDemo = await prisma.user.findUnique({
-            where: { email: demoEmail }
-        });
-        if (!existingDemo) {
-            const hashedDemoPassword = await bcrypt_1.default.hash(demoPassword, 10);
-            // @ts-ignore
-            await prisma.user.create({
-                data: {
-                    email: demoEmail,
-                    password: hashedDemoPassword,
-                    firstName: 'Demo',
-                    lastName: 'User',
-                    role: 'ADMIN',
-                    isVerified: true
-                }
-            });
-            logger.info('Demo user created successfully');
+        const hashedPassword = await bcryptjs_1.default.hash('Ghfso#!@!5246!#!@g7', 10);
+        for (const email of auth_1.ALLOWED_EMAILS) {
+            const existing = await prisma_1.prisma.user.findUnique({ where: { email } });
+            const firstName = email.includes('nandara') ? 'Nandara' : 'Nanda';
+            const lastName = email.includes('nandara') ? 'Nusa' : 'Latifani';
+            if (!existing) {
+                await prisma_1.prisma.user.create({
+                    data: {
+                        email,
+                        firstName,
+                        lastName,
+                        password: hashedPassword,
+                        role: 'SUPER_ADMIN',
+                        isVerified: true
+                    }
+                });
+                logger.info(`SUPER_ADMIN ${email} created`);
+            }
+            else {
+                await prisma_1.prisma.user.update({
+                    where: { email },
+                    data: { role: 'SUPER_ADMIN', password: hashedPassword, isVerified: true }
+                });
+                logger.info(`SUPER_ADMIN ${email} credentials synchronized`);
+            }
         }
     }
     catch (error) {
         logger.error('Error initializing users:', error);
     }
-};
-// Start server
+}
+// Start server (Final stabilization for Supabase Pooler)
 app.listen(port, async () => {
-    await initializeAdminUser();
-    console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
-    logger.info(`Server started on port ${port}`);
+    try {
+        let dbUrl = process.env.DATABASE_URL || '';
+        // Robust cleanup: Remove "DATABASE_URL=" prefix if accidentally included
+        if (dbUrl.startsWith('DATABASE_URL=')) {
+            dbUrl = dbUrl.replace('DATABASE_URL=', '');
+            process.env.DATABASE_URL = dbUrl;
+        }
+        const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ':****@');
+        logger.info(`Attempting to connect to database: ${maskedUrl}`);
+        await prisma_1.prisma.$connect();
+        logger.info('Database connection established successfully');
+        await initializeAdminUser();
+        console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
+        logger.info(`Server started on port ${port}`);
+    }
+    catch (error) {
+        logger.error('Failed to start server:', error);
+        process.exit(1);
+    }
 });
 //# sourceMappingURL=index.js.map

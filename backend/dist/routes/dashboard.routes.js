@@ -37,16 +37,16 @@ const express_1 = require("express");
 const dashboardController = __importStar(require("../controllers/dashboard.controller"));
 const auth_1 = require("../middleware/auth");
 const google_sheets_service_1 = require("../services/google-sheets.service");
-const index_1 = require("../index");
+const prisma_1 = require("../prisma");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticate);
 router.get('/stats', dashboardController.getDashboardStats);
-router.post('/sync-sheets', async (req, res) => {
+router.post('/sync-sheets', async (_req, res) => {
     try {
         const [importers, samples, quotations] = await Promise.all([
-            index_1.prisma.importer.findMany(),
-            index_1.prisma.sample.findMany(),
-            index_1.prisma.quotation.findMany()
+            prisma_1.prisma.importer.findMany(),
+            prisma_1.prisma.sample.findMany(),
+            prisma_1.prisma.quotation.findMany()
         ]);
         await google_sheets_service_1.GoogleSheetsService.syncAll({ importers, samples, quotations });
         res.json({ message: 'Sync to Google Sheets successful' });

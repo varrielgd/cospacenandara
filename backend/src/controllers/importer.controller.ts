@@ -56,8 +56,15 @@ export const getImporterById = async (req: AuthRequest, res: Response) => {
 export const createImporter = async (req: AuthRequest, res: Response) => {
   try {
     const importerData = req.body;
+    const cleanData = {
+      ...importerData,
+      website: importerData.website && importerData.website.trim() !== '' ? importerData.website : null,
+      email: importerData.email && importerData.email.trim() !== '' ? importerData.email : null,
+      phone: importerData.phone && importerData.phone.trim() !== '' ? importerData.phone : null,
+      linkedin: importerData.linkedin && importerData.linkedin.trim() !== '' ? importerData.linkedin : null,
+    };
     const importer = await prisma.importer.create({
-      data: importerData
+      data: cleanData
     });
 
     // Log activity
@@ -134,15 +141,15 @@ export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
         const created = await prisma.importer.create({
           data: {
             companyName: data.companyName,
-            website: data.website,
-            email: data.email,
-            phone: data.phone,
+            website: data.website && data.website.trim() !== '' ? data.website : null,
+            email: data.email && data.email.trim() !== '' ? data.email : null,
+            phone: data.phone && data.phone.trim() !== '' ? data.phone : null,
             country: data.country,
             city: data.city,
             leadScore: data.leadScore,
             status: data.status || 'NEW',
             notes: data.notes,
-            linkedin: data.linkedin
+            linkedin: data.linkedin && data.linkedin.trim() !== '' ? data.linkedin : null
           }
         });
         createdImporters.push(created);

@@ -41,7 +41,17 @@ const router = (0, express_1.Router)();
 router.post('/register', validators_1.authValidator, authController.register);
 router.post('/verify-2fa', authController.verify2FA);
 router.post('/login', validators_1.authValidator, authController.login);
-router.post('/demo-login', authController.demoLogin);
 router.get('/me', auth_1.authenticate, authController.me);
+router.get('/debug', authController.debugAuth);
+router.get('/headers', (req, res) => {
+    res.json({
+        headers: req.headers,
+        method: req.method,
+        url: req.url,
+        originalUrl: req.originalUrl
+    });
+});
+router.get('/users', auth_1.authenticate, authController.getAllUsers);
+router.delete('/users/:id', auth_1.authenticate, authController.deleteUser);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

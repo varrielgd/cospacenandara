@@ -1,4 +1,5 @@
 export declare class AiService {
+    private static readonly MASTER_BUSINESS_CONTEXT;
     private static groq;
     private static genAI;
     private static primaryProvider;

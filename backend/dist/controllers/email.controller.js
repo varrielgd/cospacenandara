@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEmailsByImporter = exports.syncInbox = exports.getInbox = exports.sendDirectEmail = exports.sendEmail = exports.approveEmail = exports.generateDraft = void 0;
+exports.getEmailsByImporter = exports.syncInbox = exports.getInbox = exports.sendDirectEmail = exports.getAllEmails = exports.sendEmail = exports.approveEmail = exports.generateDraft = void 0;
 const ai_service_1 = require("../services/ai.service");
 const index_1 = require("../index");
 const nodemailer_1 = __importDefault(require("nodemailer"));
@@ -109,6 +109,20 @@ const sendEmail = async (req, res) => {
     }
 };
 exports.sendEmail = sendEmail;
+const getAllEmails = async (_req, res) => {
+    try {
+        const emails = await index_1.prisma.email.findMany({
+            include: { importer: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        return res.json(emails);
+    }
+    catch (error) {
+        index_1.logger.error('Get all emails error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllEmails = getAllEmails;
 const sendDirectEmail = async (req, res) => {
     try {
         const { to, subject, body } = req.body;
@@ -143,7 +157,7 @@ const sendDirectEmail = async (req, res) => {
     }
 };
 exports.sendDirectEmail = sendDirectEmail;
-const getInbox = async (req, res) => {
+const getInbox = async (_req, res) => {
     try {
         const emails = await index_1.prisma.email.findMany({
             where: { direction: 'INBOUND' },
@@ -158,7 +172,7 @@ const getInbox = async (req, res) => {
     }
 };
 exports.getInbox = getInbox;
-const syncInbox = async (req, res) => {
+const syncInbox = async (_req, res) => {
     try {
         await email_sync_service_1.EmailSyncService.syncInbox();
         return res.json({ message: 'Inbox sync completed successfully' });

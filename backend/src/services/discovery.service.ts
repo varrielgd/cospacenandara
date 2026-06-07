@@ -629,10 +629,10 @@ Output format:
 
     const data = {
       companyName: lead.companyName,
-      website: lead.website,
-      email: lead.email,
-      phone: lead.phone,
-      linkedin: lead.linkedin,
+      website: lead.website && lead.website.trim() !== '' ? lead.website : null,
+      email: lead.email && lead.email.trim() !== '' ? lead.email : null,
+      phone: lead.phone && lead.phone.trim() !== '' ? lead.phone : null,
+      linkedin: lead.linkedin && lead.linkedin.trim() !== '' ? lead.linkedin : null,
       country: lead.country,
       city: lead.city,
       leadScore: lead.leadScore as any,

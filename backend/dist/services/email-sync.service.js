@@ -8,36 +8,43 @@ class EmailSyncService {
     static config = {
         host: process.env.IMAP_HOST || 'imap.hostinger.com',
         port: parseInt(process.env.IMAP_PORT || '993'),
-        secure: process.env.IMAP_SECURE === 'true',
+        secure: process.env.IMAP_SECURE === 'true' || process.env.IMAP_SECURE === 'true', // Handle both boolean and string
         auth: {
             user: process.env.IMAP_USER || '',
             pass: process.env.IMAP_PASS || '',
         },
     };
     static async syncInbox() {
+        index_1.logger.info(`Attempting IMAP sync for ${this.config.auth.user} at ${this.config.host}:${this.config.port}`);
         const client = new imapflow_1.ImapFlow({
             host: this.config.host,
             port: this.config.port,
             secure: this.config.secure,
             auth: this.config.auth,
             logger: false,
+            tls: {
+                rejectUnauthorized: false // Often needed for some mail servers
+            }
         });
         try {
             await client.connect();
+            index_1.logger.info('IMAP connected successfully');
             const lock = await client.getMailboxLock('INBOX');
             try {
                 const mailbox = client.mailbox;
-                if (!mailbox)
+                if (!mailbox) {
+                    index_1.logger.error('Mailbox INBOX not found after connection');
                     throw new Error('Mailbox not found');
+                }
+                index_1.logger.info(`Inbox found. Total messages: ${mailbox.exists}`);
                 // Fetch last 50 emails to sync
                 const startSeq = Math.max(1, mailbox.exists - 49);
                 const sequence = `${startSeq}:*`;
+                let syncedCount = 0;
                 for await (const message of client.fetch(sequence, { source: true, envelope: true })) {
                     if (!message.envelope || !message.source)
                         continue;
-                    const messageId = message.envelope.messageId;
-                    if (!messageId)
-                        continue;
+                    const messageId = message.envelope.messageId || `gen-${Date.now()}-${syncedCount}`;
                     // Check if already exists in DB
                     const existing = await index_1.prisma.email.findUnique({
                         where: { messageId }
@@ -59,12 +66,13 @@ class EmailSyncService {
                                 to: this.config.auth.user,
                                 status: 'RECEIVED',
                                 direction: 'INBOUND',
-                                receivedAt: message.envelope.date,
+                                receivedAt: message.envelope.date || new Date(),
                             }
                         });
-                        index_1.logger.info(`Synced new inbound email: ${message.envelope.subject}`);
+                        syncedCount++;
                     }
                 }
+                index_1.logger.info(`IMAP Sync completed. ${syncedCount} new emails added.`);
             }
             finally {
                 lock.release();
@@ -72,7 +80,11 @@ class EmailSyncService {
             await client.logout();
         }
         catch (error) {
-            index_1.logger.error('IMAP Sync Error:', error);
+            index_1.logger.error('IMAP Sync Error Details:', {
+                message: error.message,
+                stack: error.stack,
+                config: { ...this.config, pass: '***' }
+            });
             throw error;
         }
     }

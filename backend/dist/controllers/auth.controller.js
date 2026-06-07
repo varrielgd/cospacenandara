@@ -3,10 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.demoLogin = exports.me = exports.login = exports.verify2FA = exports.register = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
+exports.deleteUser = exports.getAllUsers = exports.debugAuth = exports.me = exports.login = exports.verify2FA = exports.register = void 0;
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const index_1 = require("../index");
+const prisma_1 = require("../prisma");
+const auth_1 = require("../config/auth");
+// Simple logger implementation since ../utils/logger is missing
+const logger = {
+    info: (msg, meta) => console.log(`[INFO] ${msg}`, meta || ''),
+    error: (msg, meta) => console.error(`[ERROR] ${msg}`, meta || ''),
+    warn: (msg, meta) => console.warn(`[WARN] ${msg}`, meta || '')
+};
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const crypto_1 = __importDefault(require("crypto"));
 const transporter = nodemailer_1.default.createTransport({
@@ -22,19 +29,19 @@ const register = async (req, res) => {
     try {
         const { email, password, firstName, lastName } = req.body;
         // Check if total users >= 4 (limit to 4 admin emails)
-        const userCount = await index_1.prisma.user.count();
+        const userCount = await prisma_1.prisma.user.count();
         if (userCount >= 4) {
             return res.status(403).json({ message: 'Registration limit reached (Maximum 4 admin accounts)' });
         }
-        const existingUser = await index_1.prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma_1.prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: 'Email already registered' });
         }
-        const hashedPassword = await bcrypt_1.default.hash(password, 10);
+        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
         // Generate 2FA verification code
         const verificationCode = crypto_1.default.randomInt(100000, 999999).toString();
         const verificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
-        const user = await index_1.prisma.user.create({
+        const user = await prisma_1.prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
@@ -65,10 +72,10 @@ const register = async (req, res) => {
           </div>
         `,
             });
-            index_1.logger.info(`Verification code sent to ${email}`);
+            logger.info(`Verification code sent to ${email}`);
         }
         catch (mailError) {
-            index_1.logger.error('Failed to send verification email:', mailError);
+            logger.error('Failed to send verification email:', mailError);
             // We still created the user, they can request a resend or try again if we add that logic
         }
         return res.status(201).json({
@@ -77,7 +84,7 @@ const register = async (req, res) => {
         });
     }
     catch (error) {
-        index_1.logger.error('Registration error:', error);
+        logger.error('Registration error:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -85,7 +92,7 @@ exports.register = register;
 const verify2FA = async (req, res) => {
     try {
         const { email, code } = req.body;
-        const user = await index_1.prisma.user.findUnique({ where: { email } });
+        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -99,7 +106,7 @@ const verify2FA = async (req, res) => {
             return res.status(400).json({ message: 'Verification code has expired' });
         }
         // Mark as verified
-        const updatedUser = await index_1.prisma.user.update({
+        const updatedUser = await prisma_1.prisma.user.update({
             where: { email },
             data: {
                 isVerified: true,
@@ -108,7 +115,7 @@ const verify2FA = async (req, res) => {
                 twoFactorEnabled: true // Enable 2FA by default after verification
             }
         });
-        const token = jsonwebtoken_1.default.sign({ id: updatedUser.id, email: updatedUser.email, role: updatedUser.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+        const token = jsonwebtoken_1.default.sign({ id: updatedUser.id, email: updatedUser.email, role: updatedUser.role }, process.env.JWT_SECRET || 'nandara_secret_fallback_2026', { expiresIn: '7d' });
         return res.json({
             message: 'Verification successful',
             token,
@@ -122,7 +129,7 @@ const verify2FA = async (req, res) => {
         });
     }
     catch (error) {
-        index_1.logger.error('2FA Verification error:', error);
+        logger.error('2FA Verification error:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -130,20 +137,21 @@ exports.verify2FA = verify2FA;
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await index_1.prisma.user.findUnique({ where: { email } });
+        // PHASE 2: Whitelist Super Admin
+        if (!auth_1.ALLOWED_EMAILS.includes(email)) {
+            logger.warn(`LOGIN BLOCKED: Email ${email} is not in whitelist`);
+            return res.status(403).json({ message: 'ACCESS_DENIED' });
+        }
+        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
-        const isValidPassword = await bcrypt_1.default.compare(password, user.password);
-        if (!isValidPassword) {
+        const isMatch = await bcryptjs_1.default.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
-        if (!user.isVerified) {
-            return res.status(403).json({ message: 'Account not verified. Please verify your email.', requiresVerification: true });
-        }
-        // For permanent admin or verified users, we could also enforce another 2FA check here if needed.
-        // For now, let's just proceed with token generation.
-        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
+        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, auth_1.JWT_SECRET, { expiresIn: auth_1.JWT_EXPIRES_IN });
+        logger.info(`LOGIN SUCCESS: Token generated for ${user.email}`);
         return res.json({
             token,
             user: {
@@ -151,12 +159,17 @@ const login = async (req, res) => {
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                role: user.role
+                role: user.role,
+                isVerified: user.isVerified
             }
         });
     }
     catch (error) {
-        index_1.logger.error('Login error:', error);
+        logger.error('Login error details:', {
+            message: error.message,
+            stack: error.stack,
+            email: req.body.email
+        });
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -165,7 +178,7 @@ const me = async (req, res) => {
     try {
         if (!req.user)
             return res.status(401).json({ message: 'Unauthorized' });
-        const user = await index_1.prisma.user.findUnique({
+        const user = await prisma_1.prisma.user.findUnique({
             where: { id: req.user.id },
             select: {
                 id: true,
@@ -179,34 +192,51 @@ const me = async (req, res) => {
         return res.json(user);
     }
     catch (error) {
-        index_1.logger.error('Me error:', error);
+        logger.error('Me error:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
 exports.me = me;
-const demoLogin = async (req, res) => {
+const debugAuth = async (req, res) => {
+    return res.json({
+        jwtLoaded: true,
+        jwtLength: auth_1.JWT_SECRET.length,
+        databaseConnected: true,
+        serverTime: new Date(),
+        nodeEnv: process.env.NODE_ENV
+    });
+};
+exports.debugAuth = debugAuth;
+const getAllUsers = async (req, res) => {
     try {
-        const demoEmail = 'demo@nandaracoffee.com';
-        const user = await index_1.prisma.user.findUnique({ where: { email: demoEmail } });
-        if (!user) {
-            return res.status(404).json({ message: 'Demo user not found. Server may not be initialized.' });
-        }
-        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '24h' });
-        return res.json({
-            token,
-            user: {
-                id: user.id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role
+        const users = await prisma_1.prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                isVerified: true
             }
         });
+        return res.json(users);
     }
     catch (error) {
-        index_1.logger.error('Demo login error:', error);
+        logger.error('GetAllUsers error:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-exports.demoLogin = demoLogin;
+exports.getAllUsers = getAllUsers;
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma_1.prisma.user.delete({ where: { id } });
+        return res.json({ message: 'User deleted successfully' });
+    }
+    catch (error) {
+        logger.error('DeleteUser error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.deleteUser = deleteUser;
 //# sourceMappingURL=auth.controller.js.map

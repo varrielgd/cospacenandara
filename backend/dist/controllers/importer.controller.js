@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bulkCreateImporters = exports.deleteImporter = exports.updateImporter = exports.createImporter = exports.getImporterById = exports.getAllImporters = void 0;
+exports.syncToSheets = exports.bulkCreateImporters = exports.deleteImporter = exports.updateImporter = exports.createImporter = exports.getImporterById = exports.getAllImporters = void 0;
 const index_1 = require("../index");
 const google_sheets_service_1 = require("../services/google-sheets.service");
 const getAllImporters = async (req, res) => {
@@ -56,8 +56,15 @@ exports.getImporterById = getImporterById;
 const createImporter = async (req, res) => {
     try {
         const importerData = req.body;
+        const cleanData = {
+            ...importerData,
+            website: importerData.website && importerData.website.trim() !== '' ? importerData.website : null,
+            email: importerData.email && importerData.email.trim() !== '' ? importerData.email : null,
+            phone: importerData.phone && importerData.phone.trim() !== '' ? importerData.phone : null,
+            linkedin: importerData.linkedin && importerData.linkedin.trim() !== '' ? importerData.linkedin : null,
+        };
         const importer = await index_1.prisma.importer.create({
-            data: importerData
+            data: cleanData
         });
         // Log activity
         await index_1.prisma.activity.create({
@@ -132,15 +139,15 @@ const bulkCreateImporters = async (req, res) => {
                 const created = await index_1.prisma.importer.create({
                     data: {
                         companyName: data.companyName,
-                        website: data.website,
-                        email: data.email,
-                        phone: data.phone,
+                        website: data.website && data.website.trim() !== '' ? data.website : null,
+                        email: data.email && data.email.trim() !== '' ? data.email : null,
+                        phone: data.phone && data.phone.trim() !== '' ? data.phone : null,
                         country: data.country,
                         city: data.city,
                         leadScore: data.leadScore,
                         status: data.status || 'NEW',
                         notes: data.notes,
-                        linkedin: data.linkedin
+                        linkedin: data.linkedin && data.linkedin.trim() !== '' ? data.linkedin : null
                     }
                 });
                 createdImporters.push(created);
@@ -168,4 +175,23 @@ const bulkCreateImporters = async (req, res) => {
     }
 };
 exports.bulkCreateImporters = bulkCreateImporters;
+const syncToSheets = async (req, res) => {
+    try {
+        const { importerId } = req.body;
+        if (!importerId)
+            return res.status(400).json({ message: 'Importer ID is required' });
+        const importer = await index_1.prisma.importer.findUnique({
+            where: { id: importerId }
+        });
+        if (!importer)
+            return res.status(404).json({ message: 'Importer not found' });
+        await google_sheets_service_1.GoogleSheetsService.syncImporter(importer);
+        return res.json({ message: 'Successfully synced to Google Sheets' });
+    }
+    catch (error) {
+        index_1.logger.error('Error syncing to sheets:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.syncToSheets = syncToSheets;
 //# sourceMappingURL=importer.controller.js.map

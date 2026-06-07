@@ -37,7 +37,11 @@ const express_1 = require("express");
 const emailController = __importStar(require("../controllers/email.controller"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+// Apply authentication to all email routes
 router.use(auth_1.authenticate);
+router.get('/debug', (_req, res) => res.json({ message: 'Email routes reachable' }));
+router.get('/', emailController.getAllEmails);
+router.get('', emailController.getAllEmails);
 router.post('/generate', emailController.generateDraft);
 router.post('/approve/:id', emailController.approveEmail);
 router.post('/send/:id', emailController.sendEmail);

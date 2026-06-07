@@ -9,7 +9,8 @@ const errorHandler = (err, req, res, next) => {
     res.status(status).json({
         status: 'error',
         message,
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        details: err.message, // Tampilkan detail error sementara untuk debugging di prod
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 };
 exports.errorHandler = errorHandler;

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteQuotation = exports.updateQuotation = exports.createQuotation = exports.getAllQuotations = void 0;
 const index_1 = require("../index");
 const pdf_service_1 = require("../services/pdf.service");
-const getAllQuotations = async (req, res) => {
+const getAllQuotations = async (_req, res) => {
     try {
         const quotations = await index_1.prisma.quotation.findMany({
             include: { importer: { select: { companyName: true } } },
@@ -70,14 +70,16 @@ const createQuotation = async (req, res) => {
         catch (pdfError) {
             index_1.logger.error('Failed to generate PDF during quotation creation:', pdfError);
         }
-        await index_1.prisma.activity.create({
-            data: {
-                userId: req.user.id,
-                importerId: quotation.importerId,
-                type: 'QUOTATION',
-                description: `Quotation ${quotationNumber} created for ${product}.`
-            }
-        });
+        if (req.user) {
+            await index_1.prisma.activity.create({
+                data: {
+                    userId: req.user.id,
+                    importerId: quotation.importerId,
+                    type: 'QUOTATION',
+                    description: `Quotation ${quotationNumber} created for ${product}.`
+                }
+            });
+        }
         return res.status(201).json(quotation);
     }
     catch (error) {

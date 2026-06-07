@@ -487,11 +487,9 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { id: 'id', label: 'ID' },
+                  
                   { id: 'en', label: 'EN' },
-                  { id: 'zh-CN', label: 'ZH' },
-                  { id: 'ja', label: 'JA' },
-                  { id: 'de', label: 'DE' },
+                  
                 ].map((lang) => {
                   const targetCookie = `/id/${lang.id}`;
                   const isIdEmpty = lang.id === 'id' && (!document.cookie.includes('googtrans') || document.cookie.includes('/id/id'));

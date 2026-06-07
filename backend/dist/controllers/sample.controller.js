@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteSample = exports.updateSample = exports.createSample = exports.getAllSamples = void 0;
 const index_1 = require("../index");
-const getAllSamples = async (req, res) => {
+const getAllSamples = async (_req, res) => {
     try {
         const samples = await index_1.prisma.sample.findMany({
             include: { importer: { select: { companyName: true } } },
@@ -23,14 +23,16 @@ const createSample = async (req, res) => {
             data: sampleData,
             include: { importer: { select: { companyName: true } } }
         });
-        await index_1.prisma.activity.create({
-            data: {
-                userId: req.user.id,
-                importerId: sample.importerId,
-                type: 'SAMPLE',
-                description: `New sample process started for ${sample.importer.companyName} (${sample.product}). Current stage: ${sample.status}.`
-            }
-        });
+        if (req.user) {
+            await index_1.prisma.activity.create({
+                data: {
+                    userId: req.user.id,
+                    importerId: sample.importerId,
+                    type: 'SAMPLE',
+                    description: `New sample process started for ${sample.importer.companyName} (${sample.product}). Current stage: ${sample.status}.`
+                }
+            });
+        }
         return res.status(201).json(sample);
     }
     catch (error) {
@@ -53,7 +55,7 @@ const updateSample = async (req, res) => {
             data: sampleData,
             include: { importer: { select: { companyName: true } } }
         });
-        if (oldSample.status !== sample.status) {
+        if (req.user && oldSample.status !== sample.status) {
             await index_1.prisma.activity.create({
                 data: {
                     userId: req.user.id,

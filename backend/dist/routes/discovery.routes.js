@@ -37,9 +37,18 @@ const express_1 = require("express");
 const discoveryController = __importStar(require("../controllers/discovery.controller"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-router.use(auth_1.authenticate);
-router.post('/start', discoveryController.startDiscovery);
-router.get('/status/:sessionId', discoveryController.getDiscoveryStatus);
-router.get('/recent', discoveryController.getRecentDiscoveries);
+router.post('/start', auth_1.authenticate, discoveryController.startDiscovery);
+router.get('/status/:sessionId', auth_1.authenticate, discoveryController.getDiscoveryStatus);
+router.get('/recent', auth_1.authenticate, discoveryController.getRecentDiscoveries);
+router.get('/test-ai', auth_1.authenticate, async (req, res) => {
+    try {
+        const { AiService } = require('../services/ai.service');
+        const response = await AiService.generateContent('Say "AI Connection OK" if you receive this.');
+        res.json({ status: 'SUCCESS', response });
+    }
+    catch (error) {
+        res.status(500).json({ status: 'FAILED', error: error.message });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=discovery.routes.js.map
