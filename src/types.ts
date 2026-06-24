@@ -94,25 +94,7 @@ export interface Quotation {
   dateCreated: string;
 }
 
-export interface Supplier {
-  id: string;
-  companyName: string;
-  website?: string;
-  email?: string;
-  phone?: string;
-  whatsapp?: string;
-  linkedin?: string;
-  country?: string;
-  city?: string;
-  address?: string;
-  coffeeType?: string;
-  certifications?: string;
-  minimumOrderQty?: string;
-  priceRange?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export interface SystemConfig {
   googleAppsScriptUrl: string;
