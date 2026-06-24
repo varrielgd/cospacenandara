@@ -1,9 +1,11 @@
 import { Response } from 'express';
 import { prisma, logger } from '../index';
 import { AuthRequest } from '../middleware/auth';
-import { GoogleSheetsService } from '../services/google-sheets.service';
+import { GoogleSheetsService } from '../services/google-sheets.service';        
+import * as XLSX from 'xlsx';
+import * as fs from 'fs';
 
-export const getAllImporters = async (req: AuthRequest, res: Response) => {
+export const getAllImporters = async (req: AuthRequest, res: Response) => {     
   try {
     const importers = await prisma.importer.findMany({
       include: {
@@ -21,10 +23,10 @@ export const getAllImporters = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getImporterById = async (req: AuthRequest, res: Response) => {
+export const getImporterById = async (req: AuthRequest, res: Response) => {     
   try {
     const { id } = req.params;
-    if (!id) return res.status(400).json({ message: 'ID is required' });
+    if (!id) return res.status(400).json({ message: 'ID is required' });        
 
     const importer = await prisma.importer.findUnique({
       where: { id: id as string },
@@ -53,7 +55,7 @@ export const getImporterById = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const createImporter = async (req: AuthRequest, res: Response) => {
+export const createImporter = async (req: AuthRequest, res: Response) => {      
   try {
     const importerData = req.body;
     const cleanData = {
@@ -73,7 +75,7 @@ export const createImporter = async (req: AuthRequest, res: Response) => {
         userId: req.user!.id,
         importerId: importer.id,
         type: 'SYSTEM',
-        description: `Importer ${importer.companyName} created manually.`
+        description: `Importer ${importer.companyName} created manually.`       
       }
     });
 
@@ -87,10 +89,10 @@ export const createImporter = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updateImporter = async (req: AuthRequest, res: Response) => {
+export const updateImporter = async (req: AuthRequest, res: Response) => {      
   try {
     const { id } = req.params;
-    if (!id) return res.status(400).json({ message: 'ID is required' });
+    if (!id) return res.status(400).json({ message: 'ID is required' });        
     const importerData = req.body;
 
     const importer = await prisma.importer.update({
@@ -105,10 +107,10 @@ export const updateImporter = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const deleteImporter = async (req: AuthRequest, res: Response) => {
+export const deleteImporter = async (req: AuthRequest, res: Response) => {      
   try {
     const { id } = req.params;
-    if (!id) return res.status(400).json({ message: 'ID is required' });
+    if (!id) return res.status(400).json({ message: 'ID is required' });        
     await prisma.importer.delete({ where: { id: id as string } });
     return res.status(204).send();
   } catch (error) {
@@ -117,11 +119,11 @@ export const deleteImporter = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
+export const bulkCreateImporters = async (req: AuthRequest, res: Response) => { 
   try {
     const { importers } = req.body;
     if (!importers || !Array.isArray(importers)) {
-      return res.status(400).json({ message: 'Importers array is required' });
+      return res.status(400).json({ message: 'Importers array is required' });  
     }
 
     const createdImporters = [];
@@ -142,8 +144,8 @@ export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
           data: {
             companyName: data.companyName,
             website: data.website && data.website.trim() !== '' ? data.website : null,
-            email: data.email && data.email.trim() !== '' ? data.email : null,
-            phone: data.phone && data.phone.trim() !== '' ? data.phone : null,
+            email: data.email && data.email.trim() !== '' ? data.email : null,  
+            phone: data.phone && data.phone.trim() !== '' ? data.phone : null,  
             country: data.country,
             city: data.city,
             leadScore: data.leadScore,
@@ -153,25 +155,25 @@ export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
           }
         });
         createdImporters.push(created);
-        
+
         // Activity log
         await prisma.activity.create({
           data: {
             userId: req.user!.id,
             importerId: created.id,
             type: 'SYSTEM',
-            description: `Importer ${created.companyName} added via Discovery.`
+            description: `Importer ${created.companyName} added via Discovery.` 
           }
         });
-        
+
         // Sheets sync
-        await GoogleSheetsService.syncImporter(created).catch(() => {});
+        await GoogleSheetsService.syncImporter(created).catch(() => {});        
       }
     }
 
-    return res.status(201).json({ 
+    return res.status(201).json({
       message: `Successfully processed ${importers.length} importers. ${createdImporters.length} new records created.`,
-      count: createdImporters.length 
+      count: createdImporters.length
     });
   } catch (error) {
     logger.error('Error bulk creating importers:', error);
@@ -179,7 +181,7 @@ export const bulkCreateImporters = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const syncToSheets = async (req: AuthRequest, res: Response) => {
+export const syncToSheets = async (req: AuthRequest, res: Response) => {        
   try {
     const { importerId } = req.body;
     if (!importerId) return res.status(400).json({ message: 'Importer ID is required' });
@@ -191,9 +193,79 @@ export const syncToSheets = async (req: AuthRequest, res: Response) => {
     if (!importer) return res.status(404).json({ message: 'Importer not found' });
 
     await GoogleSheetsService.syncImporter(importer);
-    return res.json({ message: 'Successfully synced to Google Sheets' });
+    return res.json({ message: 'Successfully synced to Google Sheets' });       
   } catch (error) {
     logger.error('Error syncing to sheets:', error);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const importImportersFromExcel = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'File is required' });
+    }
+
+    // Read and parse Excel file
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(sheet);
+
+    const createdImporters = [];
+
+    for (const row of data as any[]) {
+      const existing = await prisma.importer.findFirst({
+        where: {
+          OR: [
+            { companyName: row.companyName },
+            { website: row.website || undefined },
+            { email: row.email || undefined }
+          ].filter(Boolean) as any
+        }
+      });
+
+      if (!existing) {
+        const created = await prisma.importer.create({
+          data: {
+            companyName: row.companyName,
+            website: row.website || null,
+            email: row.email || null,
+            phone: row.phone || null,
+            whatsapp: row.whatsapp || null,
+            linkedin: row.linkedin || null,
+            country: row.country || null,
+            city: row.city || null,
+            address: row.address || null,
+            coffeeType: row.coffeeType || null,
+            greenBeanInterest: row.greenBeanInterest || false,
+            roastedBeanInterest: row.roastedBeanInterest || false,
+            status: row.status || 'NEW'
+          }
+        });
+
+        createdImporters.push(created);
+
+        await prisma.activity.create({
+          data: {
+            userId: req.user!.id,
+            importerId: created.id,
+            type: 'SYSTEM',
+            description: `Importer ${created.companyName} imported from Excel`
+          }
+        });
+      }
+    }
+
+    fs.unlinkSync(req.file.path);
+
+    res.status(201).json({
+      message: `Successfully imported ${createdImporters.length} new importers`,
+      count: createdImporters.length,
+      importers: createdImporters
+    });
+  } catch (error) {
+    logger.error('Error importing importers:', error);
+    res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
   }
 };

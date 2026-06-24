@@ -227,13 +227,13 @@ model Quotation {
   type            QuotationType   @default(COMMERCIAL)
   shipmentType    ShipmentType    @default(LCL_SHIPMENT)
   packaging       PackagingOption @default(GRAINPRO_JUTE_30_60KG)
-  paymentTerms    PaymentTerms    @default(TT_50_DEPOSIT_50_BEFORE_SHIPMENT)
+  paymentTerms    PaymentTerms    @default(TT_50_DEPOSIT_50_BEFORE_SHIPMENT)    
   incoterm        Incoterm        @default(FOB)
   product         String
   quantity        Float
   price           Float
   currency        String          @default("USD")
-  leadTimeDays    Int             @default(21) // 14-21 days as per infographic
+  leadTimeDays    Int             @default(21) // 14-21 days as per infographic 
   validUntil      DateTime
   status          QuotationStatus @default(DRAFT)
   pdfPath         String?
@@ -246,7 +246,9 @@ model Activity {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   importerId  String?
-  importer    Importer? @relation(fields: [importerId], references: [id])
+  importer    Importer? @relation(fields: [importerId], references: [id])       
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])       
   type        String   // EMAIL, CALL, MEETING, NOTE, TASK
   description String
   createdAt   DateTime @default(now())
@@ -256,8 +258,10 @@ model Note {
   id          String   @id @default(uuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id])
-  importerId  String
-  importer    Importer @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  importerId  String?
+  importer    Importer? @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   content     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -268,7 +272,9 @@ model Task {
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   importerId  String?
-  importer    Importer? @relation(fields: [importerId], references: [id])
+  importer    Importer? @relation(fields: [importerId], references: [id])       
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])       
   title       String
   description String?
   dueDate     DateTime?
@@ -325,7 +331,7 @@ model AuditLog {
 model DiscoverySession {
   id             String          @id @default(uuid())
   userId         String
-  user           User            @relation(fields: [userId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])  
   query          String
   status         DiscoveryStatus @default(PENDING)
   totalFound     Int             @default(0)
@@ -337,4 +343,49 @@ model DiscoverySession {
   completedAt    DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+}
+
+model Supplier {
+  id               String   @id @default(uuid())
+  companyName      String
+  website          String?  @unique
+  email            String?  @unique
+  phone            String?
+  whatsapp         String?
+  country          String?
+  city             String?
+  address          String?
+  coffeeTypes      String?
+  certifications   String?
+  minimumOrderQty  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  contacts         SupplierContact[]
+  supplierNotes    SupplierNote[]
+  activities       Activity[]
+  tasks            Task[]
+}
+
+model SupplierContact {
+  id          String   @id @default(uuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  firstName   String
+  lastName    String?
+  jobTitle    String?
+  email       String?
+  phone       String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SupplierNote {
+  id          String   @id @default(uuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

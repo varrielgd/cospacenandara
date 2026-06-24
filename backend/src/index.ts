@@ -18,6 +18,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 import discoveryRoutes from './routes/discovery.routes';
 import emailRoutes from './routes/email.routes';
 import auditRoutes from './routes/audit.routes';
+import supplierRoutes from './routes/supplier.routes';
 import { errorHandler } from './middleware/error';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -81,10 +82,11 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/discovery', discoveryRoutes);
 app.use('/api/emails', emailRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/suppliers', supplierRoutes);
 
 // Basic Health Check
 app.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });  
 });
 
 // Error handling
@@ -95,12 +97,12 @@ import { ALLOWED_EMAILS } from './config/auth';
 
 async function initializeAdminUser() {
   try {
-    const hashedPassword = await bcrypt.hash('Ghfso#!@!5246!#!@g7', 10);
+    const hashedPassword = await bcrypt.hash('Ghfso#!@!5246!#!@g7', 10);        
 
     for (const email of ALLOWED_EMAILS) {
-      const existing = await prisma.user.findUnique({ where: { email } });
-      
-      const firstName = email.includes('nandara') ? 'Nandara' : 'Nanda';
+      const existing = await prisma.user.findUnique({ where: { email } });      
+
+      const firstName = email.includes('nandara') ? 'Nandara' : 'Nanda';        
       const lastName = email.includes('nandara') ? 'Nusa' : 'Latifani';
 
       if (!existing) {
@@ -132,8 +134,8 @@ async function initializeAdminUser() {
 app.listen(port, async () => {
   try {
     let dbUrl = process.env.DATABASE_URL || '';
-    
-    // Robust cleanup: Remove "DATABASE_URL=" prefix if accidentally included
+
+    // Robust cleanup: Remove "DATABASE_URL=" prefix if accidentally included   
     if (dbUrl.startsWith('DATABASE_URL=')) {
       dbUrl = dbUrl.replace('DATABASE_URL=', '');
       process.env.DATABASE_URL = dbUrl;

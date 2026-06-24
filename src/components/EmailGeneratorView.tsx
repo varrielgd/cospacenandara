@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lead, EmailLog, EmailStatus, Quotation } from '../types';
+import { api } from '../utils/api';
 import { 
   Mail, 
   Send, 
@@ -165,26 +166,14 @@ export default function EmailGeneratorView({
     setCopied(false);
 
     try {
-      const response = await fetch('/api/leads/generate-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          companyName: activeLead.companyName,
-          country: activeLead.country,
-          leadType: activeLead.leadType,
-          coffeeInterest: coffeeInterest,
-          contactName: contactName
-        })
+      const data = await api.post('/api/leads/generate-email', {
+        companyName: activeLead.companyName,
+        country: activeLead.country,
+        leadType: activeLead.leadType,
+        coffeeInterest: coffeeInterest,
+        contactName: contactName
       });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || errData.error || 'Email generator API returned an error.');
-      }
-
-      const data = await response.json();
       const generatedSub = data.subject || '';
       const generatedBody = data.body || '';
 

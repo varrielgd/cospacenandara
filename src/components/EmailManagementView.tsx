@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Send, Inbox, RefreshCw, Loader2, User, Clock, ArrowLeft, Plus, Trash2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
+import { api } from '../utils/api';
 
 interface Email {
   id: string;
@@ -30,18 +31,12 @@ export default function EmailManagementView() {
   const fetchEmails = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const endpoint = activeTab === 'inbox' ? '/api/emails/inbox' : '/api/emails';
-      const response = await fetch(endpoint, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        let data = await response.json();
-        if (activeTab === 'sent') {
-          data = data.filter((e: Email) => e.direction === 'OUTBOUND' && e.status === 'SENT');
-        }
-        setEmails(data);
+      let data = await api.get(endpoint);
+      if (activeTab === 'sent') {
+        data = data.filter((e: Email) => e.direction === 'OUTBOUND' && e.status === 'SENT');
       }
+      setEmails(data);
     } catch (err) {
       console.error('Error fetching emails:', err);
     } finally {
@@ -59,15 +54,25 @@ export default function EmailManagementView() {
     setIsSyncing(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/emails/sync', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        fetchEmails();
+      if (!token) {
+        throw new Error('Unauthorized. Please log in again.');
       }
-    } catch (err) {
-      console.error('Sync error:', err);
+
+      await api.post('/api/emails/sync', {});
+      fetchEmails();
+    } catch (err: any) {
+      const rawMessage = err?.message || 'Failed to sync email inbox. Please try again.';
+      const normalizedMessage = /user no longer exists|token expired|invalid token|unauthorized/i.test(rawMessage)
+        ? 'Session expired or invalid credentials. Please log in again.'
+        : rawMessage;
+
+      if (/user no longer exists|token expired|invalid token|unauthorized/i.test(rawMessage)) {
+        localStorage.removeItem('token');
+        window.dispatchEvent(new Event('auth:logout'));
+      }
+
+      console.error('Sync error:', normalizedMessage);
+      alert(normalizedMessage);
     } finally {
       setIsSyncing(false);
     }
@@ -77,35 +82,21 @@ export default function EmailManagementView() {
     e.preventDefault();
     setIsSending(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/emails/send-direct', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ to, subject, body })
-      });
-      if (response.ok) {
-        alert('Email sent successfully!');
-        setTo('');
-        setSubject('');
-        setBody('');
-        setActiveTab('sent');
-      } else {
-        const err = await response.json();
-        alert('Failed to send: ' + err.message);
-      }
-    } catch (err) {
+      await api.post('/api/emails/send-direct', { to, subject, body });
+      alert('Email sent successfully!');
+      setTo('');
+      setSubject('');
+      setBody('');
+      setActiveTab('sent');
+    } catch (err: any) {
       console.error('Send error:', err);
-      alert('Error sending email');
+      alert('Failed to send: ' + err.message);
     } finally {
       setIsSending(false);
     }
   };
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '';
+  const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString();
   };
 

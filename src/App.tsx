@@ -14,6 +14,8 @@ import GlossaryView from './components/GlossaryView';
 import EmailManagementView from './components/EmailManagementView';
 import LoginView from './components/LoginView';
 import UserManagementView from './components/UserManagementView';
+import ConnectionTestView from './components/ConnectionTestView';
+import SupplierView from './components/SupplierView';
 import { 
   Compass, 
   Users, 
@@ -33,7 +35,9 @@ import {
   Inbox,
   LogOut,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Activity,
+  Package
 } from 'lucide-react';
 
 const INITIAL_LEADS: Lead[] = [];
@@ -253,6 +257,29 @@ export default function App() {
     }
   };
 
+  const handleImportLeads = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/importers/import`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      if (response.ok) {
+        alert('Importers imported successfully!');
+        refreshLeads();
+      } else {
+        alert('Failed to import importers.');
+      }
+    } catch (err) {
+      console.error('Error importing importers:', err);
+    }
+  };
+
   const handleSaveOrUpdateEmail = async (emailData: EmailLog) => {
     try {
       const token = localStorage.getItem('token');
@@ -364,7 +391,7 @@ export default function App() {
       const quote = quotations.find(q => q.quoteNumber === number)!
       if (!quote) return;
 
-const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
+      const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -391,11 +418,11 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
   const handleUpdateConfig = (newUrl: string) => {
     const updated = { ...config, googleAppsScriptUrl: newUrl };
     setConfig(updated);
-    localStorage.setItem('nandara_ciis_config', JSON.stringify(updated));
+    localStorage.setItem('nandara_ciis_config', JSON.parse(updated));
   };
 
   // MODULE 7 - Google Sheets synchronization engine (Live integration lookup)
-  const handleSyncAll = async () => {
+  const handleSyncToSheets = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/dashboard/sync-sheets', {
@@ -553,6 +580,18 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
             </button>
 
             <button
+              onClick={() => setActiveTab('suppliers')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'suppliers' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Package className="w-4 h-4 shrink-0 text-gold" />
+              <span>Supplier Management</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('discovery')}
               className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
                 activeTab === 'discovery' 
@@ -662,17 +701,30 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
 
             {/* Super Admin Only Tab */}
             {currentUser && ['nandaranusamontierra@gmail.com', 'nandalatifanibudiarti97@gmail.com'].includes(currentUser.email) && (
-              <button
-                onClick={() => setActiveTab('personnel')}
-                className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
-                  activeTab === 'personnel' 
-                    ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
-                    : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 shrink-0 text-gold" />
-                <span>Personnel Control</span>
-              </button>
+              <>
+                <button
+                  onClick={() => setActiveTab('personnel')}
+                  className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                    activeTab === 'personnel' 
+                      ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                      : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4 shrink-0 text-gold" />
+                  <span>Personnel Control</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('connection-test')}
+                  className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                    activeTab === 'connection-test' 
+                      ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                      : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+                  }`}
+                >
+                  <Activity className="w-4 h-4 shrink-0 text-gold" />
+                  <span>System Health</span>
+                </button>
+              </>
             )}
           </nav>
         </div>
@@ -706,6 +758,7 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               {activeTab === 'dashboard' && "Pipeline Overview"}
               {activeTab === 'ai-studio' && "AI Content Studio & Brand Narrative"}
               {activeTab === 'showroom' && "Nandara Sourcing Showroom & Portals"}
+              {activeTab === 'suppliers' && "Supplier Management & Procurement"}
               {activeTab === 'discovery' && "Worldwide Importer Search Engine"}
               {activeTab === 'crm' && "Indonesian Export Leads CRM Board"}
               {activeTab === 'email' && "AI Personalized B2B Pitch Suite"}
@@ -715,6 +768,7 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               {activeTab === 'curriculum' && "Premium Export Academy & Curriculum"}
               {activeTab === 'sheets' && "Google Sheet Automation Config"}
               {activeTab === 'personnel' && "Admin Hierarchy & Access Control"}
+              {activeTab === 'connection-test' && "System Connectivity & Health"}
             </h2>
             <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">
               Coffee Importer Intelligence System • Java, Gayo, Toraja Premium Specialties
@@ -766,6 +820,10 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
             />
           )}
 
+          {activeTab === 'suppliers' && (
+            <SupplierView />
+          )}
+
           {activeTab === 'crm' && (
             <CrmView 
               leads={leads}
@@ -773,6 +831,7 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               onUpdateMultipleLeadsStatus={handleUpdateMultipleLeadsStatus}
               onDeleteLead={handleDeleteLead}
               onAddLeadManual={handleAddLeadManual}
+              onImportLeads={handleImportLeads}
               onSelectLeadForEmail={handleSelectLeadForEmail}
               onSelectLeadForSample={handleSelectLeadForSample}
               onSelectLeadForQuote={handleSelectLeadForQuote}
@@ -827,12 +886,16 @@ const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
               samples={samples}
               quotations={quotations}
               onUpdateConfig={handleUpdateConfig}
-              onSyncAll={handleSyncAll}
+              onSyncAll={handleSyncToSheets}
             />
           )}
 
           {activeTab === 'personnel' && (
             <UserManagementView />
+          )}
+
+          {activeTab === 'connection-test' && (
+            <ConnectionTestView />
           )}
         </div>
       </main>

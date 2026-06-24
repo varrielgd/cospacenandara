@@ -118,15 +118,26 @@ export const getRecentDiscoveries = async (req: AuthRequest, res: Response) => {
     const sessions = await prisma.discoverySession.findMany({
       where: { userId: String(req.user!.id) },
       orderBy: { createdAt: 'desc' },
-      take: 10,
-      include: {
-        user: { select: { firstName: true, lastName: true } }
-      }
+      take: 20
     });
 
     return res.json(sessions);
   } catch (error) {
     logger.error('Get recent discoveries error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const cancelDiscovery = async (req: AuthRequest, res: Response) => {
+  try {
+    const { sessionId } = req.params;
+    await (prisma.discoverySession as any).update({
+      where: { id: sessionId },
+      data: { status: 'FAILED', error: 'Cancelled by user', completedAt: new Date() }
+    });
+    return res.json({ message: 'Discovery cancelled' });
+  } catch (error) {
+    logger.error('Cancel discovery error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

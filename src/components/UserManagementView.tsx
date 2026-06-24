@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Trash2, ShieldCheck, Mail, ShieldAlert, Loader2, User, Key } from 'lucide-react';
+import { api } from '../utils/api';
 
 interface AdminUser {
   id: string;
@@ -26,14 +27,8 @@ export default function UserManagementView() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/auth/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      }
+      const data = await api.get('/api/auth/users');
+      setUsers(data);
     } catch (err) {
       console.error('Failed to fetch users:', err);
     } finally {
@@ -52,22 +47,12 @@ export default function UserManagementView() {
     setSuccess(null);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: newEmail,
-          password: newPassword,
-          firstName: newFirstName,
-          lastName: newLastName
-        }),
+      await api.post('/api/auth/register', {
+        email: newEmail,
+        password: newPassword,
+        firstName: newFirstName,
+        lastName: newLastName
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to add admin');
-      }
 
       setSuccess(`Admin invitation sent to ${newEmail}. They must verify their email with the 6-digit code sent.`);
       setNewEmail('');
@@ -88,19 +73,9 @@ export default function UserManagementView() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/auth/users/${userId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        setSuccess(`Access revoked for ${email}`);
-        fetchUsers();
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to delete user');
-      }
+      await api.delete(`/api/auth/users/${userId}`);
+      setSuccess(`Access revoked for ${email}`);
+      fetchUsers();
     } catch (err: any) {
       setError(err.message);
     }

@@ -25,7 +25,7 @@ async function startServer() {
       // @ts-ignore
       res.status(502).send("Bad Gateway: Backend server might be down.");
     }
-  }));
+  } as any));
 
   app.use(express.json());
 

@@ -20,7 +20,9 @@ import {
   Download,
   CheckSquare,
   Square,
-  ListFilter
+  ListFilter,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 interface CrmViewProps {
@@ -29,6 +31,7 @@ interface CrmViewProps {
   onUpdateMultipleLeadsStatus?: (leadIds: string[], newStatus: Lead['status']) => void;
   onDeleteLead: (leadId: string) => void;
   onAddLeadManual: (lead: Omit<Lead, 'id' | 'dateAdded'>) => void;
+  onImportLeads: (file: File) => void;
   onSelectLeadForEmail: (lead: Lead) => void;
   onSelectLeadForSample: (lead: Lead) => void;
   onSelectLeadForQuote: (lead: Lead) => void;
@@ -53,10 +56,18 @@ export default function CrmView({
   onUpdateMultipleLeadsStatus,
   onDeleteLead, 
   onAddLeadManual,
+  onImportLeads,
   onSelectLeadForEmail,
   onSelectLeadForSample,
   onSelectLeadForQuote
 }: CrmViewProps) {
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onImportLeads(file);
+    }
+  };
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedScoreFilter, setSelectedScoreFilter] = useState<string>('ALL');
@@ -310,6 +321,17 @@ export default function CrmView({
             <Download className="w-4 h-4 text-[#D4AF37]" />
             Export CSV
           </button>
+          
+          <label className="w-full sm:w-auto px-5 py-2.5 bg-[#05190F]/5 border border-primary/20 text-primary rounded-sm text-[10px] font-mono uppercase tracking-widest hover:bg-[#05190F]/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer font-bold">
+            <FileSpreadsheet className="w-4 h-4 text-gold" />
+            Import Excel
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
 
           <button
             type="button"
@@ -319,6 +341,88 @@ export default function CrmView({
             <Plus className="w-4 h-4 text-gold" />
             Add Custom Lead
           </button>
+        </div>
+      </div>
+
+      {/* Buyer Intelligence & Lead Scoring Guide */}
+      <div className="p-6 rounded-lg bg-[#05190F]/5 border border-primary/5 shadow-luxury animate-fade-in">
+        <div className="flex items-center gap-2 mb-4">
+          <ShieldCheck className="w-5 h-5 text-gold" />
+          <h2 className="text-sm font-serif text-[#05190F] uppercase tracking-widest font-bold">Panduan Buyer Intelligence & Lead Scoring</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[
+            {
+              score: 'A',
+              title: 'Elite/Premium Buyer',
+              desc: 'Pembeli prioritas tinggi dengan kapasitas volume besar dan reputasi pasar yang kuat. Biasanya roaster besar atau distributor utama.',
+              ai: 'Prioritas utama. Kirim sampel premium segera. Tawarkan kontrak jangka panjang dengan harga kompetitif untuk volume besar.',
+              color: 'border-[#D4AF37] bg-white',
+              tagColor: 'bg-[#D4AF37] text-white'
+            },
+            {
+              score: 'B',
+              title: 'Growth/Potential Buyer',
+              desc: 'Roaster butik atau distributor spesialis yang sangat menghargai kualitas (specialty). Memiliki potensi repeat order yang sangat stabil.',
+              ai: 'Bangun hubungan melalui "Traceability" (asal-usul kopi). Tawarkan varietas unik atau micro-lots untuk membedakan diri dari kompetitor.',
+              color: 'border-emerald-200 bg-white',
+              tagColor: 'bg-emerald-600 text-white'
+            },
+            {
+              score: 'C',
+              title: 'Standard/Niche Buyer',
+              desc: 'Pembeli baru, kafe skala kecil, atau perusahaan yang baru mulai mengeksplorasi kopi Indonesia. Volume kecil namun potensial untuk ekspansi.',
+              ai: 'Gunakan pendekatan edukatif. Tawarkan volume fleksibel dan berikan informasi detail tentang profil rasa kopi Indonesia.',
+              color: 'border-slate-200 bg-white',
+              tagColor: 'bg-slate-500 text-white'
+            }
+          ].map((item) => (
+            <div key={item.score} className={`p-5 rounded-lg border shadow-sm transition-all hover:shadow-md ${item.color}`}>
+              <div className="flex items-center gap-3 mb-3">
+                <span className={`w-8 h-8 rounded-md flex items-center justify-center font-bold text-sm ${item.tagColor}`}>
+                  {item.score}
+                </span>
+                <h3 className="font-bold text-xs text-[#05190F] uppercase tracking-wider">{item.title}</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-primary/40 block mb-1">Karakteristik Buyer</span>
+                  <p className="text-[11px] text-primary/80 leading-relaxed font-sans">
+                    {item.desc}
+                  </p>
+                </div>
+                
+                <div className="pt-3 border-t border-black/5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Sparkles className="w-3 h-3 text-gold" />
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-gold font-bold">Rekomendasi Strategi AI</span>
+                  </div>
+                  <p className="text-[10px] italic text-primary/90 leading-relaxed font-sans">
+                    {item.ai}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-primary/10 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3 p-3 bg-white/50 rounded border border-primary/5">
+            <MapPin className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">Analisis Wilayah (Geographical Intelligence)</h4>
+              <p className="text-[10px] text-primary/60 leading-relaxed">Lokasi menentukan biaya logistik dan preferensi rasa. Pasar Asia Timur menyukai rasa clean, sementara Eropa cenderung menyukai body yang kuat.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 bg-white/50 rounded border border-primary/5">
+            <ExternalLink className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">Website & Email Confidence</h4>
+              <p className="text-[10px] text-primary/60 leading-relaxed">Tingkat akurasi data digital. Skor tinggi berarti website aktif dan email terverifikasi sebagai saluran komunikasi bisnis resmi.</p>
+            </div>
+          </div>
         </div>
       </div>
 

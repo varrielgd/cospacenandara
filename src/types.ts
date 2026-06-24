@@ -94,7 +94,68 @@ export interface Quotation {
   dateCreated: string;
 }
 
+export interface Supplier {
+  id: string;
+  companyName: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  whatsapp?: string;
+  linkedin?: string;
+  country?: string;
+  city?: string;
+  address?: string;
+  coffeeType?: string;
+  certifications?: string;
+  minimumOrderQty?: string;
+  priceRange?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SystemConfig {
   googleAppsScriptUrl: string;
   isSynced: boolean;
+}
+
+export interface Supplier {
+  id: string;
+  companyName: string;
+  website: string | null;
+  email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  country: string | null;
+  city: string | null;
+  address: string | null;
+  coffeeTypes: string | null;
+  certifications: string | null;
+  minimumOrderQty: string | null;
+  createdAt: string;
+  updatedAt: string;
+  contacts?: SupplierContact[];
+  notes?: SupplierNote[];
+  activities?: any[];
+}
+
+export interface SupplierContact {
+  id: string;
+  supplierId: string;
+  firstName: string;
+  lastName: string | null;
+  jobTitle: string | null;
+  email: string | null;
+  phone: string | null;
+  isPrimary: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplierNote {
+  id: string;
+  supplierId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 }
