@@ -147,9 +147,9 @@ model Importer {
   emails               Email[]
   samples              Sample[]
   quotations           Quotation[]
-  activities           Activity[]
-  importerNotes        Note[]
-  tasks                Task[]
+  activities           Activity[]          @relation("ImporterActivities")
+  importerNotes        Note[]               @relation("ImporterNotes")
+  tasks                Task[]               @relation("ImporterTasks")
   attachments          Attachment[]
 }
 
@@ -246,25 +246,25 @@ model Activity {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   importerId  String?
-  importer    Importer? @relation(fields: [importerId], references: [id])       
+  importer    Importer? @relation(fields: [importerId], references: [id], name: "ImporterActivities")       
   supplierId  String?
-  supplier    Supplier? @relation(fields: [supplierId], references: [id])       
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], name: "SupplierActivities")       
   type        String   // EMAIL, CALL, MEETING, NOTE, TASK
   description String
   createdAt   DateTime @default(now())
 }
 
 model Note {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  importerId  String?
-  importer    Importer? @relation(fields: [importerId], references: [id], onDelete: Cascade)
-  supplierId  String?
-  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  content     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  importerId      String?
+  importer        Importer?     @relation(fields: [importerId], references: [id], onDelete: Cascade, name: "ImporterNotes")
+  supplierId      String?
+  supplier        Supplier?     @relation(fields: [supplierId], references: [id], onDelete: Cascade, name: "SupplierNotes")
+  content         String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Task {
@@ -272,9 +272,9 @@ model Task {
   userId      String
   user        User      @relation(fields: [userId], references: [id])
   importerId  String?
-  importer    Importer? @relation(fields: [importerId], references: [id])       
+  importer    Importer? @relation(fields: [importerId], references: [id], name: "ImporterTasks")       
   supplierId  String?
-  supplier    Supplier? @relation(fields: [supplierId], references: [id])       
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], name: "SupplierTasks")       
   title       String
   description String?
   dueDate     DateTime?
@@ -346,10 +346,10 @@ model DiscoverySession {
 }
 
 model Supplier {
-  id               String   @id @default(uuid())
+  id               String           @id @default(uuid())
   companyName      String
-  website          String?  @unique
-  email            String?  @unique
+  website          String?          @unique
+  email            String?          @unique
   phone            String?
   whatsapp         String?
   country          String?
@@ -358,13 +358,13 @@ model Supplier {
   coffeeTypes      String?
   certifications   String?
   minimumOrderQty  String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  contacts         SupplierContact[]
-  supplierNotes    SupplierNote[]
-  activities       Activity[]
-  tasks            Task[]
+  supplierContacts SupplierContact[]
+  supplierNotes    Note[]         @relation("SupplierNotes")
+  activities       Activity[]     @relation("SupplierActivities")
+  tasks            Task[]         @relation("SupplierTasks")
 }
 
 model SupplierContact {
@@ -377,15 +377,6 @@ model SupplierContact {
   email       String?
   phone       String?
   isPrimary   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model SupplierNote {
-  id          String   @id @default(uuid())
-  supplierId  String
-  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
-  content     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

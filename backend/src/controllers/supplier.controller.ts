@@ -135,15 +135,14 @@ export const importSuppliers = async (req: AuthRequest & { file?: Express.Multer
             email: row.email || row.Email || null,
             phone: row.phone || row.Phone || row.phone_number || null,
             whatsapp: row.whatsapp || row.Whatsapp || null,
-            linkedin: row.linkedin || row.Linkedin || null,
+
             country: row.country || row.Country || null,
             city: row.city || row.City || null,
             address: row.address || row.Address || null,
-            coffeeType: row.coffeeType || row.CoffeeType || row.coffee_type || null,
+            coffeeTypes: row.coffeeType || row.CoffeeType || row.coffee_type || row.coffeeTypes || row.CoffeeTypes || null,
             certifications: row.certifications || row.Certifications || null,
             minimumOrderQty: row.minimumOrderQty || row.MinimumOrderQty || row.min_order_qty || null,
-            priceRange: row.priceRange || row.PriceRange || row.price_range || null,
-            notes: row.notes || row.Notes || null
+
           }
         });
         createdSuppliers.push(created);

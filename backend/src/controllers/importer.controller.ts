@@ -259,13 +259,13 @@ export const importImportersFromExcel = async (req: AuthRequest, res: Response) 
 
     fs.unlinkSync(req.file.path);
 
-    res.status(201).json({
+    return res.status(201).json({
       message: `Successfully imported ${createdImporters.length} new importers`,
       count: createdImporters.length,
       importers: createdImporters
     });
   } catch (error) {
     logger.error('Error importing importers:', error);
-    res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
+    return res.status(500).json({ message: 'Internal server error', error: (error as Error).message });
   }
 };

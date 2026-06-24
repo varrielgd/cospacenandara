@@ -418,7 +418,7 @@ export default function App() {
   const handleUpdateConfig = (newUrl: string) => {
     const updated = { ...config, googleAppsScriptUrl: newUrl };
     setConfig(updated);
-    localStorage.setItem('nandara_ciis_config', JSON.parse(updated));
+    localStorage.setItem('nandara_ciis_config', JSON.stringify(updated));
   };
 
   // MODULE 7 - Google Sheets synchronization engine (Live integration lookup)
