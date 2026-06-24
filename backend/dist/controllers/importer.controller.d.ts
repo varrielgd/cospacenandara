@@ -7,4 +7,5 @@ export declare const updateImporter: (req: AuthRequest, res: Response) => Promis
 export declare const deleteImporter: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const bulkCreateImporters: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const syncToSheets: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
+export declare const importImportersFromExcel: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 //# sourceMappingURL=importer.controller.d.ts.map

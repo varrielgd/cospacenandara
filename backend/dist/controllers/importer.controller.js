@@ -1,8 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.syncToSheets = exports.bulkCreateImporters = exports.deleteImporter = exports.updateImporter = exports.createImporter = exports.getImporterById = exports.getAllImporters = void 0;
+exports.importImportersFromExcel = exports.syncToSheets = exports.bulkCreateImporters = exports.deleteImporter = exports.updateImporter = exports.createImporter = exports.getImporterById = exports.getAllImporters = void 0;
 const index_1 = require("../index");
 const google_sheets_service_1 = require("../services/google-sheets.service");
+const XLSX = __importStar(require("xlsx"));
+const fs = __importStar(require("fs"));
 const getAllImporters = async (req, res) => {
     try {
         const importers = await index_1.prisma.importer.findMany({
@@ -194,4 +229,67 @@ const syncToSheets = async (req, res) => {
     }
 };
 exports.syncToSheets = syncToSheets;
+const importImportersFromExcel = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'File is required' });
+        }
+        // Read and parse Excel file
+        const workbook = XLSX.readFile(req.file.path);
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        const createdImporters = [];
+        for (const row of data) {
+            const existing = await index_1.prisma.importer.findFirst({
+                where: {
+                    OR: [
+                        { companyName: row.companyName },
+                        { website: row.website || undefined },
+                        { email: row.email || undefined }
+                    ].filter(Boolean)
+                }
+            });
+            if (!existing) {
+                const created = await index_1.prisma.importer.create({
+                    data: {
+                        companyName: row.companyName,
+                        website: row.website || null,
+                        email: row.email || null,
+                        phone: row.phone || null,
+                        whatsapp: row.whatsapp || null,
+                        linkedin: row.linkedin || null,
+                        country: row.country || null,
+                        city: row.city || null,
+                        address: row.address || null,
+                        coffeeType: row.coffeeType || null,
+                        greenBeanInterest: row.greenBeanInterest || false,
+                        roastedBeanInterest: row.roastedBeanInterest || false,
+                        status: row.status || 'NEW'
+                    }
+                });
+                createdImporters.push(created);
+                await index_1.prisma.activity.create({
+                    data: {
+                        userId: req.user.id,
+                        importerId: created.id,
+                        type: 'SYSTEM',
+                        description: `Importer ${created.companyName} imported from Excel`
+                    }
+                });
+            }
+        }
+        fs.unlinkSync(req.file.path);
+        return res.status(201).json({
+            message: `Successfully imported ${createdImporters.length} new importers`,
+            count: createdImporters.length,
+            importers: createdImporters
+        });
+    }
+    catch (error) {
+        index_1.logger.error('Error importing importers:', error);
+        return res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+};
+exports.importImportersFromExcel = importImportersFromExcel;
 //# sourceMappingURL=importer.controller.js.map

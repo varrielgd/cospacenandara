@@ -23,6 +23,7 @@ const dashboard_routes_1 = __importDefault(require("./routes/dashboard.routes"))
 const discovery_routes_1 = __importDefault(require("./routes/discovery.routes"));
 const email_routes_1 = __importDefault(require("./routes/email.routes"));
 const audit_routes_1 = __importDefault(require("./routes/audit.routes"));
+const supplier_routes_1 = __importDefault(require("./routes/supplier.routes"));
 const error_1 = require("./middleware/error");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const app = (0, express_1.default)();
@@ -76,6 +77,7 @@ app.use('/api/dashboard', dashboard_routes_1.default);
 app.use('/api/discovery', discovery_routes_1.default);
 app.use('/api/emails', email_routes_1.default);
 app.use('/api/audit', audit_routes_1.default);
+app.use('/api/suppliers', supplier_routes_1.default);
 // Basic Health Check
 app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -121,7 +123,7 @@ async function initializeAdminUser() {
 app.listen(port, async () => {
     try {
         let dbUrl = process.env.DATABASE_URL || '';
-        // Robust cleanup: Remove "DATABASE_URL=" prefix if accidentally included
+        // Robust cleanup: Remove "DATABASE_URL=" prefix if accidentally included   
         if (dbUrl.startsWith('DATABASE_URL=')) {
             dbUrl = dbUrl.replace('DATABASE_URL=', '');
             process.env.DATABASE_URL = dbUrl;

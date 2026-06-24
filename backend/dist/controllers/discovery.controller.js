@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRecentDiscoveries = exports.getDiscoveryStatus = exports.startDiscovery = void 0;
+exports.cancelDiscovery = exports.getRecentDiscoveries = exports.getDiscoveryStatus = exports.startDiscovery = void 0;
 const discovery_service_1 = require("../services/discovery.service");
 const prisma_1 = require("../prisma");
 const winston_1 = __importDefault(require("winston"));
@@ -111,10 +111,7 @@ const getRecentDiscoveries = async (req, res) => {
         const sessions = await prisma_1.prisma.discoverySession.findMany({
             where: { userId: String(req.user.id) },
             orderBy: { createdAt: 'desc' },
-            take: 10,
-            include: {
-                user: { select: { firstName: true, lastName: true } }
-            }
+            take: 20
         });
         return res.json(sessions);
     }
@@ -124,4 +121,19 @@ const getRecentDiscoveries = async (req, res) => {
     }
 };
 exports.getRecentDiscoveries = getRecentDiscoveries;
+const cancelDiscovery = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        await prisma_1.prisma.discoverySession.update({
+            where: { id: sessionId },
+            data: { status: 'FAILED', error: 'Cancelled by user', completedAt: new Date() }
+        });
+        return res.json({ message: 'Discovery cancelled' });
+    }
+    catch (error) {
+        logger.error('Cancel discovery error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.cancelDiscovery = cancelDiscovery;
 //# sourceMappingURL=discovery.controller.js.map

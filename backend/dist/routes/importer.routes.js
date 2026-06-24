@@ -32,12 +32,17 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const importerController = __importStar(require("../controllers/importer.controller"));
 const auth_1 = require("../middleware/auth");
 const validators_1 = require("../validators");
+const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
+const upload = (0, multer_1.default)({ dest: 'uploads/' });
 // Apply authentication to all importer routes
 router.use(auth_1.authenticate);
 router.get('/', importerController.getAllImporters);
@@ -45,6 +50,7 @@ router.get('/:id', importerController.getImporterById);
 router.post('/', validators_1.importerValidator, importerController.createImporter);
 router.post('/bulk', importerController.bulkCreateImporters);
 router.post('/sync-sheets', importerController.syncToSheets);
+router.post('/import', upload.single('file'), importerController.importImportersFromExcel);
 router.put('/:id', validators_1.importerValidator, importerController.updateImporter);
 router.delete('/:id', importerController.deleteImporter);
 exports.default = router;
