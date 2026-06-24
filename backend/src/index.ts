@@ -50,6 +50,8 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'https://nandaracorporation.vercel.app',
+    'https://nandaracorporation-8yzm3o79w.vercel.app',
+    'https://cospace.nandaranusamontierra.com',
     'http://localhost:3000',
     'http://localhost:5173'
   ],
