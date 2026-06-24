@@ -134,7 +134,12 @@ app.listen(port, async () => {
         logger.info(`Attempting to connect to database: ${maskedUrl}`);
         await prisma_1.prisma.$connect();
         logger.info('Database connection established successfully');
-        await initializeAdminUser();
+        await prisma_1.prisma.$connect();
+        logger.info('Database connection established successfully');
+        // initializeAdminUser disabled for production
+        // await initializeAdminUser();
+        console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
+        logger.info(`Server started on port ${port}`);
         console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
         logger.info(`Server started on port ${port}`);
     }
