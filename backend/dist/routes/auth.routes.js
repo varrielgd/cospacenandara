@@ -35,23 +35,10 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authController = __importStar(require("../controllers/auth.controller"));
-const auth_1 = require("../middleware/auth");
 const validators_1 = require("../validators");
 const router = (0, express_1.Router)();
 router.post('/register', validators_1.authValidator, authController.register);
 router.post('/verify-2fa', authController.verify2FA);
 router.post('/login', validators_1.authValidator, authController.login);
-router.get('/me', auth_1.authenticate, authController.me);
-router.get('/debug', authController.debugAuth);
-router.get('/headers', (req, res) => {
-    res.json({
-        headers: req.headers,
-        method: req.method,
-        url: req.url,
-        originalUrl: req.originalUrl
-    });
-});
-router.get('/users', auth_1.authenticate, authController.getAllUsers);
-router.delete('/users/:id', auth_1.authenticate, authController.deleteUser);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

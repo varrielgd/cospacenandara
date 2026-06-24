@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUser = exports.getAllUsers = exports.debugAuth = exports.me = exports.login = exports.verify2FA = exports.register = void 0;
+exports.login = exports.verify2FA = exports.register = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const prisma_1 = require("../prisma");
@@ -135,23 +135,47 @@ const verify2FA = async (req, res) => {
 };
 exports.verify2FA = verify2FA;
 const login = async (req, res) => {
+    console.log("================================");
+    console.log("LOGIN ROUTE HIT");
+    console.log("REQUEST BODY:", req.body);
+    console.log("================================");
     try {
         const { email, password } = req.body;
-        // PHASE 2: Whitelist Super Admin
+        console.log("EMAIL RECEIVED:", email);
         if (!auth_1.ALLOWED_EMAILS.includes(email)) {
-            logger.warn(`LOGIN BLOCKED: Email ${email} is not in whitelist`);
-            return res.status(403).json({ message: 'ACCESS_DENIED' });
+            console.log("EMAIL NOT IN WHITELIST");
+            return res.status(403).json({
+                message: "ACCESS_DENIED"
+            });
         }
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+        console.log("EMAIL PASSED WHITELIST");
+        const user = await prisma_1.prisma.user.findUnique({
+            where: { email }
+        });
+        console.log("USER FOUND:", !!user);
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({
+                message: "Invalid credentials"
+            });
         }
+        console.log("CHECKING PASSWORD");
         const isMatch = await bcryptjs_1.default.compare(password, user.password);
+        console.log("PASSWORD MATCH:", isMatch);
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({
+                message: "Invalid credentials"
+            });
         }
-        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, auth_1.JWT_SECRET, { expiresIn: auth_1.JWT_EXPIRES_IN });
-        logger.info(`LOGIN SUCCESS: Token generated for ${user.email}`);
+        console.log("JWT_SECRET LENGTH:", auth_1.JWT_SECRET?.length);
+        console.log("JWT_EXPIRES_IN:", auth_1.JWT_EXPIRES_IN);
+        const token = jsonwebtoken_1.default.sign({
+            id: user.id,
+            email: user.email,
+            role: user.role
+        }, auth_1.JWT_SECRET, {
+            expiresIn: auth_1.JWT_EXPIRES_IN
+        });
+        console.log("TOKEN CREATED");
         return res.json({
             token,
             user: {
@@ -165,78 +189,15 @@ const login = async (req, res) => {
         });
     }
     catch (error) {
-        logger.error('Login error details:', {
-            message: error.message,
-            stack: error.stack,
-            email: req.body.email
+        console.error("========== LOGIN ERROR ==========");
+        console.error(error);
+        console.error("MESSAGE:", error?.message);
+        console.error("STACK:", error?.stack);
+        console.error("=================================");
+        return res.status(500).json({
+            message: error?.message || "Internal server error"
         });
-        return res.status(500).json({ message: 'Internal server error' });
     }
 };
 exports.login = login;
-const me = async (req, res) => {
-    try {
-        if (!req.user)
-            return res.status(401).json({ message: 'Unauthorized' });
-        const user = await prisma_1.prisma.user.findUnique({
-            where: { id: req.user.id },
-            select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                role: true,
-                isVerified: true
-            }
-        });
-        return res.json(user);
-    }
-    catch (error) {
-        logger.error('Me error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
-exports.me = me;
-const debugAuth = async (req, res) => {
-    return res.json({
-        jwtLoaded: true,
-        jwtLength: auth_1.JWT_SECRET.length,
-        databaseConnected: true,
-        serverTime: new Date(),
-        nodeEnv: process.env.NODE_ENV
-    });
-};
-exports.debugAuth = debugAuth;
-const getAllUsers = async (req, res) => {
-    try {
-        const users = await prisma_1.prisma.user.findMany({
-            select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-                role: true,
-                isVerified: true
-            }
-        });
-        return res.json(users);
-    }
-    catch (error) {
-        logger.error('GetAllUsers error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
-exports.getAllUsers = getAllUsers;
-const deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await prisma_1.prisma.user.delete({ where: { id } });
-        return res.json({ message: 'User deleted successfully' });
-    }
-    catch (error) {
-        logger.error('DeleteUser error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-};
-exports.deleteUser = deleteUser;
 //# sourceMappingURL=auth.controller.js.map
