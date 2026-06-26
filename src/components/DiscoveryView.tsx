@@ -17,7 +17,8 @@ import {
   RefreshCw,
   Loader2,
   Copy,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FileSpreadsheet as FileSpreadsheetIcon
 } from 'lucide-react';
 
 interface DiscoveryViewProps {
@@ -750,14 +751,14 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                       <button
                         onClick={(e) => handleAddToGoogleSheet(lead, e)}
                         disabled={isSyncingId === lead.id}
-                        className={`p-2 rounded-md transition-all flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest ${
+                        className={`p-2 rounded-md transition-all flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest ${`
                           isSyncingId === lead.id
                             ? 'bg-[#1a3a2a] opacity-50 cursor-not-allowed'
                             : 'bg-[#1a3a2a] text-[#8fb499] hover:text-[#d4af37]'
                         }`}
                         title="Push to Google Sheets"
                       >
-                        {isSyncingId === lead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+                        {isSyncingId === lead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheetIcon className="w-4 h-4" />}
                         {isSyncingId === lead.id ? 'Syncing' : 'Sheets'}
                       </button>
                     </div>
@@ -781,7 +782,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
               disabled={isLoading || Object.values(selectedLeads).filter(Boolean).length === 0}
               className="flex items-center gap-2 px-6 py-2 bg-[#1a3a2a] text-[#8fb499] rounded-md hover:text-[#d4af37] transition-all font-bold uppercase tracking-widest text-xs disabled:opacity-50"
             >
-              <FileSpreadsheet className="w-4 h-4" />
+              <FileSpreadsheetIcon className="w-4 h-4" />
               Export to Sheets
             </button>
             <button

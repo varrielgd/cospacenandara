@@ -150,6 +150,35 @@ export const verify2FA = async (req: Request, res: Response) => {
   }
 };
 
+export const getMe = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: req.user.email },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isVerified: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.json(user);
+  } catch (error) {
+    logger.error('Get me error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const login = async (req: Request, res: Response) => {
   console.log("================================");
   console.log("LOGIN ROUTE HIT");
