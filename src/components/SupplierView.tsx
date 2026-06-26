@@ -70,15 +70,15 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
       email: supplier.email || '',
       phone: supplier.phone || '',
       whatsapp: supplier.whatsapp || '',
-      linkedin: supplier.linkedin || '',
+      linkedin: '',
       country: supplier.country || '',
       city: supplier.city || '',
       address: supplier.address || '',
-      coffeeType: supplier.coffeeType || '',
+      coffeeType: supplier.coffeeTypes || '',
       certifications: supplier.certifications || '',
       minimumOrderQty: supplier.minimumOrderQty || '',
-      priceRange: supplier.priceRange || '',
-      notes: supplier.notes || '',
+      priceRange: '',
+      notes: Array.isArray(supplier.notes) ? supplier.notes.map(n => n.content).join('\n') : '',
     });
     setIsModalOpen(true);
   };
@@ -220,7 +220,7 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
                     )}
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-600">
-                    {supplier.coffeeType || '-'}
+                    {supplier.coffeeTypes || '-'}
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex gap-2">

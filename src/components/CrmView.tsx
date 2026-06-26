@@ -22,7 +22,8 @@ import {
   Square,
   ListFilter,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface CrmViewProps {
