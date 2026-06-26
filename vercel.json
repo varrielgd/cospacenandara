@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://nandara-backend.onrender.com/api/:path*"
+      "destination": "https://nandaracorporation.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",

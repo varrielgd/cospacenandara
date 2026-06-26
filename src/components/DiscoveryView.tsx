@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Lead } from '../types';
+import { api } from '../utils/api';
 import { 
   Search, 
   MapPin, 
@@ -34,7 +35,7 @@ interface DiscoverySession {
   error?: string;
 }
 
-export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryViewProps) {
+export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryViewProps): React.ReactNode {
   const [country, setCountry] = useState('Germany');
   const [region, setRegion] = useState('');
   const [importerType, setImporterType] = useState('Green Coffee Importer');
@@ -95,14 +96,8 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
   const fetchRecentSessions = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/discovery/recent', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setRecentSessions(data);
-      }
+      const data = await api.get('/api/discovery/recent');
+      setRecentSessions(data || []);
     } catch (err) {
       console.error('Error fetching recent sessions:', err);
     }
@@ -127,22 +122,16 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     const pollStatus = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/discovery/status/${currentSessionId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const data = await api.get(`/api/discovery/status/${currentSessionId}`);
 
-        if (response.status === 401) {
+        if (!data) {
           setIsLoading(false);
           setCurrentSessionId(null);
-          setError('Session expired. Please login again.');
+          setError('Session data is unavailable. Please login again.');
           localStorage.removeItem('token');
           setTimeout(() => window.location.href = '/', 2000);
           return;
         }
-
-        if (!response.ok) return;
-
-        const data: DiscoverySession = await response.json();
 
         // Update progress
         setProgress({ total: 30, processed: data.totalProcessed });
@@ -273,48 +262,18 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     localStorage.removeItem('discoveryLastResults'); // Clear cache
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required. Please login again.');
-      }
-
-      // Construct a query if it's not explicitly provided
       const discoveryQuery = `${importerType} in ${region ? `${region}, ` : ''}${country}`;
-
-      const response = await fetch('/api/discovery/start', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          query: discoveryQuery,
-          targetCountry: country,
-          region,
-          importerType,
-          maxResults: 30
-        }),
+      const data = await api.post('/api/discovery/start', {
+        query: discoveryQuery,
+        targetCountry: country,
+        region,
+        importerType,
+        maxResults: 30
       });
 
-      if (response.status === 401) {
-        setError('Session expired. Please login again.');
-        localStorage.removeItem('token');
-        setTimeout(() => window.location.href = '/', 2000);
-        return;
+      if (!data) {
+        throw new Error('Failed to start discovery session.');
       }
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          window.location.reload(); // Force reload to trigger App.tsx logout logic
-          return;
-        }
-        const errData = await response.json().catch(() => ({}));
-        console.error('API Error Data:', errData);
-        throw new Error(errData.message || errData.error || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
       
       // Save session ID to localStorage for persistence across tab switches
       localStorage.setItem('discoverySessionId', data.sessionId);
@@ -357,27 +316,14 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/importers/bulk', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ importers: toImport })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        alert(data.message);
-        onAddLeads(toImport); // Refresh main CRM list
+      const data = await api.post('/api/importers/bulk', { importers: toImport });
+      alert(data.message);
+      onAddLeads(toImport); // Refresh main CRM list
         
-        // Don't clear leads immediately so the user can still see what they just imported
-        // Only clear the selection
-        setSelectedLeads({});
-        setStatusMessage('Importers successfully added to CRM.');
-      } else {
-        alert('Failed to import leads to database.');
-      }
+      // Don't clear leads immediately so the user can still see what they just imported
+      // Only clear the selection
+      setSelectedLeads({});
+      setStatusMessage('Importers successfully added to CRM.');
     } catch (err) {
       console.error('Import error:', err);
       alert('Error importing leads.');
@@ -432,20 +378,8 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     setIsSyncingId(lead.id);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/importers/sync-sheets', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ importerId: lead.id })
-      });
-      
-      if (response.ok) {
-        alert(`Lead ${lead.companyName} successfully pushed to Google Sheets!`);
-      } else {
-        throw new Error('Failed to sync');
-      }
+      await api.post('/api/importers/sync-sheets', { importerId: lead.id });
+      alert(`Lead ${lead.companyName} successfully pushed to Google Sheets!`);
     } catch (err) {
       console.error('Google Sheets error:', err);
       alert('Failed to sync with Google Sheets. Please try again.');
@@ -464,16 +398,8 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
     let successCount = 0;
     for (const lead of selected) {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/importers/sync-sheets', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ importerId: lead.id })
-        });
-        if (response.ok) successCount++;
+        const result = await api.post('/api/importers/sync-sheets', { importerId: lead.id });
+        if (result) successCount++;
       } catch (e) {
         console.error(`Failed to export ${lead.companyName}`, e);
       }

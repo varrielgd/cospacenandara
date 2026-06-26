@@ -100,18 +100,13 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/suppliers/import', {
-          method: 'POST',
+        await api.post('/api/suppliers/import', formData, {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
           },
-          body: formData,
         });
-        if (response.ok) {
-          alert('Suppliers imported successfully!');
-          fetchSuppliers();
-        }
+        alert('Suppliers imported successfully!');
+        fetchSuppliers();
       } catch (err) {
         console.error('Error importing suppliers:', err);
       }

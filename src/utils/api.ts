@@ -1,15 +1,21 @@
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nandaracorporation.onrender.com';
+
+console.log('[API DEBUG] import.meta.env:', import.meta.env);
+console.log('[API DEBUG] VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+console.log('[API DEBUG] resolved API_BASE_URL:', API_BASE_URL);
 
 interface RequestOptions extends RequestInit {
   headers?: Record<string, string>;
+  body?: any;
 }
 
 export async function apiFetch(endpoint: string, options: RequestOptions = {}) {
   const token = localStorage.getItem('token');
-  
+  const body = options.body;
+  const isFormData = body instanceof FormData || body instanceof URLSearchParams;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
 
@@ -17,12 +23,23 @@ export async function apiFetch(endpoint: string, options: RequestOptions = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  if (!isFormData && body !== undefined && !Object.prototype.hasOwnProperty.call(headers, 'Content-Type')) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const requestBody = body !== undefined
+    ? isFormData
+      ? body
+      : (typeof body === 'string' ? body : JSON.stringify(body))
+    : undefined;
+
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 
   try {
     const response = await fetch(url, {
       ...options,
       headers,
+      body: requestBody,
     });
 
     const contentType = response.headers.get('content-type');

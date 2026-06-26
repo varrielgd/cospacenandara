@@ -16,6 +16,7 @@ import LoginView from './components/LoginView';
 import UserManagementView from './components/UserManagementView';
 import ConnectionTestView from './components/ConnectionTestView';
 import SupplierView from './components/SupplierView';
+import { api } from './utils/api';
 import { 
   Compass, 
   Users, 
@@ -91,33 +92,36 @@ export default function App() {
 
   const fetchData = async (token: string) => {
     try {
-      const headers = { 'Authorization': `Bearer ${token}` };
-      
-      const responses = await Promise.all([
-        fetch('/api/importers', { headers }),
-        fetch('/api/samples', { headers }),
-        fetch('/api/quotations', { headers }),
-        fetch('/api/emails', { headers })
+      const [leads, samplesData, quotationsData, emailsData] = await Promise.all([
+        api.get('/api/importers'),
+        api.get('/api/samples'),
+        api.get('/api/quotations'),
+        api.get('/api/emails'),
       ]);
 
-      // Global 401 interceptor
-      if (responses.some(r => r.status === 401)) {
+      setLeads(leads || []);
+      setSamples(samplesData || []);
+      setQuotations(quotationsData || []);
+      setEmails(emailsData || []);
+    } catch (err: any) {
+      if (err.message && err.message.toLowerCase().includes('unauthorized')) {
         console.warn('Unauthorized detected in batch fetch. Logging out.');
         handleLogout();
         return;
       }
-
-      const [leadsRes, samplesRes, quotesRes, emailsRes] = responses;
-
-      if (leadsRes.ok) setLeads(await leadsRes.json());
-      if (samplesRes.ok) setSamples(await samplesRes.json());
-      if (quotesRes.ok) setQuotations(await quotesRes.json());
-      if (emailsRes.ok) setEmails(await emailsRes.json());
-
-    } catch (err) {
       console.error('Error fetching data from database:', err);
     }
   };
+
+  // Listen for auth:logout event from api.ts
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      handleLogout();
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, []);
 
   // Load from Database
   useEffect(() => {
@@ -126,12 +130,8 @@ export default function App() {
         const token = localStorage.getItem('token');
         if (token) {
           // Verify token and get user info
-          const res = await fetch('/api/auth/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
-          if (res.ok) {
-            const userData = await res.json();
+          const userData = await api.get('/api/auth/me');
+          if (userData) {
             setCurrentUser(userData);
             setIsAuthenticated(true);
             fetchData(token);
@@ -156,35 +156,23 @@ export default function App() {
 
   // Database update helpers
    const refreshLeads = async () => {
-     const token = localStorage.getItem('token');
-     const res = await fetch('/api/importers', { 
-       headers: { 'Authorization': `Bearer ${token}` } 
-     });
-     if (res.ok) setLeads(await res.json());
+     const leads = await api.get('/api/importers');
+     if (leads) setLeads(leads);
    };
 
    const refreshEmails = async () => {
-     const token = localStorage.getItem('token');
-     const res = await fetch('/api/emails', { 
-       headers: { 'Authorization': `Bearer ${token}` } 
-     });
-     if (res.ok) setEmails(await res.json());
+     const emailsData = await api.get('/api/emails');
+     if (emailsData) setEmails(emailsData);
    };
 
    const refreshSamples = async () => {
-     const token = localStorage.getItem('token');
-     const res = await fetch('/api/samples', { 
-       headers: { 'Authorization': `Bearer ${token}` } 
-     });
-     if (res.ok) setSamples(await res.json());
+     const samplesData = await api.get('/api/samples');
+     if (samplesData) setSamples(samplesData);
    };
 
    const refreshQuotations = async () => {
-     const token = localStorage.getItem('token');
-     const res = await fetch('/api/quotations', { 
-       headers: { 'Authorization': `Bearer ${token}` } 
-     });
-     if (res.ok) setQuotations(await res.json());
+     const quotationsData = await api.get('/api/quotations');
+     if (quotationsData) setQuotations(quotationsData);
    };
 
   // State manipulation triggers
@@ -196,19 +184,8 @@ export default function App() {
 
   const handleUpdateLeadStatus = async (leadId: string, newStatus: Lead['status']) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/importers/${leadId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (response.ok) {
-        refreshLeads();
-      }
+      await api.put(`/api/importers/${leadId}`, { status: newStatus });
+      refreshLeads();
     } catch (err) {
       console.error('Error updating lead status:', err);
     }
@@ -223,15 +200,8 @@ export default function App() {
 
   const handleDeleteLead = async (leadId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/importers/${leadId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        refreshLeads();
-      }
+      await api.delete(`/api/importers/${leadId}`);
+      refreshLeads();
     } catch (err) {
       console.error('Error deleting lead:', err);
     }
@@ -239,19 +209,8 @@ export default function App() {
 
   const handleAddLeadManual = async (leadData: Omit<Lead, 'id' | 'dateAdded'>) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/importers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(leadData)
-      });
-
-      if (response.ok) {
-        refreshLeads();
-      }
+      await api.post('/api/importers', leadData);
+      refreshLeads();
     } catch (err) {
       console.error('Error adding lead manually:', err);
     }
@@ -261,20 +220,13 @@ export default function App() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/importers/import`, {
-        method: 'POST',
+      await api.post('/api/importers/import', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
-        body: formData,
       });
-      if (response.ok) {
-        alert('Importers imported successfully!');
-        refreshLeads();
-      } else {
-        alert('Failed to import importers.');
-      }
+      alert('Importers imported successfully!');
+      refreshLeads();
     } catch (err) {
       console.error('Error importing importers:', err);
     }
@@ -282,26 +234,14 @@ export default function App() {
 
   const handleSaveOrUpdateEmail = async (emailData: EmailLog) => {
     try {
-      const token = localStorage.getItem('token');
       const isNew = !emailData.id || emailData.id.includes('draft');
       const url = isNew ? '/api/emails' : `/api/emails/${emailData.id}`;
-      const method = isNew ? 'POST' : 'PUT';
+      const method = isNew ? api.post : api.put;
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(emailData)
-      });
-
-      if (response.ok) {
-        refreshEmails();
-        // Update status to 'Contacted' automatically if sent
-        if (emailData.status === 'Sent') {
-          handleUpdateLeadStatus(emailData.leadId, 'Contacted');
-        }
+      await method(url, emailData);
+      refreshEmails();
+      if (emailData.status === 'Sent') {
+        handleUpdateLeadStatus(emailData.leadId, 'Contacted');
       }
     } catch (err) {
       console.error('Error saving email:', err);
@@ -310,22 +250,10 @@ export default function App() {
 
   const handleAddSample = async (sampleData: Omit<Sample, 'id' | 'sampleRequestDate'>) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/samples', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(sampleData)
-      });
-
-      if (response.ok) {
-        refreshSamples();
-        // Mark status on CRM as "Sample Requested" or "Sample Sent"
-        const targetState = sampleData.status === 'Shipped' ? 'Sample Sent' : 'Sample Requested';
-        handleUpdateLeadStatus(sampleData.leadId, targetState);
-      }
+      await api.post('/api/samples', sampleData);
+      refreshSamples();
+      const targetState = sampleData.status === 'Shipped' ? 'Sample Sent' : 'Sample Requested';
+      handleUpdateLeadStatus(sampleData.leadId, targetState);
     } catch (err) {
       console.error('Error adding sample:', err);
     }
@@ -333,27 +261,14 @@ export default function App() {
 
   const handleUpdateSampleStatus = async (sampleId: string, targetStatus: Sample['status'], trackingNumber?: string) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/samples/${sampleId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: targetStatus, trackingNumber })
-      });
-
-      if (response.ok) {
-        refreshSamples();
-        
-        // Find leadId for the sample to update status
-        const sample = samples.find(s => s.id === sampleId);
-        if (sample) {
-          if (targetStatus === 'Shipped') {
-            handleUpdateLeadStatus(sample.leadId, 'Sample Sent');
-          } else if (targetStatus === 'Delivered') {
-            handleUpdateLeadStatus(sample.leadId, 'Replied');
-          }
+      await api.put(`/api/samples/${sampleId}`, { status: targetStatus, trackingNumber });
+      refreshSamples();
+      const sample = samples.find(s => s.id === sampleId);
+      if (sample) {
+        if (targetStatus === 'Shipped') {
+          handleUpdateLeadStatus(sample.leadId, 'Sample Sent');
+        } else if (targetStatus === 'Delivered') {
+          handleUpdateLeadStatus(sample.leadId, 'Replied');
         }
       }
     } catch (err) {
@@ -363,22 +278,10 @@ export default function App() {
 
   const handleAddQuotation = async (quoteData: Omit<Quotation, 'quoteNumber' | 'dateCreated'>) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/quotations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(quoteData)
-      });
-
-      if (response.ok) {
-        refreshQuotations();
-        // Automatically advance CRM status to "Quotation Sent" if draft isn't default
-        const targetStatus = quoteData.status === 'Sent' ? 'Quotation Sent' : 'Negotiation';
-        handleUpdateLeadStatus(quoteData.leadId, targetStatus);
-      }
+      await api.post('/api/quotations', quoteData);
+      refreshQuotations();
+      const targetStatus = quoteData.status === 'Sent' ? 'Quotation Sent' : 'Negotiation';
+      handleUpdateLeadStatus(quoteData.leadId, targetStatus);
     } catch (err) {
       console.error('Error adding quotation:', err);
     }
@@ -386,29 +289,17 @@ export default function App() {
 
   const handleUpdateQuotationStatus = async (number: string, targetStatus: Quotation['status']) => {
     try {
-      const token = localStorage.getItem('token');
-      // Need to find ID by quotation number or update API to accept number
-      const quote = quotations.find(q => q.quoteNumber === number)!
+      const quote = quotations.find(q => q.quoteNumber === number);
       if (!quote) return;
 
-      const response = await fetch(`/api/quotations/${quote.quoteNumber}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: targetStatus })
-      });
-
-      if (response.ok) {
-        refreshQuotations();
-        if (targetStatus === 'Accepted') {
-          handleUpdateLeadStatus(quote.leadId, 'Order Confirmed');
-        } else if (targetStatus === 'Sent') {
-          handleUpdateLeadStatus(quote.leadId, 'Quotation Sent');
-        } else if (targetStatus === 'Declined') {
-          handleUpdateLeadStatus(quote.leadId, 'Closed Lost');
-        }
+      await api.put(`/api/quotations/${quote.quoteNumber}`, { status: targetStatus });
+      refreshQuotations();
+      if (targetStatus === 'Accepted') {
+        handleUpdateLeadStatus(quote.leadId, 'Order Confirmed');
+      } else if (targetStatus === 'Sent') {
+        handleUpdateLeadStatus(quote.leadId, 'Quotation Sent');
+      } else if (targetStatus === 'Declined') {
+        handleUpdateLeadStatus(quote.leadId, 'Closed Lost');
       }
     } catch (err) {
       console.error('Error updating quotation status:', err);
@@ -424,18 +315,7 @@ export default function App() {
   // MODULE 7 - Google Sheets synchronization engine (Live integration lookup)
   const handleSyncToSheets = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/dashboard/sync-sheets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to sync with Google Sheets');
-
-      // Simple wait and state save
+      await api.post('/api/dashboard/sync-sheets', {});
       const updated = { ...config, isSynced: true };
       setConfig(updated);
       localStorage.setItem('nandara_ciis_config', JSON.stringify(updated));

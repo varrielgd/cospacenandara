@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, ShieldCheck, Shield } from 'lucide-react';
+import { api } from '../utils/api';
 
 interface LoginViewProps {
   onLoginSuccess: (token: string, user: any) => void;
@@ -19,22 +20,12 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await api.post('/api/auth/login', { email, password });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.requiresVerification) {
-          setShow2FA(true);
-          setError('Account needs verification. Please check your email.');
-          return;
-        }
-        const errorMessage = data.details || data.message || 'Login failed';
-        throw new Error(errorMessage);
+      if (data.requiresVerification) {
+        setShow2FA(true);
+        setError('Account needs verification. Please check your email.');
+        return;
       }
 
       onLoginSuccess(data.token, data.user);
@@ -51,18 +42,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/verify-2fa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: verificationCode }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Verification failed');
-      }
-
+      const data = await api.post('/api/auth/verify-2fa', { email, code: verificationCode });
       onLoginSuccess(data.token, data.user);
     } catch (err: any) {
       setError(err.message);
