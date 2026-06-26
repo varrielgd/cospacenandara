@@ -751,7 +751,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                       <button
                         onClick={(e) => handleAddToGoogleSheet(lead, e)}
                         disabled={isSyncingId === lead.id}
-                        className={`p-2 rounded-md transition-all flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest ${`
+                        className={`p-2 rounded-md transition-all flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest ${
                           isSyncingId === lead.id
                             ? 'bg-[#1a3a2a] opacity-50 cursor-not-allowed'
                             : 'bg-[#1a3a2a] text-[#8fb499] hover:text-[#d4af37]'
