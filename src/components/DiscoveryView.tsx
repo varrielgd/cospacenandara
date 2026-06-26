@@ -135,7 +135,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
         // Update progress
         setProgress({ total: 30, processed: data.totalProcessed });
-        const isSimulated = data.importers && data.importers.some(imp => imp.notes && imp.notes.includes('Simulated'));
+        const isSimulated = data.importers && data.importers.some((imp: Lead) => imp.notes && imp.notes.includes('Simulated'));
         
         if (data.status === 'RUNNING') {
           setStatusMessage(isSimulated 
