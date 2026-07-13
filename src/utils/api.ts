@@ -1,5 +1,5 @@
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://nandaracorporation.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cospacenandara.onrender.com';
 
 console.log('[API DEBUG] import.meta.env:', import.meta.env);
 console.log('[API DEBUG] VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
