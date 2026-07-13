@@ -166,7 +166,7 @@ export default function EmailGeneratorView({
     setCopied(false);
 
     try {
-      const data = await api.post('/api/leads/generate-email', {
+      const data = await api.post('/api/emails/generate-email', {
         companyName: activeLead.companyName,
         country: activeLead.country,
         leadType: activeLead.leadType,

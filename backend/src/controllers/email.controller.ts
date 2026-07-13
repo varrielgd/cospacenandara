@@ -198,3 +198,19 @@ export const getEmailsByImporter = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const { companyName, country, leadType, coffeeInterest, contactName } = req.body;
+    
+    // Create context string for AI
+    const context = `Lead Type: ${leadType}, Country: ${country}, Coffee Interest: ${coffeeInterest}, Contact Name: ${contactName}`;
+    
+    const draft = await AiService.generateEmailDraft(companyName, context, 'professional');
+    
+    return res.json({ subject: draft.subject, body: draft.body });
+  } catch (error) {
+    logger.error('Lead email generation error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -18,5 +18,6 @@ router.post('/send-direct', emailController.sendDirectEmail);
 router.get('/inbox', emailController.getInbox);
 router.post('/sync', emailController.syncInbox);
 router.get('/importer/:importerId', emailController.getEmailsByImporter);
+router.post('/generate-email', emailController.generateLeadEmail);
 
 export default router;

@@ -96,6 +96,13 @@ export const deleteSupplier = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     if (!id) return res.status(400).json({ message: 'ID is required' });
+    
+    // Delete related records first
+    await prisma.supplierContact.deleteMany({ where: { supplierId: id as string } });
+    await prisma.note.deleteMany({ where: { supplierId: id as string } });
+    await prisma.activity.deleteMany({ where: { supplierId: id as string } });
+    await prisma.task.deleteMany({ where: { supplierId: id as string } });
+    
     await prisma.supplier.delete({ where: { id: id as string } });
     return res.status(204).send();
   } catch (error) {
