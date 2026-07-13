@@ -47,8 +47,8 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-app.use(cors({
-  origin: function (origin, callback) {
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     const allowedOrigins = [
       'https://nandaracorporation.vercel.app',
       'https://nandaracorporation-8yzm3o79w.vercel.app',
@@ -71,10 +71,12 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+app.use(cors(corsOptions));
 
 // Handle preflight OPTIONS requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
