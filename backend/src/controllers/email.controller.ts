@@ -4,6 +4,7 @@ import { AiService } from '../services/ai.service';
 import { prisma, logger } from '../index';
 import nodemailer from 'nodemailer';
 import { EmailSyncService } from '../services/email-sync.service';
+import axios from 'axios';
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.hostinger.com',
@@ -211,6 +212,65 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
     return res.json({ subject: draft.subject, body: draft.body });
   } catch (error) {
     logger.error('Lead email generation error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const fetchGoogleDriveFile = async (req: AuthRequest, res: Response) => {
+  try {
+    const { driveLink } = req.body;
+    
+    if (!driveLink) {
+      return res.status(400).json({ message: 'Google Drive link is required' });
+    }
+    
+    // Extract file ID from various Google Drive link formats
+    let fileId = '';
+    const patterns = [
+      /\/d\/([a-zA-Z0-9-_]+)/, // https://drive.google.com/file/d/FILE_ID/view...
+      /id=([a-zA-Z0-9-_]+)/, // https://drive.google.com/open?id=FILE_ID
+      /\/file\/d\/([a-zA-Z0-9-_]+)/ // Another pattern
+    ];
+    
+    for (const pattern of patterns) {
+      const match = driveLink.match(pattern);
+      if (match) {
+        fileId = match[1];
+        break;
+      }
+    }
+    
+    if (!fileId) {
+      return res.status(400).json({ message: 'Invalid Google Drive link' });
+    }
+    
+    const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    
+    // Fetch the file with axios
+    const response = await axios.get(downloadUrl, {
+      responseType: 'arraybuffer'
+    });
+    
+    // Get filename from Content-Disposition if available, otherwise default
+    let filename = 'downloaded_file';
+    const contentDisposition = response.headers['content-disposition'];
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+    
+    // Get content type
+    const contentType = response.headers['content-type'] || 'application/octet-stream';
+    
+    // Return the file data
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(response.data);
+    
+  } catch (error) {
+    logger.error('Google Drive file fetch error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

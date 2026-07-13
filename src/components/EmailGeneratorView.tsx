@@ -54,6 +54,24 @@ export default function EmailGeneratorView({
   const [attachPdfQuotation, setAttachPdfQuotation] = useState('none');
   const [attachCatalogue, setAttachCatalogue] = useState(false);
   const [attachSampleOffer, setAttachSampleOffer] = useState(false);
+  // New attachments
+  const [attachCompanyProfile, setAttachCompanyProfile] = useState(false);
+  const [companyProfileDriveLink, setCompanyProfileDriveLink] = useState('');
+  const [companyProfileFile, setCompanyProfileFile] = useState<File | null>(null);
+  const [attachPriceList, setAttachPriceList] = useState(false);
+  const [priceListDriveLink, setPriceListDriveLink] = useState('');
+  const [priceListFile, setPriceListFile] = useState<File | null>(null);
+  const [attachSampleProgram, setAttachSampleProgram] = useState(false);
+  const [sampleProgramDriveLink, setSampleProgramDriveLink] = useState('');
+  const [sampleProgramFile, setSampleProgramFile] = useState<File | null>(null);
+  const [attachQuotation, setAttachQuotation] = useState(false);
+  const [quotationDriveLink, setQuotationDriveLink] = useState('');
+  const [quotationFile, setQuotationFile] = useState<File | null>(null);
+  const [attachProformaInvoice, setAttachProformaInvoice] = useState(false);
+  const [proformaInvoiceDriveLink, setProformaInvoiceDriveLink] = useState('');
+  const [proformaInvoiceFile, setProformaInvoiceFile] = useState<File | null>(null);
+  // Loading states
+  const [downloading, setDownloading] = useState<string | null>(null);
   
   // Approval Workflow State
   const [currentEmailId, setCurrentEmailId] = useState<string>('');
@@ -119,6 +137,17 @@ export default function EmailGeneratorView({
       setAttachPdfQuotation(existing.attachPdfQuotation || 'none');
       setAttachCatalogue(existing.attachCatalogue || false);
       setAttachSampleOffer(existing.attachSampleOffer || false);
+      // New attachments
+      setAttachCompanyProfile(existing.attachCompanyProfile || false);
+      setCompanyProfileDriveLink(existing.companyProfileDriveLink || '');
+      setAttachPriceList(existing.attachPriceList || false);
+      setPriceListDriveLink(existing.priceListDriveLink || '');
+      setAttachSampleProgram(existing.attachSampleProgram || false);
+      setSampleProgramDriveLink(existing.sampleProgramDriveLink || '');
+      setAttachQuotation(existing.attachQuotation || false);
+      setQuotationDriveLink(existing.quotationDriveLink || '');
+      setAttachProformaInvoice(existing.attachProformaInvoice || false);
+      setProformaInvoiceDriveLink(existing.proformaInvoiceDriveLink || '');
       setStatus(existing.status);
       setIsApproved(existing.approved);
       setTimestamps({
@@ -140,6 +169,22 @@ export default function EmailGeneratorView({
       setAttachPdfQuotation('none');
       setAttachCatalogue(false);
       setAttachSampleOffer(false);
+      // New attachments
+      setAttachCompanyProfile(false);
+      setCompanyProfileDriveLink('');
+      setCompanyProfileFile(null);
+      setAttachPriceList(false);
+      setPriceListDriveLink('');
+      setPriceListFile(null);
+      setAttachSampleProgram(false);
+      setSampleProgramDriveLink('');
+      setSampleProgramFile(null);
+      setAttachQuotation(false);
+      setQuotationDriveLink('');
+      setQuotationFile(null);
+      setAttachProformaInvoice(false);
+      setProformaInvoiceDriveLink('');
+      setProformaInvoiceFile(null);
       setStatus('Pending Review');
       setIsApproved(false);
       setTimestamps({
@@ -192,18 +237,29 @@ export default function EmailGeneratorView({
 
       // Save automatically in local state
       const freshEmail: EmailLog = {
-        id: currentEmailId,
-        leadId: activeLead.id,
-        recipientEmail: recipientEmail || activeLead.email || '',
-        cc,
-        bcc,
-        emailSubject: generatedSub,
-        emailBody: generatedBody,
-        status: 'Draft Generated',
-        approved: false,
-        attachPdfQuotation,
-        attachCatalogue,
-        attachSampleOffer,
+            id: currentEmailId,
+            leadId: activeLead.id,
+            recipientEmail: recipientEmail || activeLead.email || '',
+            cc,
+            bcc,
+            emailSubject: generatedSub,
+            emailBody: generatedBody,
+            status: 'Draft Generated',
+            approved: false,
+            attachPdfQuotation,
+            attachCatalogue,
+            attachSampleOffer,
+            // New attachments
+            attachCompanyProfile,
+            companyProfileDriveLink,
+            attachPriceList,
+            priceListDriveLink,
+            attachSampleProgram,
+            sampleProgramDriveLink,
+            attachQuotation,
+            quotationDriveLink,
+            attachProformaInvoice,
+            proformaInvoiceDriveLink,
         draftGeneratedAt: now,
         pendingReviewAt: now,
         sentDate: new Date().toISOString().split('T')[0]
@@ -232,18 +288,29 @@ export default function EmailGeneratorView({
     setTimestamps(updatedTimestamps);
 
     const freshEmail: EmailLog = {
-      id: currentEmailId,
-      leadId: activeLead.id,
-      recipientEmail: recipientEmail,
-      cc,
-      bcc,
-      emailSubject: subject,
-      emailBody: body,
-      status: nextStatus,
-      approved: isApproved, // don't silently lose approval if approved
-      attachPdfQuotation,
-      attachCatalogue,
-      attachSampleOffer,
+          id: currentEmailId,
+          leadId: activeLead.id,
+          recipientEmail: recipientEmail,
+          cc,
+          bcc,
+          emailSubject: subject,
+          emailBody: body,
+          status: nextStatus,
+          approved: isApproved, // don't silently lose approval if approved
+          attachPdfQuotation,
+          attachCatalogue,
+          attachSampleOffer,
+          // New attachments
+          attachCompanyProfile,
+          companyProfileDriveLink,
+          attachPriceList,
+          priceListDriveLink,
+          attachSampleProgram,
+          sampleProgramDriveLink,
+          attachQuotation,
+          quotationDriveLink,
+          attachProformaInvoice,
+          proformaInvoiceDriveLink,
       ...timestamps,
       editedByUserAt: now,
       sentDate: new Date().toISOString().split('T')[0]
@@ -268,18 +335,29 @@ export default function EmailGeneratorView({
     setTimestamps(updatedTimestamps);
 
     const freshEmail: EmailLog = {
-      id: currentEmailId,
-      leadId: activeLead.id,
-      recipientEmail: recipientEmail,
-      cc,
-      bcc,
-      emailSubject: subject,
-      emailBody: body,
-      status: 'Approved',
-      approved: true,
-      attachPdfQuotation,
-      attachCatalogue,
-      attachSampleOffer,
+          id: currentEmailId,
+          leadId: activeLead.id,
+          recipientEmail: recipientEmail,
+          cc,
+          bcc,
+          emailSubject: subject,
+          emailBody: body,
+          status: 'Approved',
+          approved: true,
+          attachPdfQuotation,
+          attachCatalogue,
+          attachSampleOffer,
+          // New attachments
+          attachCompanyProfile,
+          companyProfileDriveLink,
+          attachPriceList,
+          priceListDriveLink,
+          attachSampleProgram,
+          sampleProgramDriveLink,
+          attachQuotation,
+          quotationDriveLink,
+          attachProformaInvoice,
+          proformaInvoiceDriveLink,
       ...timestamps,
       approvedAt: now,
       readyToSendAt: now,
@@ -307,18 +385,29 @@ export default function EmailGeneratorView({
     setTimestamps(updatedTimestamps);
 
     const freshEmail: EmailLog = {
-      id: currentEmailId,
-      leadId: activeLead.id,
-      recipientEmail: recipientEmail,
-      cc,
-      bcc,
-      emailSubject: subject,
-      emailBody: body,
-      status: 'Sent',
-      approved: true,
-      attachPdfQuotation,
-      attachCatalogue,
-      attachSampleOffer,
+        id: currentEmailId,
+        leadId: activeLead.id,
+        recipientEmail: recipientEmail,
+        cc,
+        bcc,
+        emailSubject: subject,
+        emailBody: body,
+        status: 'Sent',
+        approved: true,
+        attachPdfQuotation,
+        attachCatalogue,
+        attachSampleOffer,
+        // New attachments
+        attachCompanyProfile,
+        companyProfileDriveLink,
+        attachPriceList,
+        priceListDriveLink,
+        attachSampleProgram,
+        sampleProgramDriveLink,
+        attachQuotation,
+        quotationDriveLink,
+        attachProformaInvoice,
+        proformaInvoiceDriveLink,
       ...timestamps,
       sentAt: now,
       sentDate: new Date().toISOString().split('T')[0]
@@ -333,6 +422,39 @@ export default function EmailGeneratorView({
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Function to download file from Google Drive via backend and store as File object
+  const handleDownloadDriveFile = async (
+    driveLink: string, 
+    setFile: React.Dispatch<React.SetStateAction<File | null>>, 
+    attachmentName: string
+  ) => {
+    try {
+      setDownloading(attachmentName);
+      const response = await api.post('/api/emails/fetch-drive-file', { driveLink }, { responseType: 'blob' });
+      
+      // Get filename from Content-Disposition header if possible
+      let filename = `${attachmentName}.pdf`;
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      // Create File object
+      const file = new File([response.data], filename, { type: response.data.type });
+      setFile(file);
+      
+      alert(`Successfully downloaded ${filename}!`);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Error downloading file. Please check your Google Drive link and try again.');
+    } finally {
+      setDownloading(null);
+    }
   };
 
   // Rich style formatting toolbar helpers
@@ -660,7 +782,7 @@ export default function EmailGeneratorView({
             <span>Outbound Trade Attachments</span>
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             {/* Quote Selector dropdown */}
             <div className="space-y-1">
@@ -685,7 +807,182 @@ export default function EmailGeneratorView({
               )}
             </div>
 
-            {/* Checkboxes */}
+            {/* Company Profile */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-company-profile" 
+                  checked={attachCompanyProfile}
+                  onChange={e => setAttachCompanyProfile(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-company-profile" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  📄 Company Profile
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={companyProfileDriveLink}
+                  onChange={e => setCompanyProfileDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(companyProfileDriveLink, setCompanyProfileFile, 'Company Profile')}
+                  disabled={!companyProfileDriveLink || downloading === 'Company Profile'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'Company Profile' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {companyProfileFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {companyProfileFile.name}</p>
+              )}
+            </div>
+
+            {/* Price List */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-price-list" 
+                  checked={attachPriceList}
+                  onChange={e => setAttachPriceList(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-price-list" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  📊 Price List
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={priceListDriveLink}
+                  onChange={e => setPriceListDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(priceListDriveLink, setPriceListFile, 'Price List')}
+                  disabled={!priceListDriveLink || downloading === 'Price List'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'Price List' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {priceListFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {priceListFile.name}</p>
+              )}
+            </div>
+
+            {/* Sample Program */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-sample-program" 
+                  checked={attachSampleProgram}
+                  onChange={e => setAttachSampleProgram(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-sample-program" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  🏷 Sample Program
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={sampleProgramDriveLink}
+                  onChange={e => setSampleProgramDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(sampleProgramDriveLink, setSampleProgramFile, 'Sample Program')}
+                  disabled={!sampleProgramDriveLink || downloading === 'Sample Program'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'Sample Program' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {sampleProgramFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {sampleProgramFile.name}</p>
+              )}
+            </div>
+
+            {/* Quotation (Custom) */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-quotation" 
+                  checked={attachQuotation}
+                  onChange={e => setAttachQuotation(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-quotation" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  🧾 Quotation
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={quotationDriveLink}
+                  onChange={e => setQuotationDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(quotationDriveLink, setQuotationFile, 'Quotation')}
+                  disabled={!quotationDriveLink || downloading === 'Quotation'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'Quotation' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {quotationFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {quotationFile.name}</p>
+              )}
+            </div>
+
+            {/* Proforma Invoice */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-proforma-invoice" 
+                  checked={attachProformaInvoice}
+                  onChange={e => setAttachProformaInvoice(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-proforma-invoice" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  📑 Proforma Invoice
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={proformaInvoiceDriveLink}
+                  onChange={e => setProformaInvoiceDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(proformaInvoiceDriveLink, setProformaInvoiceFile, 'Proforma Invoice')}
+                  disabled={!proformaInvoiceDriveLink || downloading === 'Proforma Invoice'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'Proforma Invoice' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {proformaInvoiceFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {proformaInvoiceFile.name}</p>
+              )}
+            </div>
+
+            {/* Old checkboxes (Catalogue and SpecSheet) */}
             <div className="flex items-center gap-2">
               <input 
                 type="checkbox" 
@@ -815,7 +1112,32 @@ export default function EmailGeneratorView({
                     🏷 Specialty_Lots_Specs.pdf
                   </span>
                 )}
-                {attachPdfQuotation === 'none' && !attachCatalogue && !attachSampleOffer && (
+                {attachCompanyProfile && (
+                  <span className="p-1 px-2 border border-green-200 bg-green-50 text-green-800 rounded-xs">
+                    📄 {companyProfileFile?.name || 'Company_Profile.pdf'}
+                  </span>
+                )}
+                {attachPriceList && (
+                  <span className="p-1 px-2 border border-purple-200 bg-purple-50 text-purple-800 rounded-xs">
+                    📊 {priceListFile?.name || 'Price_List.pdf'}
+                  </span>
+                )}
+                {attachSampleProgram && (
+                  <span className="p-1 px-2 border border-orange-200 bg-orange-50 text-orange-800 rounded-xs">
+                    🏷 {sampleProgramFile?.name || 'Sample_Program.pdf'}
+                  </span>
+                )}
+                {attachQuotation && (
+                  <span className="p-1 px-2 border border-indigo-200 bg-indigo-50 text-indigo-800 rounded-xs">
+                    🧾 {quotationFile?.name || 'Quotation.pdf'}
+                  </span>
+                )}
+                {attachProformaInvoice && (
+                  <span className="p-1 px-2 border border-pink-200 bg-pink-50 text-pink-800 rounded-xs">
+                    📑 {proformaInvoiceFile?.name || 'Proforma_Invoice.pdf'}
+                  </span>
+                )}
+                {attachPdfQuotation === 'none' && !attachCatalogue && !attachSampleOffer && !attachCompanyProfile && !attachPriceList && !attachSampleProgram && !attachQuotation && !attachProformaInvoice && (
                   <span className="italic text-gray-400 font-sans">No physical assets attached</span>
                 )}
               </div>

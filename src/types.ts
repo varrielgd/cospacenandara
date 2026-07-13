@@ -72,6 +72,17 @@ export interface EmailLog {
   attachPdfQuotation: string; // e.g. quoteNumber or "none"
   attachCatalogue: boolean;
   attachSampleOffer: boolean;
+  // New attachments
+  attachCompanyProfile: boolean;
+  companyProfileDriveLink: string;
+  attachPriceList: boolean;
+  priceListDriveLink: string;
+  attachSampleProgram: boolean;
+  sampleProgramDriveLink: string;
+  attachQuotation: boolean;
+  quotationDriveLink: string;
+  attachProformaInvoice: boolean;
+  proformaInvoiceDriveLink: string;
   
   // Timestamps
   draftGeneratedAt?: string;
