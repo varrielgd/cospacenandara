@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nandara-backend
+    name: cospacenandara
     env: node
     plan: free
     buildCommand: npm install && npm run build
