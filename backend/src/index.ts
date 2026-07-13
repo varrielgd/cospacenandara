@@ -74,9 +74,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+// In Express 5, the cors middleware already handles OPTIONS requests, so we don't need separate app.options()!
+// The cors package handles preflight automatically when credentials are true!
 
-// Handle preflight OPTIONS requests
-app.options('*', cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
