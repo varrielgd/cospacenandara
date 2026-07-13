@@ -16,6 +16,12 @@ import LoginView from './components/LoginView';
 import UserManagementView from './components/UserManagementView';
 import ConnectionTestView from './components/ConnectionTestView';
 import SupplierView from './components/SupplierView';
+import PhysicalInventoryView from './components/PhysicalInventoryView';
+import QualityControlView from './components/QualityControlView';
+import ExportContractsView from './components/ExportContractsView';
+import ShipmentTrackingView from './components/ShipmentTrackingView';
+import FXHedgingView from './components/FXHedgingView';
+import SystemSettingsView from './components/SystemSettingsView';
 import { api } from './utils/api';
 import { 
   Compass, 
@@ -38,7 +44,12 @@ import {
   User,
   ShieldCheck,
   Activity,
-  Package
+  Package,
+  Warehouse,
+  FlaskConical,
+  FileCheck,
+  Truck,
+  TrendingUp
 } from 'lucide-react';
 
 const INITIAL_LEADS: Lead[] = [];
@@ -50,7 +61,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
-  const [activeTab, setActiveTabState] = useState<string>('dashboard');
+  const [activeTab, setActiveTabState] = useState<string>('buyer-crm');
   const [activeLang, setActiveLang] = useState<string>('id');
   
   const setActiveTab = (tab: string) => {
@@ -423,6 +434,96 @@ export default function App() {
               </div>
             </div>
 
+            <div className="px-7 pb-2 mb-2 text-[9px] text-gold/60 font-mono uppercase tracking-widest">
+              CRM Modules
+            </div>
+
+            <button
+              onClick={() => setActiveTab('buyer-crm')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'buyer-crm' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Users className="w-4 h-4 shrink-0 text-gold" />
+              <span>Buyer CRM Desk</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('physical-inventory')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'physical-inventory' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Warehouse className="w-4 h-4 shrink-0 text-gold" />
+              <span>Physical Inventory</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('quality-control')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'quality-control' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <FlaskConical className="w-4 h-4 shrink-0 text-gold" />
+              <span>Quality Control</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('export-contracts')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'export-contracts' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <FileCheck className="w-4 h-4 shrink-0 text-gold" />
+              <span>Export Contracts</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('shipment-tracking')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'shipment-tracking' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Truck className="w-4 h-4 shrink-0 text-gold" />
+              <span>Shipment Tracking</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('fx-hedging')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'fx-hedging' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4 shrink-0 text-gold" />
+              <span>FX & Hedging Desk</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('system-settings')}
+              className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
+                activeTab === 'system-settings' 
+                  ? 'bg-white/5 text-gold font-semibold border-gold opacity-100' 
+                  : 'text-gray-300 opacity-70 hover:opacity-100 hover:bg-white/5 border-transparent'
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0 text-gold" />
+              <span>System Settings</span>
+            </button>
+
+            <div className="border-t border-white/5 my-3" />
+
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`w-full text-left px-7 py-3.5 flex items-center gap-3 transition-all cursor-pointer border-l-[3px] ${
@@ -636,6 +737,13 @@ export default function App() {
           <div className="space-y-1.5">
             <h2 className="text-2xl sm:text-3xl font-serif italic tracking-wide text-primary" id="active-tab-title">
               {activeTab === 'dashboard' && "Pipeline Overview"}
+              {activeTab === 'buyer-crm' && "Buyer CRM Desk"}
+              {activeTab === 'physical-inventory' && "Physical Inventory"}
+              {activeTab === 'quality-control' && "Quality Control"}
+              {activeTab === 'export-contracts' && "Export Contracts"}
+              {activeTab === 'shipment-tracking' && "Shipment Tracking"}
+              {activeTab === 'fx-hedging' && "FX & Hedging Desk"}
+              {activeTab === 'system-settings' && "System Settings"}
               {activeTab === 'ai-studio' && "AI Content Studio & Brand Narrative"}
               {activeTab === 'showroom' && "Nandara Sourcing Showroom & Portals"}
               {activeTab === 'suppliers' && "Supplier Management & Procurement"}
@@ -678,6 +786,44 @@ export default function App() {
               emails={emails} 
               onNavigate={setActiveTab}
             />
+          )}
+
+          {activeTab === 'buyer-crm' && (
+            <CrmView 
+              leads={leads}
+              onUpdateLeadStatus={handleUpdateLeadStatus}
+              onUpdateMultipleLeadsStatus={handleUpdateMultipleLeadsStatus}
+              onDeleteLead={handleDeleteLead}
+              onAddLeadManual={handleAddLeadManual}
+              onImportLeads={handleImportLeads}
+              onSelectLeadForEmail={handleSelectLeadForEmail}
+              onSelectLeadForSample={handleSelectLeadForSample}
+              onSelectLeadForQuote={handleSelectLeadForQuote}
+            />
+          )}
+
+          {activeTab === 'physical-inventory' && (
+            <PhysicalInventoryView />
+          )}
+
+          {activeTab === 'quality-control' && (
+            <QualityControlView />
+          )}
+
+          {activeTab === 'export-contracts' && (
+            <ExportContractsView />
+          )}
+
+          {activeTab === 'shipment-tracking' && (
+            <ShipmentTrackingView />
+          )}
+
+          {activeTab === 'fx-hedging' && (
+            <FXHedgingView />
+          )}
+
+          {activeTab === 'system-settings' && (
+            <SystemSettingsView />
           )}
 
           {activeTab === 'ai-studio' && (

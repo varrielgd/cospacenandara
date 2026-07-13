@@ -23,7 +23,8 @@ import {
   ListFilter,
   ShieldCheck,
   Sparkles,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Save
 } from 'lucide-react';
 
 interface CrmViewProps {
@@ -63,6 +64,17 @@ export default function CrmView({
   onSelectLeadForQuote
 }: CrmViewProps) {
 
+  // Calculate stats
+  const totalBuyers = leads.length;
+  const newLeads = leads.filter(l => l.status === 'New Lead').length;
+  const negotiations = leads.filter(l => l.status === 'Negotiation').length;
+  const samplesRunning = leads.filter(l => l.status === 'Sample Requested' || l.status === 'Sample Sent').length;
+  const quotationsSent = leads.filter(l => l.status === 'Quotation Sent').length;
+  const shipmentsRunning = 0; // Placeholder for now
+  const repeatClients = leads.filter(l => (l as any).isRepeatClient).length;
+  const lostAccounts = leads.filter(l => l.status === 'Closed Lost').length;
+  const todayFollowups = 0; // Placeholder for now
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -81,12 +93,22 @@ export default function CrmView({
 
   // Form State
   const [companyName, setCompanyName] = useState('');
+  const [businessType, setBusinessType] = useState('Importer');
   const [country, setCountry] = useState('Germany');
   const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [website, setWebsite] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [linkedin, setLinkedin] = useState('');
+  const [primaryContactName, setPrimaryContactName] = useState('');
+  const [primaryContactEmail, setPrimaryContactEmail] = useState('');
+  const [importLicenseNumber, setImportLicenseNumber] = useState('');
+  const [annualVolumeBags, setAnnualVolumeBags] = useState('');
+  const [estimatedBuyingCapacity, setEstimatedBuyingCapacity] = useState('');
+  const [targetMoqBags, setTargetMoqBags] = useState('');
+  const [preferredIncoterm, setPreferredIncoterm] = useState<'FOB' | 'CIF' | 'EXW' | 'CNF'>('FOB');
   const [leadType, setLeadType] = useState('Green Coffee Importer');
   const [leadScore, setLeadScore] = useState<'A' | 'B' | 'C'>('B');
   const [notes, setNotes] = useState('');
@@ -115,26 +137,48 @@ export default function CrmView({
       companyName,
       country,
       city,
+      state,
       website,
       contactPage: '',
       email,
       phone,
+      whatsapp,
       linkedin,
+      businessType,
+      primaryContactName,
+      primaryContactEmail,
+      importLicenseNumber,
+      annualVolumeBags: annualVolumeBags ? Number(annualVolumeBags) : undefined,
+      estimatedBuyingCapacity: estimatedBuyingCapacity ? Number(estimatedBuyingCapacity) : undefined,
+      targetMoqBags: targetMoqBags ? Number(targetMoqBags) : undefined,
+      preferredIncoterm,
       leadType,
       leadScore,
       status: 'New Lead',
       lastContact: 'Added manually',
       notes
-    });
+    } as any); // Using as any for now since we're adding new fields
 
     // Reset
     setCompanyName('');
+    setBusinessType('Importer');
     setCountry('Germany');
     setCity('');
+    setState('');
     setWebsite('');
     setEmail('');
     setPhone('');
+    setWhatsapp('');
     setLinkedin('');
+    setPrimaryContactName('');
+    setPrimaryContactEmail('');
+    setImportLicenseNumber('');
+    setAnnualVolumeBags('');
+    setEstimatedBuyingCapacity('');
+    setTargetMoqBags('');
+    setPreferredIncoterm('FOB');
+    setLeadType('Green Coffee Importer');
+    setLeadScore('B');
     setNotes('');
     setShowAddModal(false);
   };
@@ -343,6 +387,26 @@ export default function CrmView({
             Add Custom Lead
           </button>
         </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-4">
+        {[
+          { label: 'Total Buyers', value: totalBuyers, color: 'text-primary' },
+          { label: 'New Leads', value: newLeads, color: 'text-blue-600' },
+          { label: 'Negotiations', value: negotiations, color: 'text-orange-600' },
+          { label: 'Samples Running', value: samplesRunning, color: 'text-amber-600' },
+          { label: 'Quotations Sent', value: quotationsSent, color: 'text-pink-600' },
+          { label: 'Shipments Running', value: shipmentsRunning, color: 'text-teal-600' },
+          { label: 'Repeat Clients', value: repeatClients, color: 'text-green-600' },
+          { label: 'Lost Accounts', value: lostAccounts, color: 'text-red-600' },
+          { label: 'Today Follow-ups', value: todayFollowups, color: 'text-gold' }
+        ].map((stat, idx) => (
+          <div key={idx} className="p-4 bg-white border border-primary/5 rounded-lg shadow-luxury">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-gray-500">{stat.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Buyer Intelligence & Lead Scoring Guide */}

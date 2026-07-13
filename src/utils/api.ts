@@ -84,10 +84,10 @@ export const api = {
     apiFetch(endpoint, { ...options, method: 'GET' }),
     
   post: (endpoint: string, body: any, options: RequestOptions = {}) => 
-    apiFetch(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
+    apiFetch(endpoint, { ...options, method: 'POST', body }),
     
   put: (endpoint: string, body: any, options: RequestOptions = {}) => 
-    apiFetch(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
+    apiFetch(endpoint, { ...options, method: 'PUT', body }),
     
   delete: (endpoint: string, options: RequestOptions = {}) => 
     apiFetch(endpoint, { ...options, method: 'DELETE' }),

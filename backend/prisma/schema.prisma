@@ -130,6 +130,7 @@ model Importer {
   linkedin             String?
   country              String?
   city                 String?
+  state                String?
   address              String?
   coffeeType           String?
   greenBeanInterest    Boolean              @default(false)
@@ -142,7 +143,18 @@ model Importer {
   emailValidatedAt     DateTime?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
-
+  
+  // New fields from the image
+  businessType         String?              // e.g., Importer, Roaster, Distributor
+  primaryContactName   String?
+  primaryContactEmail  String?
+  importLicenseNumber  String?
+  annualVolumeBags     Int?                 // Annual volume (60kg bags)
+  estimatedBuyingCapacity Float?            // Estimated buying capacity ($)
+  targetMoqBags        Int?                 // Target MOQ (60kg bags)
+  preferredIncoterm    Incoterm?            // Preferred Incoterm
+  isRepeatClient       Boolean              @default(false)
+  
   contacts             Contact[]
   emails               Email[]
   samples              Sample[]

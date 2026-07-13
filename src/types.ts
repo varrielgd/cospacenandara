@@ -4,13 +4,15 @@ export interface Lead {
   companyName: string;
   country: string;
   city: string;
+  state?: string;
   website: string;
   contactPage: string;
   email: string;
   phone: string;
+  whatsapp?: string;
   linkedin: string;
   leadType: string;
-  leadScore: 'A' | 'B' | 'C';
+  leadScore: 'A' | 'B' | 'C' | 'A+' | 'B+';
   status:
     | 'New Lead'
     | 'Contacted'
@@ -36,6 +38,17 @@ export interface Lead {
   emailConfidence?: 'High' | 'Medium' | 'Low';
   importerConfidence?: 'High' | 'Medium' | 'Low';
   importerProbability?: 'High' | 'Medium' | 'Low';
+  
+  // New fields from updated schema
+  businessType?: string;
+  primaryContactName?: string;
+  primaryContactEmail?: string;
+  importLicenseNumber?: string;
+  annualVolumeBags?: number;
+  estimatedBuyingCapacity?: number;
+  targetMoqBags?: number;
+  preferredIncoterm?: 'FOB' | 'CIF' | 'EXW' | 'CNF';
+  isRepeatClient?: boolean;
 }
 
 export type EmailStatus = 
