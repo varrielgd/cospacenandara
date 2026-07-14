@@ -53,7 +53,11 @@ export default function EmailGeneratorView({
   // Attachments
   const [attachPdfQuotation, setAttachPdfQuotation] = useState('none');
   const [attachCatalogue, setAttachCatalogue] = useState(false);
+  const [catalogueDriveLink, setCatalogueDriveLink] = useState('');
+  const [catalogueFile, setCatalogueFile] = useState<File | null>(null);
   const [attachSampleOffer, setAttachSampleOffer] = useState(false);
+  const [sampleOfferDriveLink, setSampleOfferDriveLink] = useState('');
+  const [sampleOfferFile, setSampleOfferFile] = useState<File | null>(null);
   // New attachments
   const [attachCompanyProfile, setAttachCompanyProfile] = useState(false);
   const [companyProfileDriveLink, setCompanyProfileDriveLink] = useState('');
@@ -136,7 +140,9 @@ export default function EmailGeneratorView({
       setBody(existing.emailBody);
       setAttachPdfQuotation(existing.attachPdfQuotation || 'none');
       setAttachCatalogue(existing.attachCatalogue || false);
+      setCatalogueDriveLink(existing.catalogueDriveLink || '');
       setAttachSampleOffer(existing.attachSampleOffer || false);
+      setSampleOfferDriveLink(existing.sampleOfferDriveLink || '');
       // New attachments
       setAttachCompanyProfile(existing.attachCompanyProfile || false);
       setCompanyProfileDriveLink(existing.companyProfileDriveLink || '');
@@ -168,7 +174,11 @@ export default function EmailGeneratorView({
       setBody('');
       setAttachPdfQuotation('none');
       setAttachCatalogue(false);
+      setCatalogueDriveLink('');
+      setCatalogueFile(null);
       setAttachSampleOffer(false);
+      setSampleOfferDriveLink('');
+      setSampleOfferFile(null);
       // New attachments
       setAttachCompanyProfile(false);
       setCompanyProfileDriveLink('');
@@ -248,7 +258,9 @@ export default function EmailGeneratorView({
             approved: false,
             attachPdfQuotation,
             attachCatalogue,
+            catalogueDriveLink,
             attachSampleOffer,
+            sampleOfferDriveLink,
             // New attachments
             attachCompanyProfile,
             companyProfileDriveLink,
@@ -299,7 +311,9 @@ export default function EmailGeneratorView({
           approved: isApproved, // don't silently lose approval if approved
           attachPdfQuotation,
           attachCatalogue,
+          catalogueDriveLink,
           attachSampleOffer,
+          sampleOfferDriveLink,
           // New attachments
           attachCompanyProfile,
           companyProfileDriveLink,
@@ -346,7 +360,9 @@ export default function EmailGeneratorView({
           approved: true,
           attachPdfQuotation,
           attachCatalogue,
+          catalogueDriveLink,
           attachSampleOffer,
+          sampleOfferDriveLink,
           // New attachments
           attachCompanyProfile,
           companyProfileDriveLink,
@@ -396,7 +412,9 @@ export default function EmailGeneratorView({
         approved: true,
         attachPdfQuotation,
         attachCatalogue,
+        catalogueDriveLink,
         attachSampleOffer,
+        sampleOfferDriveLink,
         // New attachments
         attachCompanyProfile,
         companyProfileDriveLink,
@@ -982,31 +1000,74 @@ export default function EmailGeneratorView({
               )}
             </div>
 
-            {/* Old checkboxes (Catalogue and SpecSheet) */}
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="check-cat" 
-                checked={attachCatalogue}
-                onChange={e => setAttachCatalogue(e.target.checked)}
-                className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
-              />
-              <label htmlFor="check-cat" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
-                📕 Attach Catalogue.pdf
-              </label>
+            {/* Catalogue */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-cat" 
+                  checked={attachCatalogue}
+                  onChange={e => setAttachCatalogue(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-cat" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  📕 Attach Catalogue.pdf
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={catalogueDriveLink}
+                  onChange={e => setCatalogueDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(catalogueDriveLink, setCatalogueFile, 'Catalogue')}
+                  disabled={!catalogueDriveLink || downloading === 'Catalogue'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'Catalogue' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {catalogueFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {catalogueFile.name}</p>
+              )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="check-sample" 
-                checked={attachSampleOffer}
-                onChange={e => setAttachSampleOffer(e.target.checked)}
-                className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
-              />
-              <label htmlFor="check-sample" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
-                🏷 Attach SpecSheet.pdf
-              </label>
+            {/* SpecSheet */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="check-sample" 
+                  checked={attachSampleOffer}
+                  onChange={e => setAttachSampleOffer(e.target.checked)}
+                  className="w-4 h-4 text-primary bg-white border-primary/30 rounded-sm"
+                />
+                <label htmlFor="check-sample" className="text-[10px] text-primary uppercase font-bold cursor-pointer select-none">
+                  🏷 Attach SpecSheet.pdf
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={sampleOfferDriveLink}
+                  onChange={e => setSampleOfferDriveLink(e.target.value)}
+                  placeholder="Google Drive Link"
+                  className="flex-1 bg-white border border-primary/10 rounded-sm p-1.5 text-[10px]"
+                />
+                <button
+                  onClick={() => handleDownloadDriveFile(sampleOfferDriveLink, setSampleOfferFile, 'SpecSheet')}
+                  disabled={!sampleOfferDriveLink || downloading === 'SpecSheet'}
+                  className="px-2 py-1 bg-primary text-gold rounded-sm text-[9px] font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {downloading === 'SpecSheet' ? 'Downloading...' : 'Download'}
+                </button>
+              </div>
+              {sampleOfferFile && (
+                <p className="text-[9px] text-green-700 font-sans">✓ Attached: {sampleOfferFile.name}</p>
+              )}
             </div>
           </div>
         </div>
@@ -1104,12 +1165,12 @@ export default function EmailGeneratorView({
                 )}
                 {attachCatalogue && (
                   <span className="p-1 px-2 border border-rose-200 bg-rose-50 text-rose-800 rounded-xs">
-                    📕 Product_Catalogue.pdf
+                    📕 {catalogueFile?.name || 'Product_Catalogue.pdf'}
                   </span>
                 )}
                 {attachSampleOffer && (
                   <span className="p-1 px-2 border border-teal-200 bg-teal-50 text-teal-800 rounded-xs">
-                    🏷 Specialty_Lots_Specs.pdf
+                    🏷 {sampleOfferFile?.name || 'Specialty_Lots_Specs.pdf'}
                   </span>
                 )}
                 {attachCompanyProfile && (

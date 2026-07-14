@@ -71,7 +71,9 @@ export interface EmailLog {
   approved: boolean;
   attachPdfQuotation: string; // e.g. quoteNumber or "none"
   attachCatalogue: boolean;
+  catalogueDriveLink: string;
   attachSampleOffer: boolean;
+  sampleOfferDriveLink: string;
   // New attachments
   attachCompanyProfile: boolean;
   companyProfileDriveLink: string;
