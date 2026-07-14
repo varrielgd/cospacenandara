@@ -200,6 +200,32 @@ export const getEmailsByImporter = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const createEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const { leadId, emailSubject, emailBody, recipientEmail, cc, bcc, status } = req.body;
+
+    const email = await prisma.email.create({
+      data: {
+        importerId: leadId,
+        subject: emailSubject || '',
+        body: emailBody || '',
+        to: recipientEmail || '',
+        from: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
+        status: (status as any) || 'DRAFT',
+        direction: 'OUTBOUND',
+        cc: cc || null,
+        bcc: bcc || null
+      },
+      include: { importer: true }
+    });
+
+    return res.json(email);
+  } catch (error) {
+    logger.error('Create email error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
   try {
     const { companyName, country, leadType, coffeeInterest, contactName } = req.body;

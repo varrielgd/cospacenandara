@@ -450,26 +450,52 @@ export default function EmailGeneratorView({
   ) => {
     try {
       setDownloading(attachmentName);
-      const response = await api.post('/api/emails/fetch-drive-file', { driveLink }, { responseType: 'blob' });
       
-      // Get filename from Content-Disposition header if possible
-      let filename = `${attachmentName}.pdf`;
-      const contentDisposition = response.headers['content-disposition'];
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        if (filenameMatch && filenameMatch[1]) {
-          filename = filenameMatch[1].replace(/['"]/g, '');
-        }
+      const token = localStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cospacenandara.onrender.com';
+      
+      const response = await fetch(`${API_BASE_URL}/api/emails/fetch-drive-file`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ driveLink })
+      });
+      
+      if (!response.ok) {
+        let errorMsg = `Server error: ${response.status}`;
+        try {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMsg = errorData.message || errorData.hint || errorMsg;
+          }
+        } catch (_) {}
+        throw new Error(errorMsg);
       }
       
-      // Create File object
-      const file = new File([response.data], filename, { type: response.data.type });
+      const blob = await response.blob();
+      
+      // Get filename from Content-Disposition header if possible (safely)
+      let filename = `${attachmentName}.pdf`;
+      try {
+        const contentDisposition = response.headers.get('content-disposition');
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, '');
+          }
+        }
+      } catch (_) {}
+      
+      const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
       setFile(file);
       
       alert(`Successfully downloaded ${filename}!`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading file:', error);
-      alert('Error downloading file. Please check your Google Drive link and try again.');
+      alert(error.message || 'Error downloading file from Google Drive.');
     } finally {
       setDownloading(null);
     }
