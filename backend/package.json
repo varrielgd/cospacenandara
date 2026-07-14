@@ -5,13 +5,13 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "./node_modules/.bin/prisma generate && tsc",
-    "postinstall": "./node_modules/.bin/prisma generate",
+    "build": "npx prisma generate && tsc",
+    "postinstall": "npx prisma generate",
     "start": "node dist/index.js",
-    "db:generate": "./node_modules/.bin/prisma generate",
-    "db:migrate": "./node_modules/.bin/prisma migrate dev",
-    "db:push": "./node_modules/.bin/prisma db push",
-    "db:studio": "./node_modules/.bin/prisma studio",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio",
     "check": "npm ls cors"
   },
   "dependencies": {
