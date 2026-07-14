@@ -195,13 +195,13 @@ enum EmailDirection {
 
 model Email {
   id            String         @id @default(uuid())
-  importerId    String?
+  importerId    String?        @map("leadId")
   importer      Importer?      @relation(fields: [importerId], references: [id], onDelete: Cascade)
   messageId     String?        @unique // From Hostinger
   subject       String
   body          String
-  from          String
-  to            String
+  from          String?
+  to            String?
   status        EmailStatus    @default(DRAFT)
   direction     EmailDirection @default(OUTBOUND)
   isAiGenerated Boolean        @default(false)
@@ -209,6 +209,34 @@ model Email {
   receivedAt    DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  
+  // Extra fields for email generator
+  cc               String?
+  bcc              String?
+  approved         Boolean        @default(false)
+  attachPdfQuotation String       @default("none") // e.g. quote number or "none"
+  attachCatalogue  Boolean        @default(false)
+  catalogueDriveLink String?
+  attachSampleOffer Boolean       @default(false)
+  sampleOfferDriveLink String?
+  attachCompanyProfile Boolean    @default(false)
+  companyProfileDriveLink String?
+  attachPriceList  Boolean        @default(false)
+  priceListDriveLink String?
+  attachSampleProgram Boolean     @default(false)
+  sampleProgramDriveLink String?
+  attachQuotation  Boolean        @default(false)
+  quotationDriveLink String?
+  attachProformaInvoice Boolean   @default(false)
+  proformaInvoiceDriveLink String?
+  
+  // Timestamps
+  draftGeneratedAt DateTime?
+  pendingReviewAt DateTime?
+  editedByUserAt DateTime?
+  approvedAt DateTime?
+  readyToSendAt DateTime?
+  sentDate String? // legacy support (e.g. YYYY-MM-DD)
 }
 
 model Sample {
