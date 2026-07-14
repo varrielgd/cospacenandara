@@ -77,7 +77,7 @@ export const sendEmail = async (req: AuthRequest, res: Response) => {
     }
 
     // Send actual email via Hostinger SMTP
-    const info = await transporter.sendMail({
+    const info: any = await transporter.sendMail({
       from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
       to: email.to,
       subject: email.subject,
@@ -133,7 +133,7 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'To, subject, and body are required' });
     }
 
-    const info = await transporter.sendMail({
+    const info: any = await transporter.sendMail({
       from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
       to,
       subject,

@@ -201,7 +201,7 @@ model Email {
   subject       String
   body          String
   from          String
-  to            String?
+  to            String
   cc            String?
   bcc           String?
   status        EmailStatus    @default(DRAFT)
