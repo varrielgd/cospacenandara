@@ -202,6 +202,11 @@ model Email {
   body          String
   from          String
   to            String
+
+  // Optional fields (nullable) so DB sync / IMAP inbound won't error
+  cc            String?
+  bcc           String?
+
   status        EmailStatus    @default(DRAFT)
   direction     EmailDirection @default(OUTBOUND)
   isAiGenerated Boolean        @default(false)
