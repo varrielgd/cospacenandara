@@ -202,7 +202,7 @@ export const getEmailsByImporter = async (req: AuthRequest, res: Response) => {
 
 export const createEmail = async (req: AuthRequest, res: Response) => {
   try {
-    const { leadId, emailSubject, emailBody, recipientEmail, status } = req.body;
+    const { leadId, emailSubject, emailBody, recipientEmail, cc, bcc, status } = req.body;
 
     const email = await prisma.email.create({
       data: {
@@ -212,7 +212,9 @@ export const createEmail = async (req: AuthRequest, res: Response) => {
         to: recipientEmail || '',
         from: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
         status: (status as any) || 'DRAFT',
-        direction: 'OUTBOUND'
+        direction: 'OUTBOUND',
+        cc: cc || null,
+        bcc: bcc || null
       },
       include: { importer: true }
     });
