@@ -202,8 +202,6 @@ model Email {
   body          String
   from          String
   to            String
-  cc            String?
-  bcc           String?
   status        EmailStatus    @default(DRAFT)
   direction     EmailDirection @default(OUTBOUND)
   isAiGenerated Boolean        @default(false)

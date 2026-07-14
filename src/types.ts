@@ -61,30 +61,30 @@ export type EmailStatus =
 
 export interface EmailLog {
   id: string;
-  leadId: string;
-  emailSubject: string;
-  emailBody: string;
-  recipientEmail: string;
-  cc: string;
-  bcc: string;
+  leadId?: string; // matches importerId in Prisma
+  subject: string;
+  body: string;
+  to?: string; // recipient email
+  cc?: string;
+  bcc?: string;
   status: EmailStatus;
   approved: boolean;
-  attachPdfQuotation: string; // e.g. quoteNumber or "none"
+  attachPdfQuotation: string; // e.g. quote number or "none"
   attachCatalogue: boolean;
-  catalogueDriveLink: string;
+  catalogueDriveLink?: string;
   attachSampleOffer: boolean;
-  sampleOfferDriveLink: string;
+  sampleOfferDriveLink?: string;
   // New attachments
   attachCompanyProfile: boolean;
-  companyProfileDriveLink: string;
+  companyProfileDriveLink?: string;
   attachPriceList: boolean;
-  priceListDriveLink: string;
+  priceListDriveLink?: string;
   attachSampleProgram: boolean;
-  sampleProgramDriveLink: string;
+  sampleProgramDriveLink?: string;
   attachQuotation: boolean;
-  quotationDriveLink: string;
+  quotationDriveLink?: string;
   attachProformaInvoice: boolean;
-  proformaInvoiceDriveLink: string;
+  proformaInvoiceDriveLink?: string;
   
   // Timestamps
   draftGeneratedAt?: string;
@@ -93,7 +93,12 @@ export interface EmailLog {
   approvedAt?: string;
   readyToSendAt?: string;
   sentAt?: string;
-  sentDate: string; // legacy support (e.g. YYYY-MM-DD)
+  sentDate?: string; // legacy support (e.g. YYYY-MM-DD)
+  
+  // For backwards compatibility
+  emailSubject?: string;
+  emailBody?: string;
+  recipientEmail?: string;
 }
 
 export interface Sample {

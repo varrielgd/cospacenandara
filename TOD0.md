@@ -1,0 +1,2 @@
+- [ ] Update `render.yaml` to use `npx prisma migrate deploy` instead of `npx prisma db push`
+- [ ] Redeploy and confirm build no longer fails with data-loss warnings
