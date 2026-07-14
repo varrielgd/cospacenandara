@@ -265,9 +265,9 @@ export const fetchGoogleDriveFile = async (req: AuthRequest, res: Response) => {
     const contentType = response.headers['content-type'] || 'application/octet-stream';
     
     // Return the file data
-    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Type', contentType as string);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(response.data);
+    return res.send(response.data);
     
   } catch (error) {
     logger.error('Google Drive file fetch error:', error);
