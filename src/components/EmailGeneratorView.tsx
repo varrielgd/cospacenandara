@@ -42,7 +42,7 @@ export default function EmailGeneratorView({
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
   
   // Form States
-  const [to, setTo] = useState('');
+  const [recipientEmail, setRecipientEmail] = useState('');
   const [cc, setCc] = useState('');
   const [bcc, setBcc] = useState('');
   const [contactName, setContactName] = useState('Procurement Manager');
@@ -133,7 +133,7 @@ export default function EmailGeneratorView({
     
     if (existing) {
       setCurrentEmailId(existing.id);
-      setTo(existing.to || activeLead.email || '');
+      setRecipientEmail(existing.recipientEmail || activeLead.email || '');
       setCc(existing.cc || '');
       setBcc(existing.bcc || '');
       setSubject(existing.emailSubject);
@@ -167,7 +167,7 @@ export default function EmailGeneratorView({
     } else {
       // Intialize fresh draft structure
       setCurrentEmailId(`email_draft_${Date.now()}`);
-      setTo(activeLead.email || '');
+      setRecipientEmail(activeLead.email || '');
       setCc('');
       setBcc('');
       setSubject('');
@@ -249,7 +249,7 @@ export default function EmailGeneratorView({
       const freshEmail: EmailLog = {
             id: currentEmailId,
             leadId: activeLead.id,
-            to: to || activeLead.email || '',
+            recipientEmail: recipientEmail || activeLead.email || '',
             cc,
             bcc,
             emailSubject: generatedSub,
@@ -302,7 +302,7 @@ export default function EmailGeneratorView({
     const freshEmail: EmailLog = {
           id: currentEmailId,
           leadId: activeLead.id,
-          to: to,
+          recipientEmail: recipientEmail,
           cc,
           bcc,
           emailSubject: subject,
@@ -351,7 +351,7 @@ export default function EmailGeneratorView({
     const freshEmail: EmailLog = {
           id: currentEmailId,
           leadId: activeLead.id,
-          to: to,
+          recipientEmail: recipientEmail,
           cc,
           bcc,
           emailSubject: subject,
@@ -403,7 +403,7 @@ export default function EmailGeneratorView({
     const freshEmail: EmailLog = {
         id: currentEmailId,
         leadId: activeLead.id,
-        to: to,
+        recipientEmail: recipientEmail,
         cc,
         bcc,
         emailSubject: subject,
@@ -436,7 +436,7 @@ export default function EmailGeneratorView({
   };
 
   const handleCopy = () => {
-    const textToCopy = `To: ${to || 'Undisclosed Buyership'}\nCC: ${cc}\nBCC: ${bcc}\nSubject: ${subject}\n\n${body}`;
+    const textToCopy = `To: ${recipientEmail || 'Undisclosed Buyership'}\nCC: ${cc}\nBCC: ${bcc}\nSubject: ${subject}\n\n${body}`;
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -450,69 +450,26 @@ export default function EmailGeneratorView({
   ) => {
     try {
       setDownloading(attachmentName);
+      const response = await api.post('/api/emails/fetch-drive-file', { driveLink }, { responseType: 'blob' });
       
-      const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cospacenandara.onrender.com';
-      const url = `${API_BASE_URL}/api/emails/fetch-drive-file`;
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ driveLink })
-      });
-      
-      // If response is not OK, try to parse error body (JSON or text)
-      if (!response.ok) {
-        let errorMsg = `Server error: ${response.status}`;
-        try {
-          // Check content type before parsing
-          const contentType = response.headers.get('content-type') || '';
-          if (contentType.includes('application/json')) {
-            const errorData = await response.json();
-            errorMsg = errorData.message || errorData.hint || errorMsg;
-          } else {
-            const text = await response.text();
-            if (text && text.length < 500) errorMsg = text; // Only show short error text
-          }
-        } catch (_) {
-          // Ignore parsing errors
-        }
-        throw new Error(errorMsg);
-      }
-      
-      // Get blob first, then try to extract filename from headers
-      const blob = await response.blob();
-      
-      // Get filename from Content-Disposition header if possible (safely)
+      // Get filename from Content-Disposition header if possible
       let filename = `${attachmentName}.pdf`;
-      try {
-        const headers = response.headers;
-        if (headers) {
-          const contentDisposition = headers.get('content-disposition');
-          if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (filenameMatch && filenameMatch[1]) {
-              const rawName = filenameMatch[1].replace(/['"]/g, '');
-              if (rawName) filename = rawName;
-            }
-          }
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
         }
-      } catch (headerErr) {
-        // Ignore header parsing errors, use default filename
-        console.warn('Could not parse filename from response headers:', headerErr);
       }
       
       // Create File object
-      const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+      const file = new File([response.data], filename, { type: response.data.type });
       setFile(file);
       
       alert(`Successfully downloaded ${filename}!`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error downloading file:', error);
-      alert(error.message || 'Error downloading file from Google Drive. Pastikan link bisa diakses publik dan file < 100MB.');
+      alert('Error downloading file. Please check your Google Drive link and try again.');
     } finally {
       setDownloading(null);
     }
@@ -726,9 +683,9 @@ export default function EmailGeneratorView({
             <label className="text-[9px] uppercase tracking-widest text-[#4A5568] font-bold">To (Procurement Email)</label>
             <input 
               type="email" 
-              value={to}
+              value={recipientEmail}
               onChange={e => {
-                setTo(e.target.value);
+                setRecipientEmail(e.target.value);
                 if (status !== 'Draft Generated' && status !== 'Approved' && status !== 'Sent') {
                   setStatus('Edited By User');
                 }
@@ -1193,7 +1150,7 @@ export default function EmailGeneratorView({
 
             {/* Letter Headers Envelope */}
             <div className="p-4 bg-bg-ivory/40 rounded-sm border border-primary/5 space-y-1.5 text-xs font-mono text-gray-700">
-              <p><span className="text-text-dim text-[10px] uppercase font-bold mr-2">To:</span> {to || activeLead.email || 'None specified'}</p>
+              <p><span className="text-text-dim text-[10px] uppercase font-bold mr-2">To:</span> {recipientEmail || activeLead.email || 'None specified'}</p>
               {cc && <p><span className="text-text-dim text-[10px] uppercase font-bold mr-2">CC:</span> {cc}</p>}
               {bcc && <p><span className="text-text-dim text-[10px] uppercase font-bold mr-2">BCC:</span> {bcc}</p>}
               <p><span className="text-text-dim text-[10px] uppercase font-bold mr-2">Subject:</span> {subject}</p>

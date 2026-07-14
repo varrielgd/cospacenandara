@@ -10,8 +10,6 @@ router.use(authenticate);
 router.get('/debug', (_req: Request, res: Response) => res.json({ message: 'Email routes reachable' }));
 router.get('/', emailController.getAllEmails);
 router.get('', emailController.getAllEmails);
-router.post('/', emailController.createEmail);
-router.put('/:id', emailController.updateEmail);
 router.post('/generate', emailController.generateDraft);
 router.post('/approve/:id', emailController.approveEmail);
 router.post('/send/:id', emailController.sendEmail);
