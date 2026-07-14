@@ -77,20 +77,27 @@ export const sendEmail = async (req: AuthRequest, res: Response) => {
     }
 
     // Send actual email via Hostinger SMTP
-    const info = await transporter.sendMail({
+    const recipientTo = email.to || undefined;
+    if (!recipientTo) {
+      return res.status(400).json({ message: 'Recipient email address is missing' });
+    }
+
+    const sendResult = await transporter.sendMail({
       from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
-      to: email.to,
+      to: recipientTo,
       subject: email.subject,
       text: email.body,
       html: email.body.replace(/\n/g, '<br>'),
     });
+
+    const resultMessageId = typeof sendResult === 'object' && sendResult !== null ? (sendResult as any).messageId || null : null;
 
     await prisma.email.update({
       where: { id: id as string },
       data: { 
         status: 'SENT',
         sentAt: new Date(),
-        messageId: info.messageId
+        messageId: resultMessageId
       }
     });
 
@@ -105,7 +112,7 @@ export const sendEmail = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    return res.json({ message: 'Email sent successfully', messageId: info.messageId });
+    return res.json({ message: 'Email sent successfully', messageId: resultMessageId });
   } catch (error) {
     logger.error('Email sending error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -133,13 +140,15 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'To, subject, and body are required' });
     }
 
-    const info = await transporter.sendMail({
+    const sendResult = await transporter.sendMail({
       from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
       to,
       subject,
       text: body,
       html: body.replace(/\n/g, '<br>'),
     });
+
+    const resultMessageId = typeof sendResult === 'object' && sendResult !== null ? (sendResult as any).messageId || null : null;
 
     // Log the sent email in DB
     await prisma.email.create({
@@ -151,11 +160,11 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
         status: 'SENT',
         direction: 'OUTBOUND',
         sentAt: new Date(),
-        messageId: info.messageId
+        messageId: resultMessageId
       }
     });
 
-    return res.json({ message: 'Email sent successfully', messageId: info.messageId });
+    return res.json({ message: 'Email sent successfully', messageId: resultMessageId });
   } catch (error) {
     logger.error('Direct email sending error:', error);
     return res.status(500).json({ message: 'Internal server error' });
