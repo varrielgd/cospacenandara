@@ -1,39 +1,5 @@
 import React, { useState } from 'react';
 import { Lead } from '../types';
-import { 
-  BookOpen, 
-  Award, 
-  ShieldAlert, 
-  Sparkles, 
-  Calculator, 
-  FileText, 
-  Coffee, 
-  CheckCircle2, 
-  TrendingUp, 
-  ShieldCheck, 
-  Info, 
-  HelpCircle, 
-  DollarSign, 
-  ArrowRight,
-  ClipboardList,
-  Mail,
-  Layers,
-  Handshake,
-  Ship,
-  Users,
-  Target,
-  Printer,
-  ChevronRight,
-  Beaker,
-  Check,
-  Flame,
-  Copy,
-  ChevronDown,
-  ChevronUp,
-  Globe,
-  Search,
-  Languages
-} from 'lucide-react';
 
 const ROAST_PROFILES_MAP: Record<string, {
   name: string;
@@ -92,7 +58,7 @@ const ROAST_PROFILES_MAP: Record<string, {
     density: "Dense & High Sugars",
     dryingPhaseAdvice: "Naturals memiliki lapisan gula karamel bebas tinggi di permukaan luar. Gunakan Charge Temp rendah (185°C) dan tingkatkan aliran udara (airflow) setelah menit ke-3 untuk membuang kulit ari (chaff) yang rontok dengan cepat agar tidak terbakar di drum.",
     maillardAdvice: "Perpanjang fase Maillard secara halus agar rasa asam buah-buahan bersinergi dengan manis kompleks brown sugar.",
-    developmentAdvice: "DTR pendek (12-14%). Drop cepat setelah First Crack selesai untuk melestarikan rasa strawberry kering dan kesegaran citrus.",
+    developmentAdvice: "DTR pendek (12-14%). Drop cepat setelah First Crack selesuntuk melestarikan rasa strawberry kering dan kesegaran citrus.",
     levels: {
       light: {
         chargeTemp: 180, turningPointTemp: 80, turningPointTime: "1:25", dryEndTemp: 148, dryEndTime: "4:45", firstCrackTemp: 194, firstCrackTime: "9:30", dropTemp: 200, dropTime: "10:40", dtr: "11.0%",
@@ -117,7 +83,7 @@ const ROAST_PROFILES_MAP: Record<string, {
     process: "Semi-Washed",
     moisture: "12.0% - 12.5%",
     density: "Dense, Volcanic Terroir",
-    dryingPhaseAdvice: "Biji arabika Jawa berdensitas tinggi dapat menahan transfer energi panas yang agresif di awal. Mulai dengan Charge Temp tinggi (205°C) dengan gas penuh 85-90% untuk mempercepat laju kenaikan suhu (RoR).",
+    dryingPhaseAdvice: "Biji arabika Jawa berdensitas tinggi dapat menahan transfer energi panas yang agresif di awal. Muldengan Charge Temp tinggi (205°C) dengan gas penuh 85-90% untuk mempercepat laju kenaikan suhu (RoR).",
     maillardAdvice: "Turunkan laju pembakar (gas) secara bertahap begitu menguning (Yellowing) untuk memperpanjang transisi Maillard demi mengembangkan cita rasa manis teh.",
     developmentAdvice: "DTR 14-16% dengan penyelesaian drop di 208°C (Medium) untuk mengeluarkan rasa teh hitam citrus yang elegan dan manis karamel.",
     levels: {
@@ -225,9 +191,9 @@ const ROAST_PROFILES_MAP: Record<string, {
     process: "Specialty Semi-Washed (Bourbon Microlot)",
     moisture: "11.8% - 12.2%",
     density: "Super Dense High Altitude (1,500 - 1,850 masl)",
-    dryingPhaseAdvice: "Microlot berketinggian ekstrem ini sangat padat dengan konsentrasi asam dan gula buah alami yang tinggi. Gunakan Charge Temp tinggi (212°C) namun turunkan gas cepat begitu mencapai Turning Point guna melatih laju RoR yang menurun elegan (Steady Declining RoR).",
+    dryingPhaseAdvice: "Microlot berketinggian ekstrem ini sangat padat dengan konsentrasi asam dan gula buah alami yang tinggi. Gunakan Charge Temp tinggi (212°C) namun turunkan gas cepat begitu mencapTurning Point guna melatih laju RoR yang menurun elegan (Steady Declining RoR).",
     maillardAdvice: "Fase Maillard singkat namun konvektif tinggi untuk menjaga tingkat keasaman floral yang elegan agar tidak pudar (avoid bake).",
-    developmentAdvice: "DTR pendek (11-13%). Selesaikan segera setelah First Crack selesai pada 200°C untuk menonjolkan aroma melati (jasmine), persik (white peach), madu, dan aroma jeruk bergamot.",
+    developmentAdvice: "DTR pendek (11-13%). Selesaikan segera setelah First Crack selespada 200°C untuk menonjolkan aroma melati (jasmine), persik (white peach), madu, dan aroma jeruk bergamot.",
     levels: {
       light: {
         chargeTemp: 205, turningPointTemp: 92, turningPointTime: "1:12", dryEndTemp: 151, dryEndTime: "3:50", firstCrackTemp: 194, firstCrackTime: "7:55", dropTemp: 199, dropTime: "8:55", dtr: "11.2%",
@@ -252,7 +218,7 @@ const ROAST_PROFILES_MAP: Record<string, {
     process: "Natural Process",
     moisture: "12.5% - 13.0%",
     density: "Robusta Dense BP Series",
-    dryingPhaseAdvice: "Sebagai Fine Robusta, sasarannya adalah merusak asam klorogenat astringen tanpa membumihanguskan aromatik nutty alami. Gunakan Charge Temp 205°C dengan transfer konduktif yang merata.",
+    dryingPhaseAdvice: "SebagFine Robusta, sasarannya adalah merusak asam klorogenat astringen tanpa membumihanguskan aromatik nutty alami. Gunakan Charge Temp 205°C dengan transfer konduktif yang merata.",
     maillardAdvice: "Perpanjang fase Maillard secara signifikan untuk mematangkan rasa malted caramel.",
     developmentAdvice: "DTR panjang (20-22%). Penyangraian harus dalam (Medium-Dark hingga Dark, 218°C) untuk meluluhkan kandungan bodi menjadi cokelat pahit pekat, mentega kacang kenari, dan ketiadaan asiditas.",
     levels: {
@@ -270,7 +236,7 @@ const ROAST_PROFILES_MAP: Record<string, {
       },
       dark: {
         chargeTemp: 210, turningPointTemp: 98, turningPointTime: "1:05", dryEndTemp: 152, dryEndTime: "3:35", firstCrackTemp: 198, firstCrackTime: "8:20", dropTemp: 222, dropTime: "11:00", dtr: "24.2%",
-        profileDescription: "Sangrai arang cokelat, pahit tebal mutlak untuk campuran kopi susu kental manis.", flavorOutcome: "Smoky Charcoal, Dark Bakers Cocoa, Ashy Walnut"
+        profileDescription: "Sangrarang cokelat, pahit tebal mutlak untuk campuran kopi susu kental manis.", flavorOutcome: "Smoky Charcoal, Dark Bakers Cocoa, Ashy Walnut"
       }
     }
   },
@@ -281,7 +247,7 @@ const ROAST_PROFILES_MAP: Record<string, {
     density: "Highland Robusta SA 237",
     dryingPhaseAdvice: "Robusta dataran tinggi Temanggung memiliki kualitas sensori yang luar biasa bersih. Gunakan profil gas yang menurun perlahan, muat suhu di 208°C.",
     maillardAdvice: "Fase Maillard sedang untuk membangun karamel manis laksana susu cokelat kental tanpa bau tanah bakar.",
-    developmentAdvice: "DTR 17-19%. Drop di 212°C sebagai Medium Roast untuk mengapresiasi manis hazelnut panggang and malted sweetness yang memesona.",
+    developmentAdvice: "DTR 17-19%. Drop di 212°C sebagMedium Roast untuk mengapresiasi manis hazelnut panggang and malted sweetness yang memesona.",
     levels: {
       light: {
         chargeTemp: 198, turningPointTemp: 87, turningPointTime: "1:18", dryEndTemp: 151, dryEndTime: "4:20", firstCrackTemp: 197, firstCrackTime: "9:10", dropTemp: 206, dropTime: "10:35", dtr: "13.5%",
@@ -311,7 +277,7 @@ const B2B_FAQ_ITEMS = [
     translations: {
       id: {
         question: "Mengapa kopi Semi-Washed Gayo Anda lebih mahal dibanding Grade 1 komersial dari kolektor besar?",
-        answer: "Kopi Semi-Washed Gayo kami berasal dari kebun single-origin berketinggian tinggi (>1.500 mdpl) di Bener Meriah, dipetik merah 100%, dikeringkan perlahan di para-para terlindung (raised beds), bukan di aspal jalanan. Kadar cacat fisik (defect rate) di bawah 1% (triple-picked), serta nilai aw stabil di rentang 0.52-0.58 untuk menjamin stabilitas penyimpanan selama pengapalan laut jarak jauh."
+        answer: "Kopi Semi-Washed Gayo kami berasal dari kebun single-origin berketinggian tinggi (>1.500 mdpl) di Bener Meriah, dipetik merah 100%, dikeringkan perlahan di para-para terlindung (raised beds), bukan di aspal jalanan. Kadar cacat fisik (defect rate) di bawah 1% (triple-picked), serta nilaw stabil di rentang 0.52-0.58 untuk menjamin stabilitas penyimpanan selama pengapalan laut jarak jauh."
       },
       en: {
         question: "Why is your Semi-Washed Gayo more expensive than commercial Grade 1 from major collectors?",
@@ -365,7 +331,7 @@ const B2B_FAQ_ITEMS = [
     translations: {
       id: {
         question: "Bisakah Anda memberikan spesifikasi fisik dan kimia tepercaya untuk Java Preanger Honey?",
-        answer: "Spesifikasi Java Preanger Honey kami: Kadar Air: 11.2% - 11.9% | Defect Rate: < 1.5% (SCA Grade 1 Premium) | Ukuran Biji: Screen size 16 (6-7mm) > 90% | Densitas: > 720 g/L | Nilai aw: 0.54 aw | Pengolahan: Honey Process (lapisan lendir buah disisakan 50% saat penjemuran untuk aroma floral manis karamel)."
+        answer: "Spesifikasi Java Preanger Honey kami: Kadar Air: 11.2% - 11.9% | Defect Rate: < 1.5% (SCA Grade 1 Premium) | Ukuran Biji: Screen size 16 (6-7mm) > 90% | Densitas: > 720 g/L | Nilaw: 0.54 aw | Pengolahan: Honey Process (lapisan lendir buah disisakan 50% saat penjemuran untuk aroma floral manis karamel)."
       },
       en: {
         question: "Can you provide the precise physical and chemical specifications for your Java Preanger Honey?",
@@ -388,7 +354,7 @@ const B2B_FAQ_ITEMS = [
   {
     id: "lampung-clean",
     category: "product_knowledge",
-    negotiationInsight: "Robusta sering dituduh apek karena dijemur di tanah. Penjelasan raised beds (para-para tinggi) mematahkan stigma ini dan menaikkan nilai tawar Robusta Specialty di mata pembeli premium.",
+    negotiationInsight: "Robusta sering dituduh apek karena dijemur di tanah. Penjelasan raised beds (para-para tinggi) mematahkan stigma ini dan menaikkan niltawar Robusta Specialty di mata pembeli premium.",
     translations: {
       id: {
         question: "Bagaimana proses Lampung Robusta Anda, dan bagaimana menyajikan rasa yang bersih tanpa defect kapang (mouldy)?",
@@ -415,11 +381,11 @@ const B2B_FAQ_ITEMS = [
   {
     id: "kintamani-roast",
     category: "roasting",
-    negotiationInsight: "Buyer yang mencari cita rasa buah asam sitrus yang tajam dari dataran tinggi Kintamani wajib disarankan profil Light-to-Medium. Penjelasan DTR rendah membuktikan keahlian sangrai pasca-panen Anda.",
+    negotiationInsight: "Buyer yang mencari cita rasa buah asam sitrus yang tajam dari dataran tinggi Kintamani wajib disarankan profil Light-to-Medium. Penjelasan DTR rendah membuktikan keahlian sangrpasca-panen Anda.",
     translations: {
       id: {
-        question: "Tingkat sangrai mana yang paling baik mengeluarkan keasaman buah segar di Bali Kintamani Fully Washed?",
-        answer: "Tingkat sangrai Light-to-Medium (Drop Temp 200°C s.d 202°C pada mesin Giesen) dengan rasio DTR rendah (12-14%). Ini mengawetkan karakter asam sitrat (citric acidity) buah jeruk kintamani murni dan memicu aroma teh melati segar. Menghindari masuknya aroma gosong/karamel pekat yang menutupi karakter buah asli."
+        question: "Tingkat sangrmana yang paling baik mengeluarkan keasaman buah segar di Bali Kintamani Fully Washed?",
+        answer: "Tingkat sangrLight-to-Medium (Drop Temp 200°C s.d 202°C pada mesin Giesen) dengan rasio DTR rendah (12-14%). Ini mengawetkan karakter asam sitrat (citric acidity) buah jeruk kintamani murni dan memicu aroma teh melati segar. Menghindari masuknya aroma gosong/karamel pekat yang menutupi karakter buah asli."
       },
       en: {
         question: "Which roasting level expresses the highest fruit acidity of Bali Kintamani Fully Washed coffee?",
@@ -446,7 +412,7 @@ const B2B_FAQ_ITEMS = [
     translations: {
       id: {
         question: "Bagaimana menyesuaikan Charge Temp untuk biji berkepadatan sangat tinggi dibanding Robusta dataran rendah?",
-        answer: "Biji berkepadatan tinggi (SHB / Hard Density seperti Gayo Arabika > 1.500m) dapat menyerap panas sangat cepat tanpa gosong; kami pakai Charge Temp tinggi (205°C - 210°C). Sebaliknya, Robusta dataran rendah dengan densitas sel yang lebih longgar membutuhkan suhu muat lebih sejuk (190°C - 195°C) ditambah aliran udara agresif agar teras biji matang merata tanpa risiko mencederai kulit luar (scorching)."
+        answer: "Biji berkepadatan tinggi (SHB / Hard Density seperti Gayo Arabika > 1.500m) dapat menyerap panas sangat cepat tanpa gosong; kami pakCharge Temp tinggi (205°C - 210°C). Sebaliknya, Robusta dataran rendah dengan densitas sel yang lebih longgar membutuhkan suhu muat lebih sejuk (190°C - 195°C) ditambah aliran udara agresif agar teras biji matang merata tanpa risiko mencederkulit luar (scorching)."
       },
       en: {
         question: "How do you adjust Charge Temp for hard density mountain beans versus softer lowland robusta?",
@@ -496,7 +462,7 @@ const B2B_FAQ_ITEMS = [
   {
     id: "payments-lc",
     category: "payments",
-    negotiationInsight: "Pembayaran L/C At Sight (Letter of Credit) adalah opsi terbaik untuk transaksi senilai puluhan ribu USD dengan pembeli korporat baru. Ini mengamankan eksportir dari wanprestasi bayar.",
+    negotiationInsight: "Pembayaran L/C At Sight (Letter of Credit) adalah opsi terbaik untuk transaksi senilpuluhan ribu USD dengan pembeli korporat baru. Ini mengamankan eksportir dari wanprestasi bayar.",
     translations: {
       id: {
         question: "Apakah Anda menerima metode pembayaran L/C atau harus T/T?",
@@ -675,7 +641,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
         <div className="absolute inset-0 bg-[radial-gradient(#C9A227_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-10" />
         <div className="relative z-10 space-y-3">
           <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-[#C9A227] animate-pulse" />
+            
             <span className="font-mono text-[10px] uppercase tracking-widest text-[#C9A227] font-bold">PT. Nandara Nusa Montierra • Corporate Export Academy</span>
           </div>
           <h1 className="text-2xl md:text-4xl font-serif italic text-white leading-tight">
@@ -691,7 +657,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
       <div className="bg-[#F7F4EC] border border-[#05190F]/10 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-[#05190F] text-[#C9A227] rounded-full">
-            <BookOpen className="w-4 h-4" />
+            
           </div>
           <div>
             <h4 className="font-serif italic font-bold text-sm text-[#05190f]">Export Academy Learning Progress</h4>
@@ -712,7 +678,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
       {/* Subtab Navigation Panel */}
       <div className="border-b border-[#05190F]/10 flex flex-wrap gap-1 md:gap-2 pb-1" id="curriculum-subtabs">
         {[
-          { id: 'blueprint', label: 'Secrets of Pecah Telur', icon: Sparkles },
+          { id: 'blueprint', label: 'Secrets of Pecah Telur', icon: },
           { id: 'funnel', label: 'B2B Marketing Funnel', icon: Layers },
           { id: 'sample_flow', label: 'Sample Flow Analysis', icon: ClipboardList },
           { id: 'sample_quotation', label: 'Sample Quotation Builder', icon: Calculator },
@@ -738,7 +704,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
                   : 'text-[#05190F]/70 hover:text-[#05190F] hover:bg-[#05190F]/5 border-transparent'
               }`}
             >
-              <IconComp className="w-3.5 h-3.5" />
+              
               <span>{tab.label}</span>
             </button>
           );
@@ -756,13 +722,13 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
               <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-4">
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[#C9A227]" /> 
+                     
                     Strategi 30 Hari Pecah Telur (First Order Secrets)
                   </h3>
                   <h2 className="text-2xl font-serif italic text-[#05190F]">Rahasia Akselerasi Transaksi Ekspor Perdana & Email Sourcing</h2>
                   
                   <p className="text-xs text-gray-700 leading-relaxed font-sans">
-                    Mendapatkan pembeli pertama ("pecah telur") dalam industri ekspor kopi hijau specialty menuntut ketepatan komunikasi taktis dan pembagian risiko yang cerdas. Banyak eksportir pemula gagal karena terlalu kaku atau kurang responsif dalam menyuplai sampel terverifikasi.
+                    Mendapatkan pembeli pertama ("pecah telur") dalam industri ekspor kopi hijau specialty menuntut ketepatan komunikasi taktis dan pembagian risiko yang cerdas. Banyak eksportir pemula gagal karena terlalu kaku atau kurang responsif dalam menyuplsampel terverifikasi.
                   </p>
 
                   <div className="border-l-2 border-[#C9A227] pl-4 italic text-xs text-gray-600 font-sans my-4 bg-[#F7F4EC]/60 p-3 rounded-r-md">
@@ -792,7 +758,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
                 <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-6">
                   <div className="border-b border-[#05190F]/10 pb-4">
                     <h3 className="text-xs font-mono tracking-widest text-[#05190F] font-bold uppercase flex items-center gap-1.5 mb-1">
-                      <Mail className="w-4 h-4 text-[#C9A227] animate-pulse" /> Outreach Spec Templates
+                       Outreach Spec Templates
                     </h3>
                     <h2 className="text-xl font-serif italic text-[#05190F]">Template Email Penawaran yang Pasti Direspon</h2>
                     <p className="text-xs text-gray-500 font-sans mt-1">
@@ -874,7 +840,7 @@ Sincerely,
 PT. Nandara Nusa Montierra Exports
 Indonesia
 export@nandaramontierra.id`,
-                        strategicInsight: "Sumatra Gayo Wet-Hulled (Giling Basah) sangat dicari karena body-nya yang tebal & aroma cedarwood yang eksotis. Buyer internasional sangat sensitif terhadap kelembaban giling basah yang sering tidak stabil. Dengan menyatakan moisture diukur menggunakan digital Kett tester secara konstan di angka 12.0%, Anda langsung menyejajarkan diri sebagai eksportir modern dan terpercaya.",
+                        strategicInsight: "Sumatra Gayo Wet-Hulled (Giling Basah) sangat dicari karena body-nya yang tebal & aroma cedarwood yang eksotis. Buyer internasional sangat sensitif terhadap kelembaban giling basah yang sering tidak stabil. Dengan menyatakan moisture diukur menggunakan digital Kett tester secara konstan di angka 12.0%, Anda langsung menyejajarkan diri sebageksportir modern dan terpercaya.",
                         taskKey: "learn_email_gayo"
                       },
                       gayo_wild: {
@@ -906,7 +872,7 @@ Sincerely,
 PT. Nandara Nusa Montierra Exports
 Indonesia
 export@nandaramontierra.id`,
-                        strategicInsight: "Kopi natural Indonesia berkembang sangat pesat. Nilai tambah 'Yeast-Aerobic Natural' menceritakan proses fermentasi higienis terkontrol. Menyebutkan 'Water Activity (aW) under 0.60' membuktikan bahwa Anda mengerti standar stabilitas mold/jamur laboratorium modern, yang merupakan dambaan para green buyer specialty.",
+                        strategicInsight: "Kopi natural Indonesia berkembang sangat pesat. Niltambah 'Yeast-Aerobic Natural' menceritakan proses fermentasi higienis terkontrol. Menyebutkan 'Water Activity (aW) under 0.60' membuktikan bahwa Anda mengerti standar stabilitas mold/jamur laboratorium modern, yang merupakan dambaan para green buyer specialty.",
                         taskKey: "learn_email_gayo"
                       },
                       java_preanger: {
@@ -972,7 +938,7 @@ Warm regards,
 PT. Nandara Nusa Montierra Exports
 Indonesia
 export@nandaramontierra.id`,
-                        strategicInsight: "Fakta unik bahwa kebun kopi Bali Kintamani tumpang sari dengan pohon jeruk memberikan lore atau kisah herba organik menarik bagi roaster global. Buyer sangat menyukai kisah di balik cherry kopi (storytelling).",
+                        strategicInsight: "Fakta unik bahwa kebun kopi Bali Kintamani tumpang sari dengan pohon jeruk memberikan lore atau kisah herba organik menarik bagi roaster global. Buyer sangat menyukkisah di balik cherry kopi (storytelling).",
                         taskKey: "learn_email_java"
                       },
                       flores_volcanic: {
@@ -1011,7 +977,7 @@ export@nandaramontierra.id`,
                         name: "Toraja Reserve (Heritage Hybrid Premium)",
                         badge: "Complex Cardamom & Cedar",
                         badgeColor: "bg-stone-200 text-stone-850",
-                        shortDesc: "Pecinta kopi klasik menyukai Sulawesi Toraja. Template ini mengedepankan kompleksitas herba rempah cardamom dan bodi cokelat gelap dari pegunungan karts Sulawesi.",
+                        shortDesc: "Pecinta kopi klasik menyukSulawesi Toraja. Template ini mengedepankan kompleksitas herba rempah cardamom dan bodi cokelat gelap dari pegunungan karts Sulawesi.",
                         subject: "Direct Specialty: Sulawesi Toraja Reserve G1 (Volcanic Micro-climate Heritage)",
                         tone: "Technical, Heritage-Focused, Deep Complexity",
                         body: `Dear [Green Coffee Buyer / Specialty Sourcing Specialist],
@@ -1034,7 +1000,7 @@ Warm regards,
 PT. Nandara Nusa Montierra Exports
 Indonesia
 export@nandaramontierra.id`,
-                        strategicInsight: "Mengatur sortasi 'double hand-sorting' untuk kopi Toraja sangat penting karena proses tradisional kerap membawa defect fisik tinggi. Pembeli akan menghargai jaminan 'maximum 3 secondary defects' yang menunjukkan disiplin kontrol mutu Nandara.",
+                        strategicInsight: "Mengatur sortasi 'double hand-sorting' untuk kopi Toraja sangat penting karena proses tradisional kerap membawa defect fisik tinggi. Pembeli akan menghargjaminan 'maximum 3 secondary defects' yang menunjukkan disiplin kontrol mutu Nandara.",
                         taskKey: "learn_email_java"
                       },
                       gayo_lb: {
@@ -1157,7 +1123,7 @@ export@nandaramontierra.id`,
                               completedTasks[activeTemp.taskKey] ? 'bg-emerald-800 text-white border-emerald-800 font-bold' : 'bg-white text-gray-600 border-gray-300'
                             }`}
                           >
-                            {completedTasks[activeTemp.taskKey] ? '✓ Selesai Dipelajari' : 'Tandai Selesai Pelajaran'}
+                            {completedTasks[activeTemp.taskKey] ? '✓ SelesDipelajari' : 'TandSelesPelajaran'}
                           </button>
                         </div>
 
@@ -1178,9 +1144,9 @@ export@nandaramontierra.id`,
                               className="text-[#05190F] hover:text-[#C9A227] flex items-center gap-1 cursor-pointer font-bold transition-all text-[9.5px]"
                             >
                               {currCopiedStatus === 'subject' ? (
-                                <><Check className="w-3 h-3 text-emerald-600 animate-bounce" /> Copied!</>
+                                <> Copied!</>
                               ) : (
-                                <><Copy className="w-3 h-3" /> Copy Subject</>
+                                <> Copy Subject</>
                               )}
                             </button>
                           </div>
@@ -1197,9 +1163,9 @@ export@nandaramontierra.id`,
                               className="text-[#05190F] hover:text-[#C9A227] flex items-center gap-1 cursor-pointer font-bold transition-all text-[9.5px]"
                             >
                               {currCopiedStatus === 'body' ? (
-                                <><Check className="w-4 h-4 text-emerald-600 animate-bounce" /> Copied!</>
+                                <> Copied!</>
                               ) : (
-                                <><Copy className="w-3.5 h-3.5" /> Copy Email Body</>
+                                <> Copy Email Body</>
                               )}
                             </button>
                           </div>
@@ -1224,7 +1190,7 @@ export@nandaramontierra.id`,
               <div className="space-y-6">
                 <div className="bg-[#FAF8F5] border border-[#05190F]/15 p-5 rounded-lg shadow-luxury space-y-4">
                   <h4 className="font-mono text-[9px] tracking-widest text-[#C9A227] uppercase font-bold flex items-center gap-1">
-                    <ShieldCheck className="w-4 h-4 text-[#C9A227]" /> Honesty Rules the Deal
+                     Honesty Rules the Deal
                   </h4>
                   <p className="text-[11px] text-gray-600 leading-relaxed font-sans">
                     <strong>Penting:</strong> Jangan pernah memanipulasi kadar air kopi atau menyembunyikan jamur di tengah tumpukan karung goni. Kopi Anda akan melewati pengujian laboratorium di Pelabuhan Impor Amerika atau Jerman. Jika kadar air melebihi batas toleransi negara tujuan, kargo bisa disita atau dihancurkan dengan biaya sepenuhnya dibebankan pada Anda.
@@ -1235,10 +1201,10 @@ export@nandaramontierra.id`,
                 </div>
 
                 <div className="bg-[#05190F] text-white p-5 rounded-lg shadow-luxury space-y-3 border border-[#C9A227]/20">
-                  <FileText className="w-7 h-7 text-[#C9A227]" />
+                  
                   <h4 className="font-serif font-bold text-xs text-[#C9A227]">Verifikasi Parameter Terroir</h4>
                   <p className="text-[10px] text-gray-300 font-mono leading-relaxed">
-                    Setiap quotation ekspor kopi yang Anda buat di Nandara platform disertai dengan sertifikat parameter terroir digital untuk membuktikan keaslian teritorial kopi demi mengurangi gesekan verifikasi.
+                    Setiap quotation ekspor kopi yang Anda buat di Nandara platform disertdengan sertifikat parameter terroir digital untuk membuktikan keaslian teritorial kopi demi mengurangi gesekan verifikasi.
                   </p>
                 </div>
               </div>
@@ -1252,7 +1218,7 @@ export@nandaramontierra.id`,
           <div className="space-y-6 animate-fade-in text-xs font-mono">
             <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-4">
               <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#C9A227]" /> Specialty Coffee Export Marketing Funnel
+                 Specialty Coffee Export Marketing Funnel
               </h3>
               <h2 className="text-lg font-serif italic text-[#05190F]">Corong Pemasaran Komoditas Ekspor (B2B Coffee Marketing Funnel)</h2>
               <p className="text-xs text-gray-500 font-sans leading-relaxed">
@@ -1271,7 +1237,7 @@ export@nandaramontierra.id`,
                   <div className="space-y-1 flex-1">
                     <h4 className="font-serif italic font-bold text-sm text-[#C9A227]">AWARENESS: B2B Prospect Discovery</h4>
                     <p className="text-gray-300 font-sans text-[11px] leading-relaxed">
-                      Saring ribuan data bea cukai global menggunakan <strong>Specialty Importer Registry</strong> untuk mencantumkan roaster yang secara periodik mendatangkan kopi asal Indonesia. Jangkau mereka lewat email perkenalan terstruktur dan pesan LinkedIn yang berfokus pada terroir spesifik (Bukan sekedar jualan general).
+                      Saring ribuan data bea cukglobal menggunakan <strong>Specialty Importer Registry</strong> untuk mencantumkan roaster yang secara periodik mendatangkan kopi asal Indonesia. Jangkau mereka lewat email perkenalan terstruktur dan pesan LinkedIn yang berfokus pada terroir spesifik (Bukan sekedar jualan general).
                     </p>
                     <div className="pt-2 text-[9px] text-[#C9A227] flex items-center gap-2">
                       <input 
@@ -1303,7 +1269,7 @@ export@nandaramontierra.id`,
                         onChange={() => toggleTask('learn_funnel_b2b')}
                         className="accent-[#05190F]" 
                       />
-                      <span>Tandai selesai mempelajari taktik pengiriman boks sampel</span>
+                      <span>Tandselesmempelajari taktik pengiriman boks sampel</span>
                     </div>
                   </div>
                 </div>
@@ -1346,7 +1312,7 @@ export@nandaramontierra.id`,
           <div className="space-y-6 animate-fade-in text-xs font-mono">
             <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-4">
               <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                <Handshake className="w-4 h-4 text-[#C9A227]" /> B2B Price & Terms Negotiation Standard
+                 B2B Price & Terms Negotiation Standard
               </h3>
               <h2 className="text-lg font-serif italic text-[#05190F]">Taktik Negosiasi Harga & Teknik Memastikan Closing Tanpa Perang Harga</h2>
               <p className="text-xs text-gray-500 font-sans leading-relaxed">
@@ -1360,7 +1326,7 @@ export@nandaramontierra.id`,
                     🤝 1. Taktik Penawaran Harga Berjenjang (Volume Price Ladder)
                   </h4>
                   <p className="text-gray-600 leading-relaxed font-sans text-[11px]">
-                    Jangan pernah memberikan satu harga mati yang kaku. Selalu sediakan rentang pilihan karena pembeli B2B sangat menyukai fleksibilitas kuantitas. Sediakan tangga harga berdasarkan beban risiko logistik:
+                    Jangan pernah memberikan satu harga mati yang kaku. Selalu sediakan rentang pilihan karena pembeli B2B sangat menyukfleksibilitas kuantitas. Sediakan tangga harga berdasarkan beban risiko logistik:
                   </p>
                   <ul className="text-gray-700 bg-white p-2.5 rounded border border-gray-200 list-mono space-y-1 font-mono text-[10.5px]">
                     <li>• Pallet LCL (0.5 - 2 Tons): <strong>$8.50 / Kg CIF</strong></li>
@@ -1386,7 +1352,7 @@ export@nandaramontierra.id`,
                     ⚠️ 2. Menghadapi Permintaan Diskon Ekstrim (Incoterms Lever)
                   </h4>
                   <p className="text-gray-600 leading-relaxed font-sans text-[11px]">
-                    <strong>Skenario:</strong> Buyer menyukai cupping sampel Anda tapi menawar harga kopi Anda turun $1.00 - $1.50 per Kilogram dengan alasan ongkir kontainer mereka mahal.
+                    <strong>Skenario:</strong> Buyer menyukcupping sampel Anda tapi menawar harga kopi Anda turun $1.00 - $1.50 per Kilogram dengan alasan ongkir kontainer mereka mahal.
                   </p>
                   <p className="text-red-800 leading-relaxed font-sans text-[11px] font-semibold">
                     <strong>Pola Tanggapan Salah:</strong> Langsung menyetujui karena takut kehilangan buyer, padahal margin modal tani Anda habis tergerus.
@@ -1438,7 +1404,7 @@ export@nandaramontierra.id`,
           <div className="space-y-6 animate-fade-in text-xs font-mono">
             <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-4">
               <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                <Ship className="w-4 h-4 text-[#C9A227]" /> Ocean Logistics & Payment Systems
+                 Ocean Logistics & Payment Systems
               </h3>
               <h2 className="text-lg font-serif italic text-[#05190F]">Sistem Proteksi Pengiriman & Mekanisme Pembayaran Aman</h2>
               <p className="text-xs text-gray-500 font-sans leading-relaxed">
@@ -1453,12 +1419,12 @@ export@nandaramontierra.id`,
                     📦 1. Proteksi Logistik & GrainPro Hermetic Technology
                   </h3>
                   <p className="text-gray-600 font-sans leading-relaxed text-[11.5px]">
-                    Kapal kargo membutuhkan waktu 10 hingga 45 hari untuk mencapai pelabuhan Eropa atau Amerika Serikat. Di sepanjang rute khatulistiwa, udara laut bergaram tinggi dan fluktuasi kelembapan udara dapat memicu "efek hujan dalam kontainer" yang merusak rasa segar green bean.
+                    Kapal kargo membutuhkan waktu 10 hingga 45 hari untuk mencappelabuhan Eropa atau Amerika Serikat. Di sepanjang rute khatulistiwa, udara laut bergaram tinggi dan fluktuasi kelembapan udara dapat memicu "efek hujan dalam kontainer" yang merusak rasa segar green bean.
                   </p>
                   <div className="bg-white p-3 border border-gray-200 space-y-2 rounded-sm text-[11px] text-gray-700">
                     <p className="font-bold text-[#05190F]">🛡️ Standar Pelindungan Karung Ekspor Kopi Nandara:</p>
                     <ul className="list-disc list-inside space-y-1 font-sans text-[10.5px] text-gray-600 pl-1">
-                      <li><strong>Kantong Hermetik GrainPro:</strong> Selalu gunakan kantong plastik komposit GrainPro Ultra-Hermetik sebagai liner dalam sebelum dimasukkan ke karung goni biasa. Ini mengunci oksigen di bawah 1% dan menjaga kadar air stabil di 11.5% konstan.</li>
+                      <li><strong>Kantong Hermetik GrainPro:</strong> Selalu gunakan kantong plastik komposit GrainPro Ultra-Hermetik sebagliner dalam sebelum dimasukkan ke karung goni biasa. Ini mengunci oksigen di bawah 1% dan menjaga kadar air stabil di 11.5% konstan.</li>
                       <li><strong>Lining Kardus Kontainer:</strong> Lapisi seluruh dinding bagian dalam kontainer 20ft besi dengan lembaran kertas karton coklat bergelombang penyerap uap untuk memitigasi kondensasi uap basah kapal.</li>
                       <li><strong>Gantungan silica Gel Kering:</strong> Gantung 6-8 kantong besar absorpsi gel silika kargo seberat 1.5Kg di balok pengikat sudut atas kontainer baja pengiriman.</li>
                     </ul>
@@ -1527,7 +1493,7 @@ export@nandaramontierra.id`,
               <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-6 lg:col-span-1">
                 <div className="border-b border-gray-100 pb-3">
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1">
-                    <Calculator className="w-4 h-4" /> Simulator Input parametrik
+                     Simulator Input parametrik
                   </h3>
                   <p className="text-[10px] text-gray-500 font-mono mt-0.5">Sesuaikan parameter kargo untuk menganalisa kalkulasi harga ekspor.</p>
                 </div>
@@ -1693,7 +1659,7 @@ export@nandaramontierra.id`,
 
                   <div className="p-4 bg-white border border-[#05190F]/10 rounded-lg text-xs space-y-2 font-sans">
                     <h4 className="font-serif font-bold text-[#05190F] flex items-center gap-1.5 text-xs">
-                      <Info className="w-4 h-4 text-[#C9A227]" /> Insight Strategi Negosiasi:
+                       Insight Strategi Negosiasi:
                     </h4>
                     <p className="text-gray-600 leading-relaxed text-[11px]">
                       Impor komoditas kopi premium sering kali dinegosiasikan dalam klausul <strong>FOB</strong> karena roastery global (cth: di Jerman/Jepang) biasanya memiliki jalur logistik kapal angkut langganan sendiri (<span className="font-bold">Freight Forwarder Partner</span>) untuk meraih efisiensi tarif muat bulk kontainer. Sebaliknya, pembeli skala kecil/menengah akan lebih memilih klausul <strong>CIF</strong> untuk kemudahan operasional pendaratan kargo mereka.
@@ -1715,7 +1681,7 @@ export@nandaramontierra.id`,
               <div className="border-b border-gray-100 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <FileText className="w-4 h-4" /> Modul Ekspor Kopi: Dokumen Administrasi & Kepabeanan
+                     Modul Ekspor Kopi: Dokumen Administrasi & Kepabeanan
                   </h3>
                   <h2 className="text-2xl font-serif italic text-[#05190F]">Kelengkapan Dokumen Wajib Ekspor & Sertifikasi Negara Tujuan</h2>
                 </div>
@@ -1769,7 +1735,7 @@ export@nandaramontierra.id`,
                     </div>
                     <p className="text-[10px] text-[#C9A227] font-mono mt-1 uppercase tracking-widest font-bold">Wajib Pabean</p>
                     <p className="text-xs text-gray-750 leading-relaxed font-sans mt-3">
-                      Menyajikan rincian pengemasan fisik. Wajib merinci jumlah karung goni (Jute Bags), berat bersih (Net Weight), berat kotor (Gross Weight), nomor seri segel bea cukai (Customs Seal No), dan tanda pengenal kontainer (Container ID).
+                      Menyajikan rincian pengemasan fisik. Wajib merinci jumlah karung goni (Jute Bags), berat bersih (Net Weight), berat kotor (Gross Weight), nomor seri segel bea cuk(Customs Seal No), dan tanda pengenal kontainer (Container ID).
                     </p>
                   </div>
 
@@ -1786,7 +1752,7 @@ export@nandaramontierra.id`,
                     </div>
                     <p className="text-[10px] text-[#C9A227] font-mono mt-1 uppercase tracking-widest font-bold">Bukti Kepemilikan</p>
                     <p className="text-xs text-gray-750 leading-relaxed font-sans mt-3">
-                      Surat tanda terima barang yang dikeluarkan oleh perusahaan pelayaran (Carrier) setelah kontainer naik ke atas kapal. Berfungsi sebagai bukti kontrak angkutan dan dokumen kepemilikan kargo lepas sah.
+                      Surat tanda terima barang yang dikeluarkan oleh perusahaan pelayaran (Carrier) setelah kontainer naik ke atas kapal. Berfungsi sebagbukti kontrak angkutan dan dokumen kepemilikan kargo lepas sah.
                     </p>
                   </div>
 
@@ -1818,9 +1784,9 @@ export@nandaramontierra.id`,
                       <span className="font-mono font-bold text-[#05190F] text-xs uppercase tracking-wider block">5. PEB & NPE (Nota Pelayanan Ekspor)</span>
                       <input type="checkbox" checked={completedTasks.learn_peb} onChange={() => {}} className="accent-[#05190F]" />
                     </div>
-                    <p className="text-[10px] text-[#C9A227] font-mono mt-1 uppercase tracking-widest font-bold">Sistem Bea Cukai RI</p>
+                    <p className="text-[10px] text-[#C9A227] font-mono mt-1 uppercase tracking-widest font-bold">Sistem Bea CukRI</p>
                     <p className="text-xs text-gray-750 leading-relaxed font-sans mt-3">
-                      Disubmit secara online melalui modul EDI Bea Cukai. NPE dirilis sebagai persetujuan fisik pemuatan kontainer ke kompartemen kapal palka utama setelah lolos screening fiskal dan kepabeanan RI.
+                      Disubmit secara online melalui modul EDI Bea Cukai. NPE dirilis sebagpersetujuan fisik pemuatan kontainer ke kompartemen kapal palka utama setelah lolos screening fiskal dan kepabeanan RI.
                     </p>
                   </div>
 
@@ -1846,7 +1812,7 @@ export@nandaramontierra.id`,
                 <div className="bg-[#FAF8F5] border border-[#05190F]/10 p-5 rounded-lg space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="p-2 bg-[#05190F] text-[#C9A227] rounded-sm shrink-0">
-                      <ShieldCheck className="w-5 h-5" />
+                      
                     </div>
                     <div className="space-y-1">
                       <h4 className="font-serif font-bold text-gray-900 text-sm">Sertifikat Fitosanitari (Phytosanitary Certificate - Barantin)</h4>
@@ -1951,7 +1917,7 @@ export@nandaramontierra.id`,
 
                       <div className="p-2.5 bg-emerald-50/20 border border-emerald-500/15 rounded-sm">
                         <strong className="text-emerald-950 font-mono text-[10px] block uppercase tracking-widest">🔬 3. Ochratoxin-A Level Certification</strong>
-                        EU memiliki nilai ambang batas Ochratoxin-A paling ketat di dunia (maksimum 5.0 ppb untuk kopi hijau). Hasil tes kelembaban lab independen harus dilampirkan untuk mengesahkan standar keamanan pangan Uni Eropa.
+                        EU memiliki nilambang batas Ochratoxin-A paling ketat di dunia (maksimum 5.0 ppb untuk kopi hijau). Hasil tes kelembaban lab independen harus dilampirkan untuk mengesahkan standar keamanan pangan Uni Eropa.
                       </div>
                     </div>
                   </div>
@@ -1968,7 +1934,7 @@ export@nandaramontierra.id`,
                     <div className="text-xs text-gray-700 space-y-3 font-sans leading-relaxed">
                       <div className="p-2.5 bg-stone-50 border border-stone-300 rounded-sm">
                         <strong className="text-stone-900 font-mono text-[10px] block uppercase tracking-wider">🇨🇳 1. GACC Single Window Registration</strong>
-                        Sesuai ketetapan Decree 248 & 249 dari General Administration of Customs China (GACC). Pabrik pengolahan ekspor wajib memperoleh nomor registrasi GACC sebelum pengapalan kontainer. Nomor ini wajib dicetak tebal di atas karton kemasan luar kargo.
+                        Sesuketetapan Decree 248 & 249 dari General Administration of Customs China (GACC). Pabrik pengolahan ekspor wajib memperoleh nomor registrasi GACC sebelum pengapalan kontainer. Nomor ini wajib dicetak tebal di atas karton kemasan luar kargo.
                       </div>
 
                       <div className="p-2.5 bg-stone-50 border border-stone-300 rounded-sm">
@@ -1978,7 +1944,7 @@ export@nandaramontierra.id`,
 
                       <div className="p-2.5 bg-stone-50 border border-stone-300 rounded-sm">
                         <strong className="text-stone-900 font-mono text-[10px] block uppercase tracking-wider">🔬 3. Pesticide & Heavy Metal Lab Reports</strong>
-                        Bea Cukai China secara berkala membongkar kontainer acak untuk menguji kadar logam berat Timbal (Pb) & pestisida organofosfat dilarang. Nandara wajib melampirkan hasil uji bebas cemaran logam berat di pelabuhan bongkar.
+                        Bea CukChina secara berkala membongkar kontainer acak untuk menguji kadar logam berat Timbal (Pb) & pestisida organofosfat dilarang. Nandara wajib melampirkan hasil uji bebas cemaran logam berat di pelabuhan bongkar.
                       </div>
                     </div>
                   </div>
@@ -2026,11 +1992,11 @@ export@nandaramontierra.id`,
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div className="space-y-2">
                   <span className="font-mono text-[10px] uppercase tracking-widest text-[#C9A227] font-bold flex items-center gap-1">
-                    <Flame className="w-4 h-4 text-[#C9A227] animate-pulse" /> Advanced Penyangraian Komoditas PT. Nandara
+                     Advanced Penyangraian Komoditas PT. Nandara
                   </span>
                   <h2 className="text-2xl md:text-3xl font-serif italic text-white leading-tight">Roasting Masterclass & Curve Simulator</h2>
                   <p className="text-xs text-gray-300 max-w-2xl font-sans leading-relaxed">
-                    Setiap varietas kopi hijau specialty PT. Nandara Nusa Montierra memiliki spesifikasi densitas, kadar air, dan ketahanan suhu yang saksama. Simulator ini dirancang untuk memandu Q-Grader dan Master Roaster global menyusun profil sangrai yang memaksimalkan skor potensi cita rasa biji kopi.
+                    Setiap varietas kopi hijau specialty PT. Nandara Nusa Montierra memiliki spesifikasi densitas, kadar air, dan ketahanan suhu yang saksama. Simulator ini dirancang untuk memandu Q-Grader dan Master Roaster global menyusun profil sangryang memaksimalkan skor potensi cita rasa biji kopi.
                   </p>
                 </div>
                 <div className="bg-white/10 p-3 border border-white/15 rounded text-xs font-mono shrink-0 space-y-1">
@@ -2114,8 +2080,8 @@ export@nandaramontierra.id`,
                       ))}
                     </div>
                     <p className="text-[9.5px] text-gray-500 leading-normal italic font-sans bg-[#FAF8F5] p-2 rounded border border-gray-150">
-                      {roastDensityLevel === 'soft' && `👉 Soft: Sangrai biji lunak (e.g. Robusta dataran rendah). Menghindari scorching dengan offsets kustom Anda: Charge Temp ${softDensityCtOffset}°C & Aliran Udara ${softDensityAirflowOffset}%.`}
-                      {roastDensityLevel === 'medium' && "👉 Medium: Nilai termal standar tanpa offset (mengikuti density alami varietas kopi)."}
+                      {roastDensityLevel === 'soft' && `👉 Soft: Sangrbiji lunak (e.g. Robusta dataran rendah). Menghindari scorching dengan offsets kustom Anda: Charge Temp ${softDensityCtOffset}°C & Aliran Udara ${softDensityAirflowOffset}%.`}
+                      {roastDensityLevel === 'medium' && "👉 Medium: Niltermal standar tanpa offset (mengikuti density alami varietas kopi)."}
                       {roastDensityLevel === 'hard' && `👉 Hard: Menembus kelembaban tinggi biji keras (e.g. Lintong/Gayo Arabika >1600m). Mengakselerasi konduksi dengan offsets kustom Anda: Charge Temp +${hardDensityCtOffset}°C & Aliran Udara +${hardDensityAirflowOffset}%.`}
                     </p>
 
@@ -2467,7 +2433,7 @@ export@nandaramontierra.id`,
               <div className="border-b border-gray-150 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-[#C9A227]" /> Buyer Presentation Guide
+                     Buyer Presentation Guide
                   </h3>
                   <h2 className="text-xl font-serif italic text-[#05190F]">Panduan Presentasi Ilmiah Roasting kepada Buyer Global</h2>
                 </div>
@@ -2480,15 +2446,15 @@ export@nandaramontierra.id`,
                 Saat melakukan pitching atau cupping bersama roaster global, menyajikan kopi dengan kalimat deskriptif umum ("Kopi ini manis, body tebal, dan wangi") seringkali kurang meyakinkan purchasing manager profesional. Mereka ingin mendengar aspek fungsional-ilmiah serta jaminan stabilitas kurva sangrai. Gunakan modal dialog teknis di bawah ini untuk mengunci kesepakatan dagang (<span className="italic">roast profiling alignment</span>).
               </p>
 
-              {/* Grid 5 Tahapan Utama Sangrai */}
+              {/* Grid 5 Tahapan Utama Sangr*/}
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 {[
                   {
                     title: "1. Drying / Yellowing",
                     tempRange: "Suhu Kamar - 150°C (Endotermis)",
                     desc: "Proses transfer energi untuk mengevakuasi kandungan air bebas di dalam struktur seluler.",
-                    chemistry: "Transfer energi panas dari besi drum berputar memicu kadar air menguap. Klorofil mulai meluruh dan warna biji melunak dari hijau tua ke kuning jerami (straw phase).",
-                    buyerTalk: "Sebutkan ke buyer: 'Karakter kering alami gayo wet-hulled kami kelola dengan pengantaran energi awal konduktif stabil pada Charge Temp terukur agar kelembaban teras biji dievakuasi tanpa risiko mencederai lapisan sel luar.'",
+                    chemistry: "Transfer energi panas dari besi drum berputar memicu kadar air menguap. Klorofil mulmeluruh dan warna biji melunak dari hijau tua ke kuning jerami (straw phase).",
+                    buyerTalk: "Sebutkan ke buyer: 'Karakter kering alami gayo wet-hulled kami kelola dengan pengantaran energi awal konduktif stabil pada Charge Temp terukur agar kelembaban teras biji dievakuasi tanpa risiko mencederlapisan sel luar.'",
                     color: "bg-[#F7F4EC] border-[#C9A227]/30 text-[#05190F]"
                   },
                   {
@@ -2511,7 +2477,7 @@ export@nandaramontierra.id`,
                     title: "4. Development Phase",
                     tempRange: "Pasca FC - Drop Temp",
                     desc: "Fase krusial penentu keseimbangan akhir kadar keasaman (acidity) dan rasa manis (sweetness).",
-                    chemistry: "Karamelisasi sukrosa dan dekomposisi asam organik berlanjut secara intens. Keseimbangan ini sepenuhnya diatur oleh persentase durasi sangrai pasca-FC (DTR/Development Time Ratio).",
+                    chemistry: "Karamelisasi sukrosa dan dekomposisi asam organik berlanjut secara intens. Keseimbangan ini sepenuhnya diatur oleh persentase durasi sangrpasca-FC (DTR/Development Time Ratio).",
                     buyerTalk: "Sebutkan ke buyer: 'Dengan penataan DTR stabil pada rentang 13% s.d 16%, kami mampu mengekspos rasa jeruk segar Bali Kintamani maupun notes jasmine Java Preanger tanpa risiko rasa pangkas (scorched) atau mentah (underdeveloped).'",
                     color: "bg-emerald-50/60 border-emerald-200 text-emerald-955"
                   },
@@ -2519,8 +2485,8 @@ export@nandaramontierra.id`,
                     title: "5. Second Crack (SC)",
                     tempRange: "218°C - 224°C (Pirolisis)",
                     desc: "Ledakan sekunder hancurnya membran selulosa bagian dalam pendukung minyak kopi.",
-                    chemistry: "Pelepasan gas CO2 secara ekstrem memaksa minyak kopi (lipida esensial) mendesak keluar permukaan (oily sheen). Karbon aktif mulai terbentuk secara dominan.",
-                    buyerTalk: "Sebutkan ke buyer: 'Kami menghindari Second Crack sepenuhnya pada arabika specialty kami untuk mencegah flavor arang (ashy). Namun, fine robusta Lampung kami sangrai menyentuh awal Second Crack agar melahirkan bodi crema padat espreso base.'",
+                    chemistry: "Pelepasan gas CO2 secara ekstrem memaksa minyak kopi (lipida esensial) mendesak keluar permukaan (oily sheen). Karbon aktif multerbentuk secara dominan.",
+                    buyerTalk: "Sebutkan ke buyer: 'Kami menghindari Second Crack sepenuhnya pada arabika specialty kami untuk mencegah flavor arang (ashy). Namun, fine robusta Lampung kami sangrmenyentuh awal Second Crack agar melahirkan bodi crema padat espreso base.'",
                     color: "bg-stone-50 border-stone-300 text-stone-900"
                   }
                 ].map((phase, idx) => (
@@ -2558,13 +2524,13 @@ export@nandaramontierra.id`,
                   <div className="space-y-1.5">
                     <h5 className="font-mono font-bold text-[10px] text-amber-955 uppercase font-bold">2. Steady Declining Rate of Rise (RoR)</h5>
                     <p className="text-gray-650 leading-relaxed text-[11.5px]">
-                      Kurva sangrai yang konsisten wajib menunjukkan akselerasi laju penyerapan panas (<span className="font-mono font-bold">RoR</span>) yang menurun secara halus tanpa adanya hentakan mendadak. Defek grafis seperti <i>flick</i> (kenaikan suhu tak terkontrol pasca-FC) atau <i>crash</i> (anjloknya energi saat ekspansi uap) merusak stabilitas rasa seduh batch ke batch.
+                      Kurva sangryang konsisten wajib menunjukkan akselerasi laju penyerapan panas (<span className="font-mono font-bold">RoR</span>) yang menurun secara halus tanpa adanya hentakan mendadak. Defek grafis seperti <i>flick</i> (kenaikan suhu tak terkontrol pasca-FC) atau <i>crash</i> (anjloknya energi saat ekspansi uap) merusak stabilitas rasa seduh batch ke batch.
                     </p>
                   </div>
                   <div className="space-y-1.5">
                     <h5 className="font-mono font-bold text-[10px] text-[#05190F] uppercase font-bold">3. Density Metric Calibration</h5>
                     <p className="text-gray-650 leading-relaxed text-[11.5px]">
-                      Mempresentasikan nilai densitas fisik terperinci (misal: <strong>strictly &gt; 710 g/L</strong> untuk strictly hard bean) mematahkan kecurigaan buyer bahwa ekportir lokal tidak mengasuh lab mandiri yang tersertifikasi. Ini memberi jaminan bahwa biji mampu menahan muatan suhu awal yang agresif pada pemanggang industri kapasitas besar.
+                      Mempresentasikan nildensitas fisik terperinci (misal: <strong>strictly &gt; 710 g/L</strong> untuk strictly hard bean) mematahkan kecurigaan buyer bahwa ekportir lokal tidak mengasuh lab mandiri yang tersertifikasi. Ini memberi jaminan bahwa biji mampu menahan muatan suhu awal yang agresif pada pemanggang industri kapasitas besar.
                     </p>
                   </div>
                 </div>
@@ -2583,7 +2549,7 @@ export@nandaramontierra.id`,
               <div className="border-b border-gray-100 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <Coffee className="w-4 h-4 text-[#C9A227]" /> Quality Control (QC) & SCA Cupping Hub
+                     Quality Control (QC) & SCA Cupping Hub
                   </h3>
                   <h2 className="text-2xl font-serif italic text-[#05190F]">Kurikulum Lengkap Analisa Cita Rasa & Uji Skor Kopi Specialty</h2>
                 </div>
@@ -2593,7 +2559,7 @@ export@nandaramontierra.id`,
               </div>
 
               <p className="text-xs text-gray-600 font-sans leading-relaxed max-w-4xl">
-                Uji cita rasa (<span className="italic">cupping test</span>) merupakan bahasa universal di industri kopi internasional. Di sini Anda akan menguasai metode penilaian kuantitatif dan kualitatif berdasarkan lembar penilaian standar <strong>SCA (Specialty Coffee Association)</strong> yang diakui di seluruh pelabuhan ekspor dunia untuk memisahkan kopi <i>Commercial</i> dengan kopi <i>Specialty (80+)</i>.
+                Uji cita rasa (<span className="italic">cupping test</span>) merupakan bahasa universal di industri kopi internasional. Di sini Anda akan menguasmetode penilaian kuantitatif dan kualitatif berdasarkan lembar penilaian standar <strong>SCA (Specialty Coffee Association)</strong> yang diakui di seluruh pelabuhan ekspor dunia untuk memisahkan kopi <i>Commercial</i> dengan kopi <i>Specialty (80+)</i>.
               </p>
             </div>
 
@@ -2647,7 +2613,7 @@ export@nandaramontierra.id`,
                       </div>
                       <div className="text-xs">
                         <strong className="text-emerald-950 font-mono block text-[11px] uppercase tracking-wider">Menit ke-8 s/d Menit ke-10 (Flavor, Aftertaste, Acidity, Body, Balance)</strong>
-                        <p className="text-gray-600 font-sans mt-0.5">Bila suhu sup kopi telah mendingin ke kisaran 71°C, mulai hirup sup kopi dengan cara diseruput keras (<span className="italic">slurping</span>). Hal ini mengubah cairan kopi menjadi butiran aerosol halus yang menyelimuti seluruh reseptor sensorik lidah dan rongga hidung posterior. Semburkan kopi dan nilai dimensi sensori rasa.</p>
+                        <p className="text-gray-600 font-sans mt-0.5">Bila suhu sup kopi telah mendingin ke kisaran 71°C, mulhirup sup kopi dengan cara diseruput keras (<span className="italic">slurping</span>). Hal ini mengubah cairan kopi menjadi butiran aerosol halus yang menyelimuti seluruh reseptor sensorik lidah dan rongga hidung posterior. Semburkan kopi dan nildimensi sensori rasa.</p>
                       </div>
                       <div className="text-xs">
                         <strong className="text-emerald-950 font-mono block text-[11px] uppercase tracking-wider">Mendingin Ke Suhu Ruang &lt; 37°C (Sweetness, Clean Cup, Uniformity, Overall)</strong>
@@ -2703,7 +2669,7 @@ export@nandaramontierra.id`,
                         <span className="font-mono text-[10px] font-bold text-[#05190F]">⚪ Screen Sizes</span>
                         <input type="checkbox" checked={completedTasks.learn_screen} onChange={() => {}} className="accent-[#05190F]" />
                       </div>
-                      <p className="text-[11px] text-gray-650 font-sans mt-1"><strong>Screen 17/18 (Large)</strong>. Ukuran biji diayak seragam agar kurva sangrai di mesin pemanggang merata.</p>
+                      <p className="text-[11px] text-gray-650 font-sans mt-1"><strong>Screen 17/18 (Large)</strong>. Ukuran biji diayak seragam agar kurva sangrdi mesin pemanggang merata.</p>
                     </div>
 
                   </div>
@@ -2717,10 +2683,10 @@ export@nandaramontierra.id`,
                 <div className="bg-[#05190F] border border-[#C9A227]/30 p-5 rounded-lg text-white shadow-luxury space-y-5">
                   <div className="border-b border-[#C9A227]/20 pb-3">
                     <span className="text-[8.5px] font-mono tracking-widest text-[#C9A227] uppercase font-bold flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Interactive Q-Grader Tool
+                       Interactive Q-Grader Tool
                     </span>
                     <h3 className="font-serif italic font-bold text-lg text-white mt-1">SCA Sensory Cup Score Sheet</h3>
-                    <p className="text-[10px] text-gray-400 font-sans mt-0.5">Geser parameter rasa di bawah untuk memprediksi nilai sensori biji kopi Anda.</p>
+                    <p className="text-[10px] text-gray-400 font-sans mt-0.5">Geser parameter rasa di bawah untuk memprediksi nilsensori biji kopi Anda.</p>
                   </div>
 
                   {/* Range Sliders Loop */}
@@ -2965,12 +2931,12 @@ export@nandaramontierra.id`,
             {/* Header Block */}
             <div className="p-6 bg-[#05190F] text-white border-b-4 border-[#C9A227] rounded-lg shadow-luxury space-y-3">
               <div className="flex items-center gap-2">
-                <Languages className="w-6 h-6 text-[#C9A227]" />
+                
                 <span className="font-mono text-[10px] tracking-widest text-[#C9A227] uppercase font-bold">B2B Global Trade & Objection Handling</span>
               </div>
               <h2 className="text-2xl font-serif italic font-black">B2B Multilingual FAQ & Objection Academy</h2>
               <p className="text-xs text-gray-300 max-w-4xl leading-relaxed">
-                Sukses negosiasi ekspor berskala kontainer sangat bergantung pada respon sains dan data legalitas presisi. Kuasai modul interaktif ini yang dirancang dalam lima bahasa asing utama untuk mematahkan keraguan buyer terbesar Anda.
+                Sukses negosiasi ekspor berskala kontainer sangat bergantung pada respon sains dan data legalitas presisi. Kuasmodul interaktif ini yang dirancang dalam lima bahasa asing utama untuk mematahkan keraguan buyer terbesar Anda.
               </p>
             </div>
 
@@ -3014,7 +2980,7 @@ export@nandaramontierra.id`,
               {/* Search */}
               <div className="md:col-span-4 relative">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="w-4 h-4 text-gray-400" />
+                  
                 </span>
                 <input
                   type="text"
@@ -3051,7 +3017,7 @@ export@nandaramontierra.id`,
                           : 'bg-[#FAF8F5] text-gray-700 border-gray-200 hover:bg-gray-100'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      
                       <span>{cat.label}</span>
                     </button>
                   );
@@ -3075,7 +3041,7 @@ export@nandaramontierra.id`,
                 if (filteredItems.length === 0) {
                   return (
                     <div className="p-8 text-center text-gray-400 space-y-2">
-                      <HelpCircle className="w-12 h-12 mx-auto text-gray-300" />
+                      
                       <p className="text-xs font-mono">FAQ dengan kata kunci "{faqSearch}" tidak ditemukan.</p>
                       {faqSearch.trim() && (
                         <button
@@ -3132,13 +3098,13 @@ export@nandaramontierra.id`,
                             }`}
                             title="Salin Tanya-Jawab ke Clipboard"
                           >
-                            {isCopied ? <span className="text-[10px] font-mono font-bold text-emerald-700 px-1">✓ Copied</span> : <Copy className="w-3.5 h-3.5" />}
+                            {isCopied ? <span className="text-[10px] font-mono font-bold text-emerald-700 px-1">✓ Copied</span> : }
                           </button>
                           <span>
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-gray-500" />
+                              
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-gray-500" />
+                              
                             )}
                           </span>
                         </div>
@@ -3189,13 +3155,13 @@ export@nandaramontierra.id`,
             <div className="bg-white border-2 border-[#05190F]/10 rounded-lg p-6 shadow-luxury space-y-4">
               <div className="border-b border-[#05190F]/10 pb-3">
                 <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" /> Export Document & Market Certification Mandate
+                   Export Document & Market Certification Mandate
                 </h3>
                 <h2 className="text-xl font-serif italic text-[#05190F] font-black">
                   Sertifikasi Negara Tujuan Ekspor & Dokumen Kepabeanan
                 </h2>
                 <p className="text-xs text-gray-500 font-sans mt-1">
-                  Seluruh berkas administrasi karantina, sanitasi, pangan, dan ekspor negara tujuan wajib disiapkan dengan koordinasi dinas pertanian, Balai Karantina Pertanian, serta Bea Cukai setempat.
+                  Seluruh berkas administrasi karantina, sanitasi, pangan, dan ekspor negara tujuan wajib disiapkan dengan koordinasi dinas pertanian, BalKarantina Pertanian, serta Bea Cuksetempat.
                 </p>
               </div>
 
@@ -3231,7 +3197,7 @@ export@nandaramontierra.id`,
                     <li><strong>Certificate of Origin (Form A / EU-CoO)</strong>: Memberikan keringanan tarif bea masuk khusus GSP.</li>
                     <li><strong>Ochratoxin A (OTA) Test</strong>: Uji ambang batas toksin jamur di laboratorium berstandar ISO 17025.</li>
                     <li><strong>Pesticide Residue Limits (MRL)</strong>: Pengujian residu kontaminasi herbisida kimia (harus di bawah ambang batas Uni Eropa).</li>
-                    <li><strong>EUDR (Forest Deforestation Act)</strong>: Deklarasi geolokasi kebun bebas deforestasi (wajib mulai akhir 2024).</li>
+                    <li><strong>EUDR (Forest Deforestation Act)</strong>: Deklarasi geolokasi kebun bebas deforestasi (wajib mulakhir 2024).</li>
                   </ul>
                 </div>
 
@@ -3286,7 +3252,7 @@ export@nandaramontierra.id`,
                 {/* MANDATORI UTAMA */}
                 <div className="bg-[#05190F] text-[#C9A227] border-2 border-[#C9A227] p-4 rounded space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <Info className="w-5 h-5 text-[#C9A227]" />
+                    
                     <div>
                       <h4 className="font-bold text-xs uppercase tracking-tight">Mandatori Kertas Ekspor Utama</h4>
                       <p className="text-[10px] text-gray-300 font-mono">Standard Export Assets</p>
@@ -3308,9 +3274,9 @@ export@nandaramontierra.id`,
           <div className="space-y-6 animate-fade-in">
             <div className="bg-red-50 border border-red-200 p-6 rounded-lg shadow-sm space-y-4">
               <h3 className="text-xs font-mono tracking-widest text-[#E53E3E] font-bold uppercase flex items-center gap-1.5 animate-pulse">
-                <ShieldAlert className="w-4 h-4" /> Security Protocol Level-5
+                 Security Protocol Level-5
               </h3>
-              <h2 className="text-xl font-serif italic text-red-900">Perisai Anti-Penipuan & Proteksi Transaksi (Anti Buyer Scam Guide)</h2>
+              <h2 className="text-xl font-serif italic text-red-900">PerisAnti-Penipuan & Proteksi Transaksi (Anti Buyer Scam Guide)</h2>
               <p className="text-xs text-red-700 leading-relaxed font-sans max-w-4xl">
                 Dunia ekspor komoditas dihuni oleh pembeli bayangan dan sindikat penipu terorganisir yang menargetkan eksportir pemula. Selalu terapkan taktik proteksi internal penandatanganan kontrak ekspor ini secara militan.
               </p>
@@ -3325,7 +3291,7 @@ export@nandaramontierra.id`,
                     <strong>Skenario:</strong> Komplotan penipu meniru profil perusahaan roastery mewah fiktif, memesan sampel seberat 1 - 2 Kg berulang kali secara cuma-cuma dengan alasan "uji laboratorium cupping berlapis".
                   </p>
                   <p className="text-red-700 font-sans font-semibold text-[11px]">
-                    <strong>Solusi Mutlak:</strong> Selalu batasi berat sampel cuma-cuma maksimum 200 - 350 gram saja. Wajibkan pembeli menyuplai kode akun kurir DHL/FedEx mereka sendiri untuk menarik sampel eksportir Anda.
+                    <strong>Solusi Mutlak:</strong> Selalu batasi berat sampel cuma-cuma maksimum 200 - 350 gram saja. Wajibkan pembeli menyuplkode akun kurir DHL/FedEx mereka sendiri untuk menarik sampel eksportir Anda.
                   </p>
                 </div>
 
@@ -3334,7 +3300,7 @@ export@nandaramontierra.id`,
                     🚨 2. Sindikat LC Palsu (Letter of Credit Fraud)
                   </h4>
                   <p className="text-gray-600 leading-relaxed font-sans text-[11px]">
-                    <strong>Skenario:</strong> Penipu menolak jalur pembayaran DP (Down Payment) kawat bank Telegraphic Transfer (TT) dan bersikeras memakai Letter of Credit (L/C) namun yang diterbitkan oleh Bank asing non-tradable kelas tiga di negara berisiko tinggi.
+                    <strong>Skenario:</strong> Penipu menolak jalur pembayaran DP (Down Payment) kawat bank Telegraphic Transfer (TT) dan bersikeras memakLetter of Credit (L/C) namun yang diterbitkan oleh Bank asing non-tradable kelas tiga di negara berisiko tinggi.
                   </p>
                   <p className="text-red-700 font-sans font-semibold text-[11px]">
                     <strong>Solusi Mutlak:</strong> Cek nama bank pembuka LC. Hanya terima LC yang dikonfirmasi (<span className="underline">Confirmed Letter of Credit</span>) oleh Bank Koresponden Devisa teratas di Indonesia (seperti Mandiri, BNI, BRI, BCA).
@@ -3346,7 +3312,7 @@ export@nandaramontierra.id`,
                     🚨 3. Agen Logistik Rekayasa (Fake Freight Forwarder)
                   </h4>
                   <p className="text-gray-600 leading-relaxed font-sans text-[11px]">
-                    <strong>Skenario:</strong> Pada klausul FOB, pembeli meminta untuk memakai agen forwarding logistik tidak terafiliasi tunjukan mereka yang ternyata bersengkongkol. Begitu kargo ditarik, agen merilis kargo tanpa surat Bill of Lading asli kepada buyer walau pembayaran belum lunas.
+                    <strong>Skenario:</strong> Pada klausul FOB, pembeli meminta untuk memakagen forwarding logistik tidak terafiliasi tunjukan mereka yang ternyata bersengkongkol. Begitu kargo ditarik, agen merilis kargo tanpa surat Bill of Lading asli kepada buyer walau pembayaran belum lunas.
                   </p>
                   <p className="text-red-700 font-sans font-semibold text-[11px]">
                     <strong>Solusi Mutlak:</strong> Saring agen forwarding rujukan pembeli dan sahkan di Indonesia. Alternatif teraman, tawarkan Klausul CIF di mana Anda yang memegang kendali atas penunjukan kapal pengangkut legal terdaftar resmi.
@@ -3375,11 +3341,11 @@ export@nandaramontierra.id`,
           <div className="space-y-6 animate-fade-in text-xs font-mono">
             <div className="bg-white border border-[#05190F]/10 p-6 rounded-lg shadow-luxury space-y-4">
               <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                <ClipboardList className="w-4 h-4 text-[#C9A227]" /> Interactive Pipeline Sourcing Roadmap
+                 Interactive Pipeline Sourcing Roadmap
               </h3>
               <h2 className="text-lg font-serif italic text-[#05190F]">Roadmap Integrasi Eksportir & Evaluasi Kinerja (Task Detail Tracking)</h2>
               <p className="text-xs text-gray-500 font-sans leading-relaxed">
-                Petakan langkah operasional harian Anda secara berurutan mengikuti siklus deal sirkulasi ekspor kopi di bawah ini. Centang tugas yang selesai untuk menguji kesiapan operasional ekspor Anda:
+                Petakan langkah operasional harian Anda secara berurutan mengikuti siklus deal sirkulasi ekspor kopi di bawah ini. Centang tugas yang selesuntuk menguji kesiapan operasional ekspor Anda:
               </p>
 
               <div className="space-y-4 pt-4">
@@ -3435,7 +3401,7 @@ export@nandaramontierra.id`,
                     <div className={`p-1 px-2.5 font-bold rounded-sm border ${completedTasks.track_sample ? 'bg-emerald-800 text-white' : 'bg-white text-gray-700'}`}>03</div>
                     <div>
                       <h4 className="font-serif font-bold text-xs text-[#05190f]">Track Semua Sample</h4>
-                      <p className="text-[10px] text-gray-500 font-sans">Pantau proses transit maskapai pengiriman kurir udara secara berkala untuk meyakinkan estimasi pendaratan sampel.</p>
+                      <p className="text-[10px] text-gray-500 font-sans">Pantau proses transit maskappengiriman kurir udara secara berkala untuk meyakinkan estimasi pendaratan sampel.</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -3474,8 +3440,8 @@ export@nandaramontierra.id`,
                   <div className="flex items-center gap-3">
                     <div className={`p-1 px-2.5 font-bold rounded-sm border ${completedTasks.negotiate_small ? 'bg-emerald-800 text-white' : 'bg-white text-gray-700'}`}>05</div>
                     <div>
-                      <h4 className="font-serif font-bold text-xs text-[#05190f]">Mulai Negosiasi Small/Trial Order</h4>
-                      <p className="text-[10px] text-gray-500 font-sans">Tawarkan LCL shipment berkapasitas 10 - 25 goni kopi berkualitas tinggi untuk menguji kelayakan awal rantai suplay kargo.</p>
+                      <h4 className="font-serif font-bold text-xs text-[#05190f]">MulNegosiasi Small/Trial Order</h4>
+                      <p className="text-[10px] text-gray-500 font-sans">Tawarkan LCL shipment berkapasitas 10 - 25 goni kopi berkualitas tinggi untuk menguji kelayakan awal rantsuplay kargo.</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -3535,7 +3501,7 @@ export@nandaramontierra.id`,
               <div className="border-b border-gray-100 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <ClipboardList className="w-4 h-4 text-[#C9A227]" /> B2B Sample Sourcing Lifecycle
+                     B2B Sample Sourcing Lifecycle
                   </h3>
                   <h2 className="text-2xl font-serif italic text-[#05190F]">Analisis Alur Kontrol & Vetting Fisik Sampel Ekspor</h2>
                 </div>
@@ -3592,7 +3558,7 @@ export@nandaramontierra.id`,
                     </span>
                     <h5 className="font-serif font-bold text-xs text-[#05190F]">Documenting & Airway Waybill Draft (Administrasi Custom)</h5>
                     <p className="text-xs text-gray-650 font-sans leading-relaxed">
-                      Terbitkan Proforma Invoice Sampel dan Packing List yang sah. Cantumkan keterangan internasional wajib: <i>"No Commercial Value — Sample for Sensory Analysis Only"</i> dengan nilai pabean rendah (misal USD 10) agar pembeli tidak terbebani pajak bea masuk tinggi di negara tujuan. Lampirkan sertifikat fitosanitari dari balai karantina tanaman komoditas pertanian setempat.
+                      Terbitkan Proforma Invoice Sampel dan Packing List yang sah. Cantumkan keterangan internasional wajib: <i>"No Commercial Value — Sample for Sensory Analysis Only"</i> dengan nilpabean rendah (misal USD 10) agar pembeli tidak terbebani pajak bea masuk tinggi di negara tujuan. Lampirkan sertifikat fitosanitari dari balkarantina tanaman komoditas pertanian setempat.
                     </p>
                   </div>
 
@@ -3614,7 +3580,7 @@ export@nandaramontierra.id`,
                     </span>
                     <h5 className="font-serif font-bold text-xs text-[#05190F]">Cupping Feedback Loop & Price Closing (Pecah Telur Kontrak)</h5>
                     <p className="text-xs text-gray-650 font-sans leading-relaxed">
-                      Pantau pergerakan paket. Setelah kargo sampel mendarat di roastery pembeli, berikan waktu 5 - 7 hari kerja untuk tim QC mereka menyangrai sampel di mesin roasting kecil (<span className="italic">sample roaster</span>). Kirim formulir umpan balik sensori (gunakan lembar standard SCA Cupping Card kita). Kunci preferensi kecocokan profil rasa biji tersebut untuk menyepakati kontrak kontainer tahunan berjangka!
+                      Pantau pergerakan paket. Setelah kargo sampel mendarat di roastery pembeli, berikan waktu 5 - 7 hari kerja untuk tim QC mereka menyangrsampel di mesin roasting kecil (<span className="italic">sample roaster</span>). Kirim formulir umpan balik sensori (gunakan lembar standard SCA Cupping Card kita). Kunci preferensi kecocokan profil rasa biji tersebut untuk menyepakati kontrak kontainer tahunan berjangka!
                     </p>
                   </div>
 
@@ -3625,7 +3591,7 @@ export@nandaramontierra.id`,
               <div className="lg:col-span-5 bg-[#05190F] border border-gold/25 p-6 rounded-lg text-white space-y-6">
                 <div className="border-b border-gold/15 pb-3">
                   <h4 className="font-serif italic font-bold text-lg text-white flex items-center gap-1.5 uppercase text-xs">
-                    <ShieldCheck className="w-4 h-4 text-[#C9A227]" /> Lead Sieve & Anti-Scam Filter
+                     Lead Sieve & Anti-Scam Filter
                   </h4>
                   <p className="text-[10px] text-gray-300 font-sans mt-0.5">Identifikasi keaslian dan keseriusan prospek buyer Anda secara otomatis lewat bobot kuesioner penyaring pabean ini.</p>
                 </div>
@@ -3660,7 +3626,7 @@ export@nandaramontierra.id`,
                     />
                     <div>
                       <strong className="block font-serif text-white font-bold">1. Memiliki Kepemilikan Corporate Website & Email Resmi (+30)</strong>
-                      <span className="text-[10px] text-gray-300 block leading-tight mt-0.5">Email dikirim memakai domain web custom (spt buying@nordicroasters.dk), bukan domain gratisan @gmail, @protonmail, atau @outlook.</span>
+                      <span className="text-[10px] text-gray-300 block leading-tight mt-0.5">Email dikirim memakdomain web custom (spt buying@nordicroasters.dk), bukan domain gratisan @gmail, @protonmail, atau @outlook.</span>
                     </div>
                   </label>
 
@@ -3699,7 +3665,7 @@ export@nandaramontierra.id`,
                     />
                     <div>
                       <strong className="block font-serif text-white font-bold">4. Alamat Kantor Lolos Geofencing Google Maps (+15)</strong>
-                      <span className="text-[10px] text-gray-300 block leading-tight mt-0.5">Saat coordinates dicek di satelit digital, alamat kantor terdeteksi sebagai bangunan fisik industri gudang roastery kopi, gedung pabean komersial, atau kafe roastery aktif.</span>
+                      <span className="text-[10px] text-gray-300 block leading-tight mt-0.5">Saat coordinates dicek di satelit digital, alamat kantor terdeteksi sebagbangunan fisik industri gudang roastery kopi, gedung pabean komersial, atau kafe roastery aktif.</span>
                     </div>
                   </label>
 
@@ -3710,9 +3676,9 @@ export@nandaramontierra.id`,
                   { (( (qualDomain ? 30 : 0) + (qualCourier ? 30 : 0) + (qualDemand ? 25 : 0) + (qualMaps ? 15 : 0) )) >= 80 ? (
                     <span><strong>💡 REKOMENDASI VIP:</strong> Pembeli ini tervalidasi sangat serius dan memiliki potensi transaksi besar. Segera kirimkan 500 gram green bean terbaik Anda dibungkus kotak premium plus brosur e-catalog eksklusif. Komunikasikan terus nomor resi DHL secara ramah!</span>
                   ) : (( (qualDomain ? 30 : 0) + (qualCourier ? 30 : 0) + (qualDemand ? 25 : 0) + (qualMaps ? 15 : 0) )) >= 50 ? (
-                    <span><strong>💡 REKOMENDASI SEDANG:</strong> Pembeli asli namun level skala usahanya masih uji coba. Mintalah mereka menyuplai airway-bill berbayar atau membagi ongkos udara 50/50 sebagai jaminan keseriusan awal sebelum Anda melepas kargo sampel secara cuma-cuma.</span>
+                    <span><strong>💡 REKOMENDASI SEDANG:</strong> Pembeli asli namun level skala usahanya masih uji coba. Mintalah mereka menyuplairway-bill berbayar atau membagi ongkos udara 50/50 sebagjaminan keseriusan awal sebelum Anda melepas kargo sampel secara cuma-cuma.</span>
                   ) : (
-                    <span><strong>🚨 PERINGATAN SCAM / PENIPUAN:</strong> Probabilitas sangat tinggi bahwa prospek ini adalah "Freebie Hunter" yang mengincar biji kopi gratis demi keperluan konsumsi pribadi atau sindikat spammer. Tolak pengiriman sampel gratis. Mintalah mereka membayar USD 50 via T/T bank lunas sebagai biaya transfer sampel komersial.</span>
+                    <span><strong>🚨 PERINGATAN SCAM / PENIPUAN:</strong> Probabilitas sangat tinggi bahwa prospek ini adalah "Freebie Hunter" yang mengincar biji kopi gratis demi keperluan konsumsi pribadi atau sindikat spammer. Tolak pengiriman sampel gratis. Mintalah mereka membayar USD 50 via T/T bank lunas sebagbiaya transfer sampel komersial.</span>
                   )}
                 </div>
 
@@ -3732,7 +3698,7 @@ export@nandaramontierra.id`,
               <div className="border-b border-gray-100 pb-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
                 <div>
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <Calculator className="w-4 h-4 text-[#C9A227]" /> Commercial Proforma Sample Invoice Builder
+                     Commercial Proforma Sample Invoice Builder
                   </h3>
                   <h2 className="text-2xl font-serif italic text-[#05190F]">Estimasi Biaya & Format Penawaran Sampel Komersial</h2>
                 </div>
@@ -3940,7 +3906,7 @@ export@nandaramontierra.id`,
                       }}
                       className="p-1 px-3 bg-[#05190F] text-[#C9A227] hover:text-white font-mono text-[10px] rounded-sm font-bold flex items-center gap-1.5 cursor-pointer hover:bg-stone-900 border border-gold/40 shadow-xs"
                     >
-                      <Printer className="w-3.5 h-3.5" />
+                      
                       Print / Save PDF (Ctrl+P)
                     </button>
                   )}
@@ -3948,7 +3914,7 @@ export@nandaramontierra.id`,
 
                 {!showSampleQuoteReceipt ? (
                   <div className="flex-grow flex flex-col items-center justify-center py-24 border border-dashed border-[#05190F]/15 rounded bg-[#F7F4EC]/20 text-center text-[#05190F]/45 space-y-3">
-                    <Beaker className="w-12 h-12 stroke-1 text-[#C9A227] animate-pulse" />
+                    
                     <div className="space-y-1">
                       <h5 className="font-serif font-bold text-xs">Ready to Generate Ledger Sheet</h5>
                       <p className="text-[10px] max-w-sm font-sans mx-auto px-4 leading-normal text-gray-500">Formulasikan harga, pilih buyer dari CRM lalu klik tombol "Generate" untuk merender surat proforma ekspor bersegel resmi.</p>
@@ -4141,7 +4107,7 @@ export@nandaramontierra.id`,
               <div className="border-b border-[#05190F]/10 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
                   <h3 className="text-xs font-mono tracking-widest text-[#C9A227] font-bold uppercase flex items-center gap-1.5">
-                    <Mail className="w-4 h-4 text-[#C9A227] animate-pulse" /> Outreach Pitching Engine
+                     Outreach Pitching Engine
                   </h3>
                   <h2 className="text-xl font-serif italic text-[#05190F]">B2B Outreach Email Pitch Templates (High Response Rate)</h2>
                 </div>
@@ -4400,9 +4366,9 @@ export@nandaramontierra.id`;
                           className="text-[#05190F] hover:text-[#C9A227] flex items-center gap-1 cursor-pointer font-bold transition-all text-[9.5px]"
                         >
                           {pitchCopiedStatus === 'subject' ? (
-                            <><Check className="w-3 h-3 text-emerald-600" /> Copied!</>
+                            <> Copied!</>
                           ) : (
-                            <><Copy className="w-3 h-3" /> Copy Subject</>
+                            <> Copy Subject</>
                           )}
                         </button>
                       </div>
@@ -4419,9 +4385,9 @@ export@nandaramontierra.id`;
                           className="text-[#05190F] hover:text-[#C9A227] flex items-center gap-1 cursor-pointer font-bold transition-all text-[9.5px]"
                         >
                           {pitchCopiedStatus === 'body' ? (
-                            <><Check className="w-3.5 h-3.5 text-emerald-600" /> Copied!</>
+                            <> Copied!</>
                           ) : (
-                            <><Copy className="w-3.5 h-3.5" /> Copy Email Body</>
+                            <> Copy Email Body</>
                           )}
                         </button>
                       </div>

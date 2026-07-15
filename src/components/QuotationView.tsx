@@ -306,7 +306,7 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
                   onClick={handlePrint}
                   className="px-3.5 py-1.5 bg-[#D4AF37] hover:bg-[#bfa232] text-primary rounded-sm text-[10px] font-mono font-bold flex items-center gap-1.5 cursor-pointer uppercase tracking-wider"
                 >
-                  <Printer className="w-3.5 h-3.5 text-primary" />
+                  
                   Print / PDF
                 </button>
               </div>

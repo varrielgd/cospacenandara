@@ -5,7 +5,7 @@ const AIContentStudioView: React.FC = () => {
     <div className="flex flex-col h-full bg-[#0a1a12]">
       <div className="p-6 border-b border-[#1a3a2a] flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-[#d4af37]">AI Content Studio</h2>
+          <h2 className="text-2xl font-bold text-[#d4af37]">Content Studio</h2>
           <p className="text-[#8fb499] text-sm mt-1">Nandara Nusa Montierra - Content Factory Engine</p>
         </div>
         <div className="flex space-x-4">

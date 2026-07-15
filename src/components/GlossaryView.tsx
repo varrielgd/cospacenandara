@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { BookOpen, Search, Filter } from 'lucide-react';
 
 type TermCategory = 'Coffee Quality & Roasting' | 'Farm & Processing' | 'Export & Logistics' | 'Business & Buyers' | 'Defects & Tastes';
 
@@ -11,10 +10,10 @@ interface GlossaryTerm {
 
 const GLOSSARY_TERMS: GlossaryTerm[] = [
   // Coffee Quality & Roasting
-  { term: 'Specialty Coffee', category: 'Coffee Quality & Roasting', definitionId: 'Kopi dengan kualitas luar biasa, yang dinilai 80 poin atau lebih pada skala 100 poin oleh Q Grader bersertifikat. Mengharuskan penanganan pascapanen yang teliti dan menonjolkan karakteristik spesifik dari daerah asalnya (terroir).' },
-  { term: 'Cupping', category: 'Coffee Quality & Roasting', definitionId: 'Proses metodis dan standar (biasanya menggunakan skor SCA) untuk mengevaluasi aroma dan profil rasa biji kopi yang diseduh. Cupper menilai aspek seperti Fragrance, Flavor, Aftertaste, Acidity, Body, dan Balance.' },
-  { term: 'Q Grader', category: 'Coffee Quality & Roasting', definitionId: 'Profesional sertifikasi yang dilatih khusus dan disertifikasi oleh Coffee Quality Institute (CQI) untuk menilai kualitas kopi arabika secara objektif berdasarkan standar Specialty Coffee Association (SCA).' },
-  { term: 'Acidity (Keasaman)', category: 'Coffee Quality & Roasting', definitionId: 'Sensasi cerah, segar, atau tajam yang dirasakan di lidah, yang menentukan "kecerahan" atau "kegembiraan" dari suatu kopi. Keasaman yang baik disebut "bright" (cerah) dan sangat dihargai dalam kopi specialty, bukan berarti asam yang tidak enak.' },
+  { term: 'Specialty Coffee', category: 'Coffee Quality & Roasting', definitionId: 'Kopi dengan kualitas luar biasa, yang dinil80 poin atau lebih pada skala 100 poin oleh Q Grader bersertifikat. Mengharuskan penanganan pascapanen yang teliti dan menonjolkan karakteristik spesifik dari daerah asalnya (terroir).' },
+  { term: 'Cupping', category: 'Coffee Quality & Roasting', definitionId: 'Proses metodis dan standar (biasanya menggunakan skor SCA) untuk mengevaluasi aroma dan profil rasa biji kopi yang diseduh. Cupper menilaspek seperti Fragrance, Flavor, Aftertaste, Acidity, Body, dan Balance.' },
+  { term: 'Q Grader', category: 'Coffee Quality & Roasting', definitionId: 'Profesional sertifikasi yang dilatih khusus dan disertifikasi oleh Coffee Quality Institute (CQI) untuk menilkualitas kopi arabika secara objektif berdasarkan standar Specialty Coffee Association (SCA).' },
+  { term: 'Acidity (Keasaman)', category: 'Coffee Quality & Roasting', definitionId: 'Sensasi cerah, segar, atau tajam yang dirasakan di lidah, yang menentukan "kecerahan" atau "kegembiraan" dari suatu kopi. Keasaman yang baik disebut "bright" (cerah) dan sangat dihargdalam kopi specialty, bukan berarti asam yang tidak enak.' },
   { term: 'Body (Kekentalan)', category: 'Coffee Quality & Roasting', definitionId: 'Bobot atau ketebalan fisik kopi yang terasa di mulut saat diminum. Bisa digambarkan dari ringan (light), sedang (medium), hingga berat (heavy) dan sirup.' },
   { term: 'Aftertaste (Finish)', category: 'Coffee Quality & Roasting', definitionId: 'Rasa dan sensasi yang tertinggal di palet mulut setelah kopi ditelan. Aftertaste yang panjang dan menyenangkan menunjukkan kopi berkualitas tinggi.' },
   { term: 'Roast Profile', category: 'Coffee Quality & Roasting', definitionId: 'Catatan suhu dan waktu spesifik selama proses penyangraian kopi untuk menonjolkan karakteristik rasa bawaan biji (dari light roast, medium, hingga dark roast).' },
@@ -32,7 +31,7 @@ const GLOSSARY_TERMS: GlossaryTerm[] = [
 
   // Defects & Tastes
   { term: 'Defect (Cacat Biji)', category: 'Defects & Tastes', definitionId: 'Ketidaksempurnaan atau kerusakan pada biji kopi mentah (green bean) yang dapat mempengaruhi kualitas rasanya. Dalam skala SCA terbagi atas cacat primer (Primary Defect - sangat berdampak) dan cacat mekanis/sekunder.' },
-  { term: 'Quaker', category: 'Defects & Tastes', definitionId: 'Biji kopi yang tidak berkembang sempurna (kurang matang/immature) yang ketika disangrai warnanya menjadi sangat terang dibandingkan biji yang lain. Menghasilkan rasa hambar seperti kertas atau sereal/kacang.' },
+  { term: 'Quaker', category: 'Defects & Tastes', definitionId: 'Biji kopi yang tidak berkembang sempurna (kurang matang/immature) yang ketika disangrwarnanya menjadi sangat terang dibandingkan biji yang lain. Menghasilkan rasa hambar seperti kertas atau sereal/kacang.' },
   { term: 'Potato Defect (Rasa Kentang)', category: 'Defects & Tastes', definitionId: 'Cacat rasa unik yang umumnya ditemukan di kopi Afrika Timur (Rwanda/Burundi) yang disebabkan oleh bakteri tertentu, menyebabkan aroma kopi seperti kentang mentah yang dikupas.' },
   { term: 'Earthy', category: 'Defects & Tastes', definitionId: 'Aroma atau rasa seperti tanah basah. Sering dikaitkan dengan metode giling basah di Sumatera; bagi sebagian diapresiasi, bagi yang lain (kalau berlebihan) bisa jadi cacat rasa.' },
   { term: 'Fermented (Over-fermented)', category: 'Defects & Tastes', definitionId: 'Rasa seperti buah busuk, cuka, atau masam dari hasil fermentasi pasca-panen yang terlalu lama. Berbeda dari note "winey" yang diinginkan, over-ferment dapat merusak secangkir kopi.' },
@@ -40,20 +39,20 @@ const GLOSSARY_TERMS: GlossaryTerm[] = [
 
   // Export & Logistics
   { term: 'FOB (Free On Board)', category: 'Export & Logistics', definitionId: 'Incoterm (syarat pembayaran dan pengiriman) yang menyatakan bahwa eksportir bertanggung jawab untuk mengurus semua biaya dan risiko dari gudang asal hingga kontainer berhasil naik ke kapal di pelabuhan muat.' },
-  { term: 'CIF (Cost, Insurance, and Freight)', category: 'Export & Logistics', definitionId: 'Eksportir menanggung biaya barang, asuransi angkutan, dan biaya angkut hingga kontainer sampai di pelabuhan tujuan yang disepakati oleh pembeli.' },
+  { term: 'CIF (Cost, Insurance, and Freight)', category: 'Export & Logistics', definitionId: 'Eksportir menanggung biaya barang, asuransi angkutan, dan biaya angkut hingga kontainer sampdi pelabuhan tujuan yang disepakati oleh pembeli.' },
   { term: 'Bill of Lading (B/L)', category: 'Export & Logistics', definitionId: 'Dokumen penting tanda terima muatan, dikeluarkan oleh perusahaan pelayaran. Menandakan hak milik barang selama perjalanan. Pembeli membutuhkan ini untuk dapat mengambil barang dari pelabuhan setiba di negara tujuan.' },
   { term: 'Phytosanitary Certificate', category: 'Export & Logistics', definitionId: 'Sertifikat resmi dari otoritas Karantina Pertanian dari negara eksportir yang memvalidasi bahwa kopi mentah (green bean) yang dikirim bebas dari hama dan patogen pertanian.' },
-  { term: 'Certificate of Origin (COO)', category: 'Export & Logistics', definitionId: 'Dokumen yang membuktikan asal negara tempat barang diproduksi/ditanam. Beberapa bentuk dari dokumen ini (seperti Form D/Form E/Form ICO) dapat memberikan keringanan tarif bea cukai kepada pihak pembeli.' },
+  { term: 'Certificate of Origin (COO)', category: 'Export & Logistics', definitionId: 'Dokumen yang membuktikan asal negara tempat barang diproduksi/ditanam. Beberapa bentuk dari dokumen ini (seperti Form D/Form E/Form ICO) dapat memberikan keringanan tarif bea cukkepada pihak pembeli.' },
   { term: 'LCL (Less than Container Load)', category: 'Export & Logistics', definitionId: 'Pengiriman di mana pengirim tidak menggunakan seluruh kapasitas suatu kontainer sehingga digabung dengan barang dari pihak lain. Sering dikenakan kepada mikro eksportir atau importer dalam jumlah kecil.' },
   { term: 'FCL (Full Container Load)', category: 'Export & Logistics', definitionId: 'Pengiriman standar yang mana eksportir menggunakan dan membayar biaya penuh untuk satu kontainer muatan secara eksklusif (Umumnya kontainer 20ft untuk muatan ~19 ton kopi arabika ukuran bag goni).' },
   { term: 'ICUMSA / ICO Mark', category: 'Export & Logistics', definitionId: 'Tanda pengenal resmi atau nomor International Coffee Organization (ICO) yang harus dicetak pada karung goni eksport kopi untuk identifikasi/pelacakan global.' },
   { term: 'GrainPro / Ecotact', category: 'Export & Logistics', definitionId: 'Merk pelapis plastik hermetik (kedap udara dan anti basah) yang umum melapisi bagian dalam atau digunakan sebelum kopi dimasukan kembali ke karung goni untuk menjaga kesegaran selagi pengiriman laut berbulan-bulan.' },
 
   // Business & Buyers
-  { term: 'Direct Trade', category: 'Business & Buyers', definitionId: 'Praktek perdagangan di mana penyangrai (roaster) atau importir secara langsung membeli dan menjalin relasi kerja dengan pekebun kopi tanpa melewati rantai tengkulak yang panjang. Harga umumnya premium demi imbal balik yang suportif dan transparan.' },
+  { term: 'Direct Trade', category: 'Business & Buyers', definitionId: 'Praktek perdagangan di mana penyangr(roaster) atau importir secara langsung membeli dan menjalin relasi kerja dengan pekebun kopi tanpa melewati ranttengkulak yang panjang. Harga umumnya premium demi imbal balik yang suportif dan transparan.' },
   { term: 'Fair Trade', category: 'Business & Buyers', definitionId: 'Sertifikasi keadilan dagang dunia dengan skema harga dasar minimum yang disyaratkan untuk melindungi petani kopi ketika harga komoditi dunia(C-market price) sedang hancur. Termasuk juga sistem pembagian modal koperasi tambahan untuk petani.' },
-  { term: 'Micro-lot / Nano-lot', category: 'Business & Buyers', definitionId: 'Volume produksi kopi dengan kuantitas sangat kecil namun khusus. Dipanen dari blok lahan tertentu dalam kebun dengan penanganan spesial dan kualitas luar biasa, yang biasanya dikemas dalam volume sedikit (bisa 10-50 kg) dan bernilai jual sangat mahal.' },
-  { term: 'Green Buyer', category: 'Business & Buyers', definitionId: 'Jabatan profesi atau entitas yang pekerjaannya memilih dan menilai (cupping) profil kopi serta mengatur rantai pasok pembelian biji kopi hijau ke dalam suatu tempat roastery atau gudang grosir dari negara pengekspor.' },
+  { term: 'Micro-lot / Nano-lot', category: 'Business & Buyers', definitionId: 'Volume produksi kopi dengan kuantitas sangat kecil namun khusus. Dipanen dari blok lahan tertentu dalam kebun dengan penanganan spesial dan kualitas luar biasa, yang biasanya dikemas dalam volume sedikit (bisa 10-50 kg) dan berniljual sangat mahal.' },
+  { term: 'Green Buyer', category: 'Business & Buyers', definitionId: 'Jabatan profesi atau entitas yang pekerjaannya memilih dan menil(cupping) profil kopi serta mengatur rantpasok pembelian biji kopi hijau ke dalam suatu tempat roastery atau gudang grosir dari negara pengekspor.' },
   { term: 'Tolling', category: 'Business & Buyers', definitionId: 'Layanan pihak ketiga di mana pemilik kopi melempar beban pengerjaan (misalnya menyangrai, menggiling pabrik basah/kering kopi, sortasi) ke pihak lain dengan membayar fee per kilo.' },
 ];
 
@@ -82,7 +81,7 @@ export default function GlossaryView() {
           </div>
           <div className="flex gap-4">
             <div className="relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              
               <input
                 type="text"
                 placeholder="Cari istilah atau penjelasan..."
@@ -99,7 +98,7 @@ export default function GlossaryView() {
         <div className="max-w-5xl mx-auto py-8 px-10">
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             <span className="flex items-center gap-2 text-xs font-mono uppercase text-gray-500 mr-2 shrink-0">
-              <Filter className="w-4 h-4" /> Kategori:
+               Kategori:
             </span>
             {categories.map((cat) => (
               <button
@@ -134,7 +133,7 @@ export default function GlossaryView() {
             </div>
           ) : (
             <div className="text-center py-20 text-gray-500 font-sans">
-              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              
               <p>Istilah tidak ditemukan. Coba kata kunci lain.</p>
             </div>
           )}

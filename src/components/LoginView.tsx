@@ -133,8 +133,8 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
             ) : (
               <form onSubmit={handleVerify2FA} className="space-y-8">
                 <div className="text-center space-y-4 mb-8">
-                  <div className="inline-flex p-4 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-                    <span className="text-3xl">🔐</span>
+                  <div className="inline-flex px-4 py-2 rounded-md bg-[#05190F]/5 border border-[#05190F]/10">
+                    <span className="text-[10px] font-mono font-bold text-[#05190F] uppercase tracking-widest">2FA Required</span>
                   </div>
                   <h3 className="font-sans font-bold text-2xl text-[#05190F]">Multi-Factor Protocol</h3>
                   <p className="text-xs text-gray-500 leading-relaxed">

@@ -1,21 +1,5 @@
 import React, { useState } from 'react';
 import { Lead, Sample } from '../types';
-import { 
-  Coffee, 
-  MapPin, 
-  CheckCircle, 
-  Award, 
-  ChevronRight, 
-  ShieldCheck, 
-  Beaker, 
-  Send, 
-  Layers, 
-  FileText, 
-  Calendar,
-  Sparkles,
-  Info,
-  Compass
-} from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import IndonesiaMap from './IndonesiaMap';
 
@@ -696,7 +680,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
       <div className="bg-[#05190F] p-5 border-b border-gold/20 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full border border-gold/40 flex items-center justify-center bg-white/5 shrink-0">
-            <Coffee className="w-5 h-5 text-gold" />
+            
           </div>
           <div>
             <h3 className="text-sm font-serif font-semibold text-white tracking-widest uppercase">PT. Nandara Nusa Montierra</h3>
@@ -775,17 +759,17 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                   {
                     title: "Curated Origin",
                     desc: "Sourcing the world’s most distinct volcanic microlots directly from microclimates in Gayo, Toraja, Java Preanger, Bali, and Flores.",
-                    icon: <Compass className="w-5 h-5 text-gold" />
+                    icon: 
                   },
                   {
                     title: "Quality First",
                     desc: "Every single delivery is rigorously cupped, moisture-checked, and hand-graded strictly to ensure Specialty Q-Grading excellence.",
-                    icon: <Award className="w-5 h-5 text-gold" />
+                    icon: 
                   },
                   {
                     title: "Reliable Partner",
                     desc: "Delivering consistent, impeccably packed container lots and professional export logistics for sustainable long-term partnerships.",
-                    icon: <ShieldCheck className="w-5 h-5 text-gold" />
+                    icon: 
                   }
                 ].map((pillar, idx) => (
                   <div key={idx} className="p-6 bg-white border border-primary/5 rounded-lg shadow-luxury space-y-3 hover:border-gold/30 transition-colors">
@@ -888,14 +872,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Sourcing Map Block */}
               <div className="lg:col-span-8">
-                <IndonesiaMap
-                  origins={originsList}
-                  activeOrigin={activeOrigin}
-                  onSelectOrigin={handleSelectOrigin}
-                  isLoadingSheet={isLoadingSheet}
-                  onSyncSheetsOrigins={handleSyncSheetsOrigins}
-                  hasSheetsUrl={!!googleAppsScriptUrl}
-                />
+                
               </div>
 
               {/* Terroir Specification Sheet: Origin Intelligence Panel */}
@@ -993,7 +970,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                             className="w-full text-left p-3.5 hover:bg-[#05190F] hover:text-gold bg-white border border-[#05190F]/5 rounded-xl flex justify-between items-center transition-all duration-300 cursor-pointer group shadow-sm hover:shadow-gold/10"
                           >
                             <span className="font-sans font-bold text-sm text-[#05190F] group-hover:text-gold">{coffee.name}</span>
-                            <ChevronRight className="w-4 h-4 text-gold group-hover:translate-x-1 transition-transform" />
+                            
                           </button>
                         ))}
                       </div>
@@ -1001,7 +978,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                   </div>
                 ) : (
                   <div className="py-24 text-center border-2 border-dashed border-[#05190F]/10 rounded-2xl text-[#05190F]/30 bg-white/30">
-                    <Info className="w-12 h-12 stroke-[1px] mx-auto text-gold/30 mb-4" />
+                    
                     <p className="text-[10px] font-mono uppercase tracking-[0.3em] font-bold max-w-[200px] mx-auto leading-relaxed">Select a volcanic terroir on the map to inspect intelligence matrix</p>
                   </div>
                 )}
@@ -1071,7 +1048,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                       {selectedProduct.name}
                     </h2>
                     <p className="text-xs text-text-dim font-mono tracking-wider items-center flex gap-1 mt-1">
-                      <MapPin className="w-3.5 h-3.5 text-gold shrink-0" />
+                      
                       Sourced From: {selectedProduct.origin}
                     </p>
                   </div>
@@ -1158,7 +1135,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-gray-100">
                   <div className="space-y-3.5">
                     <h3 className="text-[10px] font-mono uppercase tracking-widest text-[#05190F] font-bold block border-b border-gray-200 pb-1.5 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-gold" />
+                      
                       <span>Cup Taste Profile & Characteristics</span>
                     </h3>
                     <p className="text-xs text-gray-700 font-sans italic font-light italic leading-relaxed pt-1 bg-stone-50 border-l-[3px] border-gold p-4 rounded-r-md">
@@ -1196,11 +1173,11 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                           }))
                         }>
                           <PolarGrid stroke="#05190F" strokeOpacity={0.1} />
-                          <PolarAngleAxis dataKey="subject" tick={{ fill: '#4A5568', fontSize: 10, fontFamily: 'monospace' }} />
-                          <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: '#4A5568', fontSize: 8 }} />
-                          <Radar name="Official Grade" dataKey="official" stroke="#D4AF37" fill="#05190F" fillOpacity={0.15} />
+                          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: '#6b7280' }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
+                          <Radar name="Official" dataKey="official" stroke="#05190F" fill="#05190F" fillOpacity={0.15} />
                           {activeSession && (
-                            <Radar name={`${activeSession.roastLevel} Roast`} dataKey="custom" stroke="#05190F" fill="#D4AF37" fillOpacity={0.35} />
+                            <Radar name="Custom" dataKey="custom" stroke="#D4AF37" fill="#D4AF37" fillOpacity={0.2} />
                           )}
                         </RadarChart>
                       </ResponsiveContainer>
@@ -1214,7 +1191,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-[#05190F]/10">
                       <div>
                         <h4 className="text-xs font-mono font-bold text-[#05190F] uppercase tracking-wider flex items-center gap-1.5">
-                          <Beaker className="w-4 h-4 text-gold shrink-0 animate-pulse" />
+                          
                           <span>🔬 ROASTER SENSORY LAB: CUSTOM CUPPING NOTES</span>
                         </h4>
                         <p className="text-[11px] text-[#4A5568] mt-0.5">Empowering specialty roasters to score, compare, and catalog custom roast batches directly over origin baselines.</p>
@@ -1347,7 +1324,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
 
                         {productSessions.length === 0 ? (
                           <div className="flex-grow flex flex-col items-center justify-center p-8 py-16 border border-dashed border-[#05190F]/10 rounded-sm text-center text-[#05190F]/40 space-y-2">
-                            <Coffee className="w-8 h-8 stroke-1 text-[#D4AF37] animate-pulse" />
+                            
                             <div className="space-y-0.5">
                               <p className="text-[10px] uppercase tracking-wider font-bold">No sessions logged yet</p>
                               <p className="text-[9px] font-sans">Sliders reflect origin baseline score of {selectedProduct.cuppingScore} SCA.</p>
@@ -1518,7 +1495,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
 
                   <div className="p-4 rounded bg-[#05190F] border border-[#D4AF37]/45 text-white space-y-2 font-sans text-xs">
                     <p className="font-serif font-semibold text-[#D4AF37] flex items-center gap-1.5 uppercase text-xs">
-                      <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+                      
                       Direct Connection
                     </p>
                     <p className="font-light text-gray-300 leading-relaxed text-[11px]">
@@ -1757,7 +1734,7 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                     disabled={!isProspectMode && !selectedLeadId}
                     className="w-full py-3 bg-primary text-white hover:bg-neutral-950 hover:text-gold border border-gold/40 rounded-sm uppercase tracking-widest font-bold cursor-pointer transition-all flex items-center justify-center gap-1 bg-emerald-950 disabled:opacity-40 select-none text-xs font-mono"
                   >
-                    <Send className="w-4 h-4 text-gold shrink-0 animate-pulse" />
+                    
                     Transmit Sample Request
                   </button>
                 </form>

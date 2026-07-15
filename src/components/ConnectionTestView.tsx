@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Shield, CheckCircle, XCircle, User, Database, Globe, Loader2 } from 'lucide-react';
 import { api } from '../utils/api';
 
 export default function ConnectionTestView() {
@@ -66,9 +65,9 @@ export default function ConnectionTestView() {
   }, []);
 
   const StatusIcon = ({ state }: { state: 'checking' | 'ok' | 'error' }) => {
-    if (state === 'checking') return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
-    if (state === 'ok') return <CheckCircle className="w-5 h-5 text-emerald-500" />;
-    return <XCircle className="w-5 h-5 text-red-500" />;
+    if (state === 'checking') return ;
+    if (state === 'ok') return ;
+    return ;
   };
 
   return (
@@ -91,9 +90,9 @@ export default function ConnectionTestView() {
         <div className="bg-[#0A2A1A] border border-white/10 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="p-3 bg-blue-500/10 rounded-lg">
-              <Globe className="w-6 h-6 text-blue-500" />
+              
             </div>
-            <StatusIcon state={status.backend} />
+            
           </div>
           <div>
             <h3 className="text-white font-medium">API Gateway</h3>
@@ -105,9 +104,9 @@ export default function ConnectionTestView() {
         <div className="bg-[#0A2A1A] border border-white/10 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="p-3 bg-emerald-500/10 rounded-lg">
-              <Database className="w-6 h-6 text-emerald-500" />
+              
             </div>
-            <StatusIcon state={status.database} />
+            
           </div>
           <div>
             <h3 className="text-white font-medium">Persistence Layer</h3>
@@ -119,9 +118,9 @@ export default function ConnectionTestView() {
         <div className="bg-[#0A2A1A] border border-white/10 rounded-xl p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div className="p-3 bg-purple-500/10 rounded-lg">
-              <Shield className="w-6 h-6 text-purple-500" />
+              
             </div>
-            <StatusIcon state={status.auth} />
+            
           </div>
           <div>
             <h3 className="text-white font-medium">Auth Protocol</h3>
@@ -134,7 +133,7 @@ export default function ConnectionTestView() {
         <div className="bg-[#0A2A1A] border border-[#C9A227]/20 rounded-xl p-8 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-start gap-6">
             <div className="w-16 h-16 rounded-full bg-[#C9A227]/20 flex items-center justify-center border border-[#C9A227]/30">
-              <User className="w-8 h-8 text-[#C9A227]" />
+              
             </div>
             <div className="flex-1 space-y-4">
               <div>
@@ -166,7 +165,7 @@ export default function ConnectionTestView() {
 
       {status.error && (
         <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3 text-red-400">
-          <XCircle className="w-5 h-5 shrink-0" />
+          
           <div className="text-sm">
             <p className="font-bold">Diagnostic Error</p>
             <p className="mt-1 opacity-80">{status.error}</p>

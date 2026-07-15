@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Supplier } from '../types';
 import { api } from '../utils/api';
-import { Plus, Upload, Edit, Trash2, Coffee, Users, FileSpreadsheet } from 'lucide-react';
 
 interface SupplierViewProps {
   // Add any props if needed later
@@ -137,7 +136,7 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Coffee className="w-8 h-8 text-[#C9A227]" />
+          
           <div>
             <h3 className="text-xl font-serif italic text-primary">Supplier Management</h3>
             <p className="text-sm text-gray-500 font-mono tracking-widest uppercase">
@@ -147,7 +146,7 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
         </div>
         <div className="flex gap-3">
           <label className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md cursor-pointer hover:bg-primary/90 transition-colors">
-            <Upload className="w-4 h-4" />
+            
             <span className="text-sm uppercase tracking-widest">Import Excel</span>
             <input
               type="file"
@@ -163,7 +162,7 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
             }}
             className="flex items-center gap-2 px-4 py-2 bg-[#C9A227] text-[#05190F] rounded-md hover:bg-[#D4AF37] transition-colors font-bold uppercase tracking-widest text-sm"
           >
-            <Plus className="w-4 h-4" />
+            
             <span>Add Supplier</span>
           </button>
         </div>
@@ -228,13 +227,13 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
                         onClick={() => handleEdit(supplier)}
                         className="p-2 text-[#C9A227] hover:bg-[#C9A227]/10 rounded transition-colors"
                       >
-                        <Edit className="w-4 h-4" />
+                        
                       </button>
                       <button
                         onClick={() => handleDelete(supplier.id)}
                         className="p-2 text-red-500 hover:bg-red-50 rounded transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        
                       </button>
                     </div>
                   </td>
@@ -244,7 +243,7 @@ const SupplierView: React.FC<SupplierViewProps> = () => {
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-gray-400">
                     <div className="flex flex-col items-center gap-2">
-                      <Users className="w-12 h-12 text-gray-300" />
+                      
                       <p className="text-sm font-mono uppercase tracking-widest">No suppliers yet</p>
                       <p className="text-xs text-gray-400">Add a supplier or import from Excel</p>
                     </div>

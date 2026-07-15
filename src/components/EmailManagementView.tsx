@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Send, Inbox, RefreshCw, Loader2, User, Clock, ArrowLeft, Plus, Trash2, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { api } from '../utils/api';
 
 interface Email {
@@ -109,7 +108,7 @@ export default function EmailManagementView() {
             onClick={() => { setActiveTab('compose'); setSelectedEmail(null); }}
             className="w-full py-2.5 bg-primary text-gold rounded-md text-xs font-mono uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
           >
-            <Plus className="w-4 h-4" />
+            
             Compose
           </button>
         </div>
@@ -118,20 +117,20 @@ export default function EmailManagementView() {
             onClick={() => { setActiveTab('inbox'); setSelectedEmail(null); }}
             className={`w-full text-left px-4 py-3 rounded-md text-xs font-mono uppercase tracking-widest flex items-center gap-3 transition-all ${activeTab === 'inbox' ? 'bg-primary/5 text-primary font-bold' : 'text-gray-500 hover:bg-gray-100'}`}
           >
-            <Inbox className="w-4 h-4" />
+            
             Inbox
           </button>
           <button 
             onClick={() => { setActiveTab('sent'); setSelectedEmail(null); }}
             className={`w-full text-left px-4 py-3 rounded-md text-xs font-mono uppercase tracking-widest flex items-center gap-3 transition-all ${activeTab === 'sent' ? 'bg-primary/5 text-primary font-bold' : 'text-gray-500 hover:bg-gray-100'}`}
           >
-            <Send className="w-4 h-4" />
+            
             Sent
           </button>
         </nav>
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center gap-2 text-[10px] text-gray-400 font-mono uppercase mb-2">
-            <User className="w-3 h-3" />
+            
             marketing@nandara...
           </div>
           <button 
@@ -139,7 +138,7 @@ export default function EmailManagementView() {
             disabled={isSyncing}
             className="w-full py-2 border border-gray-200 text-gray-500 rounded-md text-[10px] font-mono uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50"
           >
-            <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+            
             {isSyncing ? 'Syncing...' : 'Sync Inbox'}
           </button>
         </div>
@@ -151,7 +150,7 @@ export default function EmailManagementView() {
           <div className="p-8 max-w-2xl mx-auto w-full overflow-y-auto">
             <div className="flex items-center gap-3 mb-8">
               <div className="p-2 bg-primary/5 rounded-full">
-                <Mail className="w-5 h-5 text-primary" />
+                
               </div>
               <h3 className="text-xl font-serif text-primary">New B2B Outreach</h3>
             </div>
@@ -195,7 +194,7 @@ export default function EmailManagementView() {
                   disabled={isSending}
                   className="px-8 py-3 bg-primary text-gold rounded-md text-xs font-mono uppercase tracking-widest flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50"
                 >
-                  {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {isSending ?  : }
                   Send Email
                 </button>
               </div>
@@ -210,11 +209,11 @@ export default function EmailManagementView() {
                     onClick={() => setSelectedEmail(null)}
                     className="p-2 hover:bg-gray-100 rounded-full transition-all text-gray-500"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    
                   </button>
                   <div className="flex gap-2">
                     <button className="p-2 hover:bg-gray-100 rounded-full transition-all text-gray-500">
-                      <Trash2 className="w-4 h-4" />
+                      
                     </button>
                   </div>
                 </div>
@@ -243,12 +242,12 @@ export default function EmailManagementView() {
               <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
                   <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-gold" />
+                    
                     <p className="text-xs font-mono uppercase tracking-widest">Loading mailbox...</p>
                   </div>
                 ) : emails.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-4">
-                    <Mail className="w-12 h-12 opacity-20" />
+                    
                     <p className="text-xs font-mono uppercase tracking-widest">No messages found</p>
                   </div>
                 ) : (

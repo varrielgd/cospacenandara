@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Quotation, Lead } from '../types';
-import { 
-  TrendingDown, 
-  TrendingUp, 
-  DollarSign, 
-  AlertTriangle,
-  RefreshCw,
-  ShieldAlert
-} from 'lucide-react';
 import { api } from '../utils/api';
 
 interface FXHedgingViewProps {
@@ -61,7 +53,7 @@ export default function FXHedgingView({ quotations, leads }: FXHedgingViewProps)
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-primary text-gold rounded-sm">
-            <ShieldAlert className="w-5 h-5 text-gold" />
+            
           </div>
           <div>
             <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">FX & Hedging Desk</h3>
@@ -73,7 +65,7 @@ export default function FXHedgingView({ quotations, leads }: FXHedgingViewProps)
           disabled={loading}
           className="flex items-center gap-2 px-4 py-2 border border-primary/20 text-xs font-mono uppercase text-primary hover:bg-bg-ivory transition-colors disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-gold' : ''}`} />
+          
           Refresh Rates
         </button>
       </div>
@@ -88,13 +80,13 @@ export default function FXHedgingView({ quotations, leads }: FXHedgingViewProps)
             </h3>
             {isHighRisk && (
               <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-sm flex gap-2 text-red-800 text-xs font-sans">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+                
                 <p>IDR is strengthening. Warning: Potential loss of revenue upon USD conversion. Consider locking forward rates.</p>
               </div>
             )}
             {!isHighRisk && usdIdr && (
               <div className="mt-4 p-3 bg-emerald-50 border border-emerald-100 rounded-sm flex gap-2 text-emerald-800 text-xs font-sans">
-                <TrendingUp className="w-4 h-4 shrink-0" />
+                
                 <p>Favorable exchange rate for exporters. Conversion yields optimal margins.</p>
               </div>
             )}

@@ -1,28 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lead, EmailLog, EmailStatus, Quotation } from '../types';
 import { api } from '../utils/api';
-import { 
-  Mail, 
-  Send, 
-  Copy, 
-  CheckCheck, 
-  Sparkles, 
-  UserCheck, 
-  Coffee, 
-  Globe, 
-  BookOpen,
-  FileSpreadsheet,
-  Plus,
-  Clock,
-  Lock,
-  Unlock,
-  Paperclip,
-  Eye,
-  Save,
-  FileText,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
 
 interface EmailGeneratorViewProps {
   leads: Lead[];
@@ -559,11 +537,11 @@ export default function EmailGeneratorView({
       <div className="lg:col-span-1 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury space-y-5" id="outreach-config">
         <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
           <div className="p-2.5 bg-primary text-gold rounded-sm">
-            <Mail className="w-5 h-5 text-gold" />
+            
           </div>
           <div>
             <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">B2B Sourcing Target</h3>
-            <p className="text-xs text-text-dim mt-0.5">Scout and trigger AI drafting</p>
+            <p className="text-xs text-text-dim mt-0.5">Scout and trigger drafting</p>
           </div>
         </div>
 
@@ -597,7 +575,7 @@ export default function EmailGeneratorView({
         {activeLead && (
           <div className="p-3.5 bg-bg-ivory/60 border border-primary/5 rounded-sm text-xs font-mono space-y-2 text-gray-700 shadow-xs">
             <div className="flex gap-1.5 items-center text-primary font-bold uppercase tracking-widest text-[9px] border-b border-gray-100 pb-1.5">
-              <UserCheck className="w-3.5 h-3.5 text-gold" />
+              
               <span>Target Metadata</span>
             </div>
             <p><span className="text-text-dim uppercase tracking-wider text-[8px] font-bold">Class:</span> {activeLead.leadType}</p>
@@ -640,12 +618,12 @@ export default function EmailGeneratorView({
           disabled={!activeLead || isGenerating}
           className="w-full py-3 bg-primary hover:bg-[#0c3320] text-gold hover:text-white text-xs font-mono uppercase tracking-widest border border-gold/45 rounded-sm select-none cursor-pointer transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 font-bold"
         >
-          <Sparkles className="w-4 h-4 text-gold animate-pulse" />
-          {isGenerating ? "Molding Cooperative Draft..." : "Generate AI Draft"}
+          
+          {isGenerating ? "Molding Cooperative Draft..." : "Generate Draft"}
         </button>
       </div>
 
-      {/* Right Column: AI Generation Playground & Live Composer */}
+      {/* Right Column: Generation Playground & Live Composer */}
       <div className="lg:col-span-2 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury flex flex-col justify-between space-y-5" id="email-playground">
         
         {/* Progress Flow Timeline Status of outbound message */}
@@ -662,7 +640,7 @@ export default function EmailGeneratorView({
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
                   : 'bg-amber-50 text-amber-800 border-amber-200'
               }`}>
-                {isApproved ? <Unlock className="w-3 h-3 text-emerald-700" /> : <Lock className="w-3 h-3 text-amber-600" />}
+                {isApproved ?  : }
                 {isApproved ? 'Approved = TRUE (Unlocked)' : 'Approved = FALSE (Locked)'}
               </span>
             </div>
@@ -818,7 +796,7 @@ export default function EmailGeneratorView({
                 setStatus('Edited By User');
               }
             }}
-            placeholder="Perform an AI scout or click generate to assemble a highly professional coffee trading template..."
+            placeholder="Perform an scout or click generate to assemble a highly professional coffee trading template..."
             className="w-full flex-1 p-4 bg-bg-ivory/10 border-b border-x border-primary/15 rounded-b-sm font-sans text-xs text-gray-800 leading-relaxed outline-hidden min-h-[180px]"
           />
         </div>
@@ -826,7 +804,7 @@ export default function EmailGeneratorView({
         {/* Attachment parameters */}
         <div className="bg-bg-ivory/40 border border-primary/15 rounded-sm p-4 space-y-3.5 text-xs font-mono">
           <p className="text-[10px] uppercase tracking-widest text-[#05190F] font-bold border-b border-gray-200 pb-1.5 flex items-center gap-1.5">
-            <Paperclip className="w-3.5 h-3.5 text-gold" />
+            
             <span>Outbound Trade Attachments</span>
           </p>
 
@@ -1105,7 +1083,7 @@ export default function EmailGeneratorView({
         {/* Lock warning banner if Not Approved */}
         {!isApproved && (
           <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-900 rounded-sm text-xs font-sans flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            
             <div>
               <p className="font-bold uppercase tracking-wider text-[10px]">Transmission Guard Activated</p>
               <p className="text-gray-700 text-[11px] leading-relaxed mt-0.5">
@@ -1123,7 +1101,7 @@ export default function EmailGeneratorView({
               disabled={!activeLead || isGenerating}
               className="px-4 py-2.5 border border-primary hover:border-neutral-900 bg-bg-ivory/50 rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5 cursor-pointer hover:bg-white"
             >
-              <Save className="w-3.5 h-3.5 text-[#05190F]" />
+              
               Save Draft
             </button>
 
@@ -1132,7 +1110,7 @@ export default function EmailGeneratorView({
               disabled={!subject}
               className="px-4 py-2.5 border border-primary hover:border-neutral-900 bg-bg-ivory/50 rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5 cursor-pointer hover:bg-white disabled:opacity-40"
             >
-              <Eye className="w-3.5 h-3.5 text-primary/75" />
+              
               Preview Letter
             </button>
           </div>
@@ -1143,7 +1121,7 @@ export default function EmailGeneratorView({
               disabled={!subject || isApproved}
               className="px-4 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5 cursor-pointer border border-yellow-700/30 disabled:opacity-50"
             >
-              <CheckCircle className="w-3.5 h-3.5 text-white" />
+              
               {isApproved ? 'Approved ✔' : 'Approve Email'}
             </button>
 
@@ -1152,7 +1130,7 @@ export default function EmailGeneratorView({
               disabled={!isApproved || status === 'Sent'}
               className="px-6 py-2.5 bg-emerald-800 hover:bg-emerald-950 text-white rounded-sm text-[10px] font-mono font-bold uppercase tracking-widest flex items-center gap-1.5 cursor-pointer border border-emerald-900 disabled:opacity-40"
             >
-              <Send className="w-3.5 h-3.5 text-gold" />
+              
               {status === 'Sent' ? 'Outbound Sent' : 'Manual Send Email'}
             </button>
           </div>
@@ -1167,7 +1145,7 @@ export default function EmailGeneratorView({
             
             <div className="flex justify-between items-center border-b border-gray-100 pb-3">
               <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-gold shrink-0" />
+                
                 <h3 className="text-xs font-mono uppercase tracking-widest font-bold text-primary">Nandara Sourcing Mail Dispatch</h3>
               </div>
               <button 

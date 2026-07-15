@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
 import { SystemConfig, Lead, EmailLog, Sample, Quotation } from '../types';
-import { 
-  FileSpreadsheet, 
-  Settings, 
-  Copy, 
-  CheckCheck, 
-  Sparkles, 
-  HelpCircle, 
-  RefreshCw, 
-  Database,
-  Unlink,
-  CheckCircle,
-  AlertCircle
-} from 'lucide-react';
 
 interface SheetsIntegrationViewProps {
   config: SystemConfig;
@@ -360,7 +347,7 @@ function mapHeaderToKey(h, tabName) {
       <div className="lg:col-span-1 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury space-y-5 h-fit">
         <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
           <div className="p-2.5 bg-primary text-gold rounded-sm">
-            <FileSpreadsheet className="w-5 h-5 text-gold" />
+            
           </div>
           <div>
             <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">Ledger Settings</h3>
@@ -372,16 +359,16 @@ function mapHeaderToKey(h, tabName) {
         <div className="p-5 rounded-sm border border-[#F6F2E8] bg-[#F7F4EC]/30 space-y-4 font-mono text-xs">
           <div className="flex justify-between items-center bg-white p-3 border border-primary/5 rounded-sm shadow-xs">
              <div className="flex items-center gap-2">
-                 <Database className="w-4 h-4 text-gold" />
+                 
                  <span className="text-primary font-serif font-bold text-sm">Cloud Ledger Pipeline</span>
              </div>
             {config.googleAppsScriptUrl ? (
               <span className="px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-sm font-sans text-[9px] font-bold flex items-center gap-1.5 uppercase tracking-wide">
-                <CheckCircle className="w-3 h-3" /> Connected
+                 Connected
               </span>
             ) : (
               <span className="px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-400 rounded-sm font-sans text-[9px] font-semibold flex items-center gap-1.5 uppercase tracking-wide">
-                <Unlink className="w-3 h-3" /> Local Only
+                 Local Only
               </span>
             )}
           </div>
@@ -390,7 +377,7 @@ function mapHeaderToKey(h, tabName) {
             <div className="p-3.5 bg-white border border-primary/10 rounded-sm hover:border-gold/50 transition-all cursor-default">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[10px] text-text-dim font-mono uppercase tracking-widest font-bold">LEADS</p>
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-gray-300" />
+                  
                 </div>
                 <div className="flex justify-between items-end">
                     <span className="font-serif text-3xl font-bold text-primary leading-none">{leads.length}</span>
@@ -400,7 +387,7 @@ function mapHeaderToKey(h, tabName) {
             <div className="p-3.5 bg-white border border-primary/10 rounded-sm hover:border-gold/50 transition-all cursor-default">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[10px] text-text-dim font-mono uppercase tracking-widest font-bold">EMAILS</p>
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-gray-300" />
+                  
                 </div>
                 <div className="flex justify-between items-end">
                     <span className="font-serif text-3xl font-bold text-primary leading-none">{emails.length}</span>
@@ -410,7 +397,7 @@ function mapHeaderToKey(h, tabName) {
             <div className="p-3.5 bg-white border border-primary/10 rounded-sm hover:border-gold/50 transition-all cursor-default">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[10px] text-text-dim font-mono uppercase tracking-widest font-bold">SAMPLES</p>
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-gray-300" />
+                  
                 </div>
                 <div className="flex justify-between items-end">
                     <span className="font-serif text-3xl font-bold text-primary leading-none">{samples.length}</span>
@@ -420,7 +407,7 @@ function mapHeaderToKey(h, tabName) {
             <div className="p-3.5 bg-white border border-primary/10 rounded-sm hover:border-gold/50 transition-all cursor-default">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-[10px] text-text-dim font-mono uppercase tracking-widest font-bold">QUOTES</p>
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-gray-300" />
+                  
                 </div>
                 <div className="flex justify-between items-end">
                     <span className="font-serif text-3xl font-bold text-primary leading-none">{quotations.length}</span>
@@ -457,7 +444,7 @@ function mapHeaderToKey(h, tabName) {
               onClick={handleManualSync}
               className="flex-1 py-2 bg-primary text-white hover:bg-neutral-950 hover:text-gold border border-gold/45 rounded-sm font-mono tracking-widest font-bold text-[9px] shadow-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all uppercase"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              
               {isSyncing ? "Syncing..." : "Sync Ledger"}
             </button>
           </div>
@@ -492,7 +479,7 @@ function mapHeaderToKey(h, tabName) {
               onClick={handleCopyCode}
               className="px-3.5 py-2 bg-bg-ivory/40 hover:bg-white border border-primary/10 hover:border-gold rounded-sm text-[9px] font-mono uppercase tracking-widest flex items-center gap-1.5 cursor-pointer transition-all text-primary font-bold"
             >
-              {isCopied ? <CheckCheck className="w-4 h-4 text-emerald-700" /> : <Copy className="w-4 h-4" />}
+              {isCopied ?  : }
               {isCopied ? "Copied" : "Copy Code"}
             </button>
           </div>
@@ -501,7 +488,7 @@ function mapHeaderToKey(h, tabName) {
             {/* Guide Step description */}
             <div className="bg-primary text-white border border-gold/35 rounded-sm p-5 space-y-3">
               <div className="flex items-center gap-2 pb-1 border-b border-white/10">
-                <Sparkles className="w-4 h-4 text-gold shrink-0" />
+                
                 <h4 className="font-serif font-bold text-xs uppercase tracking-widest text-gold text-sm">
                   Deploy Google Sheets in 3 Minutes
                 </h4>

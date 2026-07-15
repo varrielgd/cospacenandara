@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Trash2, ShieldCheck, Mail, ShieldAlert, Loader2, User, Key } from 'lucide-react';
 import { api } from '../utils/api';
 
 interface AdminUser {
@@ -89,7 +88,7 @@ export default function UserManagementView() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-2xl border border-primary/5 shadow-sm">
         <div className="space-y-1">
           <h3 className="text-xl font-serif text-primary flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-gold" />
+            
             Admin Hierarchy & Access Control
           </h3>
           <p className="text-xs text-gray-500 font-mono tracking-wider uppercase">
@@ -107,7 +106,7 @@ export default function UserManagementView() {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-8 rounded-2xl border border-primary/5 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
-              <UserPlus className="w-24 h-24 text-primary" />
+              
             </div>
             
             <h4 className="text-sm font-bold text-primary uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
@@ -142,7 +141,7 @@ export default function UserManagementView() {
               <div className="space-y-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-bold ml-1">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold opacity-50" />
+                  
                   <input
                     type="email"
                     required
@@ -157,7 +156,7 @@ export default function UserManagementView() {
               <div className="space-y-2">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-bold ml-1">Temporary Password</label>
                 <div className="relative">
-                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gold opacity-50" />
+                  
                   <input
                     type="password"
                     required
@@ -171,14 +170,14 @@ export default function UserManagementView() {
 
               {error && (
                 <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-600 text-[10px] font-bold flex items-center gap-2 uppercase tracking-tight">
-                  <ShieldAlert className="w-4 h-4 shrink-0" />
+                  
                   {error}
                 </div>
               )}
 
               {success && (
                 <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-lg text-emerald-700 text-[10px] font-bold flex items-center gap-2 uppercase tracking-tight">
-                  <ShieldCheck className="w-4 h-4 shrink-0" />
+                  
                   {success}
                 </div>
               )}
@@ -189,12 +188,9 @@ export default function UserManagementView() {
                 className="w-full bg-primary hover:bg-primary/90 text-gold font-bold py-4 rounded-xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 uppercase tracking-widest text-[11px]"
               >
                 {isSubmitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    Authorize Admin
-                  </>
+                  <span className="tracking-widest text-xs uppercase">Authorize Admin</span>
                 )}
               </button>
             </form>
@@ -227,14 +223,14 @@ export default function UserManagementView() {
                   {isLoading ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-20 text-center">
-                        <Loader2 className="w-8 h-8 text-gold animate-spin mx-auto opacity-40" />
+                        
                         <p className="text-[10px] font-mono text-gray-400 mt-4 uppercase tracking-widest">Querying Personnel DB...</p>
                       </td>
                     </tr>
                   ) : users.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-20 text-center">
-                        <User className="w-8 h-8 text-gray-200 mx-auto" />
+                        
                         <p className="text-[10px] font-mono text-gray-400 mt-4 uppercase tracking-widest">No personnel records found.</p>
                       </td>
                     </tr>
@@ -243,7 +239,7 @@ export default function UserManagementView() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center">
-                            <User className="w-5 h-5 text-primary opacity-60" />
+                            
                           </div>
                           <div>
                             <p className="text-sm font-serif text-primary">{user.firstName} {user.lastName}</p>
@@ -259,11 +255,11 @@ export default function UserManagementView() {
                           <div className="flex items-center gap-1.5">
                             {user.isVerified ? (
                               <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 uppercase tracking-tighter">
-                                <ShieldCheck className="w-3 h-3" /> VERIFIED
+                                 VERIFIED
                               </span>
                             ) : (
                               <span className="flex items-center gap-1 text-[9px] font-bold text-amber-600 uppercase tracking-tighter">
-                                <ShieldAlert className="w-3 h-3" /> PENDING VERIFICATION
+                                 PENDING VERIFICATION
                               </span>
                             )}
                           </div>
@@ -282,7 +278,7 @@ export default function UserManagementView() {
                             className="p-2 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             title="Revoke Access"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            
                           </button>
                         ) : (
                           <span className="text-[9px] font-mono text-gold/40 uppercase tracking-widest pr-2 italic">Immutable System Admin</span>
@@ -296,7 +292,7 @@ export default function UserManagementView() {
           </div>
           
           <div className="mt-6 p-6 bg-primary/5 border border-primary/10 rounded-xl flex items-start gap-4">
-            <ShieldAlert className="w-6 h-6 text-gold shrink-0 mt-1" />
+            
             <div className="space-y-1">
               <p className="text-xs font-bold text-primary uppercase tracking-widest">Protocol Notice</p>
               <p className="text-[11px] text-gray-500 leading-relaxed">

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { RefreshCw, MapPin } from 'lucide-react';
 
 // Fix for Leaflet marker icons in Vite/React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -250,7 +249,7 @@ export default function IndonesiaMap({
             disabled={isLoadingSheet}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-gold/30 rounded-md text-gold hover:bg-gold hover:text-primary transition-all duration-300 disabled:opacity-50"
           >
-            <RefreshCw size={14} className={isLoadingSheet ? 'animate-spin' : ''} />
+            
             <span className="text-[9px] font-mono uppercase tracking-widest font-bold">Sync Origin Matrix</span>
           </button>
         )}

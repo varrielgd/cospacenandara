@@ -1,19 +1,5 @@
 import React, { useState } from 'react';
 import { Sample, Lead } from '../types';
-import { 
-  Beaker, 
-  MapPin, 
-  Calendar, 
-  Truck, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle, 
-  Plus, 
-  ChevronRight,
-  Filter,
-  Bookmark,
-  TrendingDown
-} from 'lucide-react';
 
 interface SampleViewProps {
   samples: Sample[];
@@ -86,10 +72,10 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
 
   const getStatusIcon = (st: Sample['status']) => {
     switch(st) {
-      case 'Preparing': return <Clock className="w-3.5 h-3.5" />;
-      case 'Shipped': return <Truck className="w-3.5 h-3.5" />;
-      case 'Delivered': return <CheckCircle2 className="w-3.5 h-3.5" />;
-      default: return <AlertCircle className="w-3.5 h-3.5" />;
+      case 'Preparing': return ;
+      case 'Shipped': return ;
+      case 'Delivered': return ;
+      default: return ;
     }
   };
 
@@ -99,7 +85,7 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
       <div className="lg:col-span-1 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury space-y-4 h-fit" id="register-dispatch">
         <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
           <div className="p-2.5 bg-primary text-gold rounded-sm">
-            <Beaker className="w-5 h-5 text-gold" />
+            
           </div>
           <div>
             <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">Sample Dispatcher</h3>
@@ -259,7 +245,7 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
           <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
             {samples.length === 0 ? (
               <div className="py-16 text-center border border-dashed border-primary/10 rounded-sm text-primary/30">
-                <Beaker className="w-10 h-10 stroke-1 text-gold/40 mx-auto mb-2" />
+                
                 <p className="text-xs font-mono uppercase tracking-widest">No physical coffee samples dispatched yet</p>
               </div>
             ) : (
@@ -277,7 +263,7 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
                           {associatedLead ? associatedLead.companyName : "Unknown Importer"}
                         </h4>
                         <p className="text-[10px] text-text-dim flex items-center gap-1 font-mono mt-0.5 uppercase tracking-wider">
-                          <MapPin className="w-3.5 h-3.5 text-gold" />
+                          
                           Destination: {sample.destinationCountry}
                         </p>
                       </div>
@@ -311,7 +297,7 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
                     {/* Mold Risk Alert */}
                     {sample.moistureReading && sample.moistureReading > 12.5 && (
                       <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-sm">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-widest font-mono">High Moisture Alert</p>
                           <p className="text-[11px] font-sans leading-tight">Reading of {sample.moistureReading}% exceeds 12.5% threshold. High risk of mold growth during transit.</p>
@@ -322,7 +308,7 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
                     {/* Tracking Actions */}
                     <div className="flex justify-between items-center pt-3 text-[10px] text-text-dim">
                       <span className="flex items-center gap-1 text-[9px] uppercase tracking-wider">
-                        <Calendar className="w-3.5 h-3.5 text-gold shrink-0" />
+                        
                         Dispatched: {sample.sampleRequestDate}
                       </span>
 

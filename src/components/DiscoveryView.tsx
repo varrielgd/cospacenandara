@@ -137,8 +137,8 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
         
         if (data.status === 'RUNNING') {
           setStatusMessage(isSimulated 
-            ? `AI is currently using deep knowledge fallback. Found ${data.totalFound} importers.`
-            : `AI Deep Scouting... ${data.totalProcessed} real entities found.`);
+            ? `is currently using deep knowledge fallback. Found ${data.totalFound} importers.`
+            : `Deep Scouting... ${data.totalProcessed} real entities found.`);
         }
 
         // Update discovered leads
@@ -186,7 +186,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
           clearInterval(pollingRef.current!);
           
           if (data.totalFound === 0) {
-            setError('The AI was unable to find specific data for this region. Please try a broader search or a different country.');
+            setError('The was unable to find specific data for this region. Please try a broader search or a different country.');
             setStatusMessage('');
           } else {
             setStatusMessage(`DISCOVERY COMPLETED! FOUND ${data.totalFound} NEW IMPORTERS.`);
@@ -619,7 +619,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                 {/* Status or Error Message */}
                 {(statusMessage || error) && (
                   <div className={`p-3 rounded-md text-[10px] font-mono uppercase tracking-widest ${error ? 'bg-red-900/30 text-red-400' : 'bg-[#1a3a2a] text-[#8fb499]'}`}>
-                    {error ? <AlertCircle className="w-3 h-3 inline mr-2" /> : <Loader2 className="w-3 h-3 inline mr-2 animate-spin" />}
+                    {error ?  : }
                     {error || statusMessage}
                   </div>
                 )}
@@ -635,13 +635,13 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      
                       Scouting...
                     </>
                   ) : (
                     <>
-                      <Search className="w-4 h-4" />
-                      Start AI Discovery
+                      
+                      Start Discovery
                     </>
                   )}
                 </button>
@@ -656,7 +656,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
         <div className="flex-1 p-6 overflow-y-auto">
           {discoveredLeads.length === 0 && !isLoading ? (
             <div className="h-full flex flex-col items-center justify-center text-[#8fb499]">
-              <Compass className="w-16 h-16 mb-4 opacity-50" />
+              
               <p className="text-lg">No discoveries yet</p>
               <p className="text-sm opacity-70 mt-2">Configure your search criteria and click Discover</p>
             </div>
@@ -720,7 +720,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                             className="flex items-center gap-1 hover:text-[#d4af37]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <LinkIcon className="w-4 h-4" />
+                            
                             Website
                           </a>
                         )}
@@ -732,7 +732,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                             className="flex items-center gap-1 hover:text-[#d4af37]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Linkedin className="w-4 h-4" />
+                            
                             LinkedIn
                           </a>
                         )}
@@ -742,19 +742,19 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                             className="flex items-center gap-1 hover:text-[#d4af37]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <Mail className="w-4 h-4" />
+                            
                             {lead.email}
                           </a>
                         )}
                         {lead.phone && (
                           <span className="flex items-center gap-1">
-                            <Phone className="w-4 h-4" />
+                            
                             {lead.phone}
                           </span>
                         )}
                         {lead.country && (
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
+                            
                             {lead.country}{lead.city ? `, ${lead.city}` : ''}
                           </span>
                         )}
@@ -772,7 +772,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                         }`}
                         title="Copy to clipboard"
                       >
-                        {copiedId === lead.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copiedId === lead.id ?  : }
                         {copiedId === lead.id ? 'Copied' : 'Copy'}
                       </button>
                       <button
@@ -785,7 +785,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                         }`}
                         title="Push to Google Sheets"
                       >
-                        {isSyncingId === lead.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheetIcon className="w-4 h-4" />}
+                        {isSyncingId === lead.id ?  : }
                         {isSyncingId === lead.id ? 'Syncing' : 'Sheets'}
                       </button>
                     </div>
@@ -809,7 +809,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
               disabled={isLoading || Object.values(selectedLeads).filter(Boolean).length === 0}
               className="flex items-center gap-2 px-6 py-2 bg-[#1a3a2a] text-[#8fb499] rounded-md hover:text-[#d4af37] transition-all font-bold uppercase tracking-widest text-xs disabled:opacity-50"
             >
-              <FileSpreadsheetIcon className="w-4 h-4" />
+              
               Export to Sheets
             </button>
             <button
@@ -817,7 +817,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
               disabled={isLoading || Object.values(selectedLeads).filter(Boolean).length === 0}
               className="flex items-center gap-2 px-6 py-2 bg-[#d4af37] text-[#0a1a12] rounded-md hover:bg-[#c4a030] transition-all font-bold uppercase tracking-widest text-xs disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" />
+              
               Add to CRM
             </button>
           </div>

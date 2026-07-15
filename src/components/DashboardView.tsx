@@ -239,13 +239,9 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pipelineStates} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                  <XAxis dataKey="name" tick={{ fill: '#4A5568', fontSize: 10, fontFamily: 'monospace' }} />
-                  <YAxis tick={{ fill: '#4A5568', fontSize: 10, fontFamily: 'monospace' }} allowDecimals={false} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#05190F', border: '1px solid #D4AF37', borderRadius: '4px' }}
-                    labelStyle={{ color: '#D4AF37', fontWeight: 'bold', fontSize: '11px', fontFamily: 'serif' }}
-                    itemStyle={{ color: '#FFF', fontSize: '11px' }}
-                  />
+                  <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={{ fontSize: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4 }} />
                   <Bar dataKey="count" fill="#05190F" radius={[2, 2, 0, 0]}>
                     {pipelineStates.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={index === 5 ? '#D4AF37' : '#05190F'} />
@@ -283,10 +279,7 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#05190F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
-                    itemStyle={{ color: '#FFF', fontSize: '11px' }}
-                  />
+                  <Tooltip contentStyle={{ fontSize: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 4 }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
