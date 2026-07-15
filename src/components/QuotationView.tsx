@@ -10,8 +10,11 @@ import {
   RotateCcw,
   Check,
   Award,
-  Globe2
+  Globe2,
+  Sparkles,
+  Info
 } from 'lucide-react';
+import { api } from '../utils/api';
 
 interface QuotationViewProps {
   quotations: Quotation[];
@@ -28,6 +31,10 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
   const [price, setPrice] = useState(6800.00); // e.g. Price per Metric Ton
   const [incoterm, setIncoterm] = useState('FOB Belawan Port, Sumatra');
   const [selectedQuote, setSelectedQuote] = useState<Quotation | null>(null);
+  
+  // Phase 3: Dynamic Pricing state
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestMessage, setSuggestMessage] = useState('');
 
   const productsList = [
     'Aceh Gayo Grade 1 (Classic)',
@@ -72,6 +79,26 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSuggestPrice = async () => {
+    setIsSuggesting(true);
+    setSuggestMessage('');
+    try {
+      const response = await api.post('/api/quotations/suggest-price', {
+        product,
+        incoterm
+      });
+      // The API returns price per KG. We need Price per Metric Ton (x 1000)
+      const data = response as any;
+      const suggestedPricePerMT = data.suggestedPrice * 1000;
+      setPrice(suggestedPricePerMT);
+      setSuggestMessage(data.message);
+    } catch (error) {
+      setSuggestMessage('Failed to fetch live market data.');
+    } finally {
+      setIsSuggesting(false);
+    }
   };
 
   return (
@@ -180,7 +207,18 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Price (USD / Ton)</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Price (USD / Ton)</label>
+                  <button 
+                    type="button" 
+                    onClick={handleSuggestPrice}
+                    disabled={isSuggesting}
+                    className="text-[9px] flex items-center gap-1 text-gold hover:text-yellow-600 uppercase font-bold tracking-widest disabled:opacity-50"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    {isSuggesting ? 'Calculating...' : 'AI Suggest Price'}
+                  </button>
+                </div>
                 <input
                   type="number"
                   required
@@ -188,6 +226,12 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
                   onChange={e => setPrice(Number(e.target.value))}
                   className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
                 />
+                {suggestMessage && (
+                  <p className="text-[9px] font-sans text-emerald-700 flex items-start gap-1 mt-1 leading-tight">
+                    <Info className="w-3 h-3 shrink-0" />
+                    {suggestMessage}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5">

@@ -2,6 +2,48 @@ import { Request, Response } from 'express';
 import { prisma, logger } from '../index';
 import { AuthRequest } from '../middleware/auth';
 import { PdfService } from '../services/pdf.service';
+import { MarketDataService } from '../services/market-data.service';
+
+export const suggestPrice = async (req: AuthRequest, res: Response) => {
+  try {
+    const { product, incoterm } = req.body;
+    const snap = await MarketDataService.getSnapshot();
+    
+    if (!snap.arabicaPrice) {
+      return res.status(503).json({ message: 'Live market data temporarily unavailable' });
+    }
+
+    const basePricePerKg = snap.arabicaPrice * 2.2046; // Convert USD/lb to USD/kg
+    let margin = 0.80; // Default margin
+    
+    // Adjust margin based on product string match
+    const pLower = (product || '').toLowerCase();
+    if (pLower.includes('gayo') || pLower.includes('toraja') || pLower.includes('lintong') || pLower.includes('mandheling')) {
+      margin = 1.00; // Higher margin for premium origins
+    } else if (pLower.includes('robusta')) {
+      // Robusta pricing logic (using flat rate or lower margin from Arabica base if robusta futures not tracked yet)
+      margin = -0.50; // Hack: price robusta lower than arabica base
+    }
+
+    let calculatedPrice = basePricePerKg + margin;
+
+    // Adjust for incoterm
+    const iLower = (incoterm || '').toLowerCase();
+    if (iLower.includes('cif')) {
+      calculatedPrice += 0.50; // Add freight estimate
+    }
+
+    return res.json({
+      suggestedPrice: parseFloat(calculatedPrice.toFixed(2)),
+      arabicaPrice: snap.arabicaPrice,
+      marginApplied: margin,
+      message: `Suggested price calculated based on live Arabica futures ($${snap.arabicaPrice}/lb).`
+    });
+  } catch (error) {
+    logger.error('Error suggesting price:', error);
+    return res.status(500).json({ message: 'Internal server error calculating dynamic price' });
+  }
+};
 
 export const getAllQuotations = async (_req: AuthRequest, res: Response) => {
   try {

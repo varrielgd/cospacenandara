@@ -62,8 +62,8 @@ export type EmailStatus =
 export interface EmailLog {
   id: string;
   leadId?: string; // matches importerId in Prisma
-  subject: string;
-  body: string;
+  subject?: string;
+  body?: string;
   to?: string; // recipient email
   cc?: string;
   bcc?: string;
@@ -121,6 +121,7 @@ export interface Quotation {
   quantity: string; // e.g., "10 Metric Tons"
   price: number; // FOB / CIF rate
   incoterm: string; // e.g., "FOB Belawan", "CIF Hamburg"
+  currency?: string;
   status: 'Draft' | 'Sent' | 'Accepted' | 'Declined';
   dateCreated: string;
 }

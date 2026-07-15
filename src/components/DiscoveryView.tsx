@@ -18,7 +18,8 @@ import {
   Loader2,
   Copy,
   FileSpreadsheet,
-  FileSpreadsheet as FileSpreadsheetIcon
+  FileSpreadsheet as FileSpreadsheetIcon,
+  Sparkles
 } from 'lucide-react';
 
 interface DiscoveryViewProps {
@@ -51,6 +52,8 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
   const [progress, setProgress] = useState({ total: 0, processed: 0 });
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isSyncingId, setIsSyncingId] = useState<string | null>(null);
+  const [marketRecs, setMarketRecs] = useState<any[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(false);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   const countries = [
@@ -86,6 +89,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
       }
     }
     fetchRecentSessions();
+    fetchMarketRecommendations();
   }, []);
 
   // Save results to localStorage whenever they change
@@ -101,6 +105,18 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
       setRecentSessions(data || []);
     } catch (err) {
       console.error('Error fetching recent sessions:', err);
+    }
+  };
+
+  const fetchMarketRecommendations = async () => {
+    setLoadingRecs(true);
+    try {
+      const data = await api.get('/api/discovery/market-recommendations') as any;
+      setMarketRecs(data || []);
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+    } finally {
+      setLoadingRecs(false);
     }
   };
 
@@ -546,7 +562,44 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
             )}
 
             {!currentSessionId && (
-              <form onSubmit={handleDiscover} className="space-y-4">
+              <div className="space-y-6">
+                
+                {/* Market-Driven Target Recommendations */}
+                <div className="p-4 bg-[#0a1a12] border border-[#d4af37]/30 rounded-lg shadow-inner">
+                  <h3 className="text-sm font-semibold text-[#d4af37] flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4" />
+                    AI Market Target Suggestions
+                  </h3>
+                  {loadingRecs ? (
+                    <div className="flex items-center text-[#8fb499] text-xs gap-2">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Analyzing live market data...
+                    </div>
+                  ) : marketRecs.length > 0 ? (
+                    <div className="space-y-2">
+                      {marketRecs.map((rec, i) => (
+                        <div key={i} className="p-3 bg-[#1a3a2a]/50 border border-[#1a3a2a] rounded cursor-pointer hover:border-[#d4af37]/50 transition-colors"
+                          onClick={() => {
+                            setCountry(rec.targetCountry);
+                            setRegion('');
+                            setImporterType(rec.searchQuery);
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <h4 className="text-xs font-bold text-white">{rec.targetCountry}</h4>
+                            <button className="text-[9px] text-[#d4af37] border border-[#d4af37]/30 rounded px-1.5 py-0.5 hover:bg-[#d4af37] hover:text-black transition-colors">
+                              Apply
+                            </button>
+                          </div>
+                          <p className="text-[10px] text-[#8fb499] mt-1 leading-tight">{rec.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#8fb499]">No recommendations available right now.</p>
+                  )}
+                </div>
+
+                <form onSubmit={handleDiscover} className="space-y-4">
                 {/* Country Selection */}
                 <div>
                   <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-[#8fb499] mb-2">Target Country</label>
@@ -620,6 +673,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                   )}
                 </button>
               </form>
+              </div>
             )}
           </div>
           )}

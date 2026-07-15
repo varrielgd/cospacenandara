@@ -7,6 +7,7 @@ const router = Router();
 router.post('/start', authenticate, discoveryController.startDiscovery);
 router.get('/status/:sessionId', authenticate, discoveryController.getDiscoveryStatus);
 router.get('/recent', authenticate, discoveryController.getRecentDiscoveries);
+router.get('/market-recommendations', authenticate, discoveryController.getMarketRecommendations);
 router.get('/test-ai', authenticate, async (req, res) => {
   try {
     const { AiService } = require('../services/ai.service');

@@ -23,7 +23,7 @@ export const getMarketData = async (_req: AuthRequest, res: Response) => {
  */
 export const refreshMarketData = async (_req: AuthRequest, res: Response) => {
   try {
-    const { prisma } = await import('../index');
+    const { prisma } = await import('../index.js');
     // Delete cache entry so next getSnapshot() fetches fresh data
     await prisma.setting.deleteMany({ where: { key: 'market_data_cache' } });
     const data = await MarketDataService.getDashboardData();

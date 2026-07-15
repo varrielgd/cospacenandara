@@ -583,7 +583,7 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
     // ── Phase 2: Retrieve market context ─────────────────────────────────────
     let marketContext = '';
     try {
-      const { MarketDataService } = await import('../services/market-data.service');
+      const { MarketDataService } = await import('../services/market-data.service.js');
       const snap = await MarketDataService.getSnapshot();
       marketContext = MarketDataService.formatAsRagContext(snap);
       if (marketContext) {

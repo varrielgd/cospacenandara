@@ -1,6 +1,8 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { DiscoveryService } from '../services/discovery.service';
+import { MarketDataService } from '../services/market-data.service';
+import { AiService } from '../services/ai.service';
 import { prisma } from '../prisma';
 import winston from 'winston';
 
@@ -109,6 +111,64 @@ export const getDiscoveryStatus = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     logger.error('Get discovery status error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteSession = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    await prisma.discoverySession.delete({
+      where: { id: String(id), userId: String(req.user!.id) }
+    });
+    return res.json({ message: 'Session deleted successfully' });
+  } catch (error) {
+    logger.error('Error deleting session:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getMarketRecommendations = async (req: AuthRequest, res: Response) => {
+  try {
+    const snap = await MarketDataService.getSnapshot();
+    const marketContext = MarketDataService.formatAsRagContext(snap);
+    
+    // AI prompt for generating targets
+    const prompt = `
+You are a coffee market analyst for PT. Nandara Nusa Montierra.
+Based on the following live market data, suggest 3 target countries/regions for our sales team to focus their Lead Discovery on today.
+    
+${marketContext}
+
+Your response must be a valid JSON array of exactly 3 objects. 
+Do not use markdown blocks, just raw JSON.
+Format of each object:
+{
+  "targetCountry": "string (e.g. Germany)",
+  "reason": "string (Short sentence explaining why, tying it to the market data if possible, or general specialty coffee demand)",
+  "searchQuery": "string (Suggested query, e.g. Specialty coffee importers in Germany)"
+}
+    `;
+    
+    const aiResponse = await AiService.generateContent(prompt);
+    
+    // Attempt to parse JSON
+    let recommendations = [];
+    try {
+      const cleaned = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+      recommendations = JSON.parse(cleaned);
+    } catch (e) {
+      // Fallback
+      recommendations = [
+        { targetCountry: 'United States', reason: 'Consistent high demand for premium origins.', searchQuery: 'Premium coffee importers USA' },
+        { targetCountry: 'Germany', reason: 'Largest European market for sustainable beans.', searchQuery: 'Green coffee buyers Germany' },
+        { targetCountry: 'Japan', reason: 'High appreciation for specialty grade Arabica.', searchQuery: 'Specialty coffee roasters Japan' }
+      ];
+    }
+    
+    return res.json(recommendations);
+  } catch (error) {
+    logger.error('Error getting market recommendations:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

@@ -819,7 +819,7 @@ export default function App() {
           )}
 
           {activeTab === 'fx-hedging' && (
-            <FXHedgingView />
+            <FXHedgingView quotations={quotations} leads={leads} />
           )}
 
           {activeTab === 'system-settings' && (
