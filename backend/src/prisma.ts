@@ -17,10 +17,14 @@ try {
 }
 
 // Create a pg Pool with explicit SSL configuration
-// Supabase/Neon requires SSL connections
+// Supabase uses self-signed certificates, so we need rejectUnauthorized: false
 const pool = new pg.Pool({
   connectionString: connectionUrl,
-  ssl: sslMode !== 'disable',
+  ssl: sslMode !== 'disable'
+    ? {
+        rejectUnauthorized: false, // Allow self-signed Supabase SSL certificate
+      }
+    : false,
 });
 
 const adapter = new PrismaPg(pool);
