@@ -658,7 +658,7 @@ www.nandaranusamontierra.com`,
     const TIMEOUT_MS = 25000; // 25 second timeout to prevent hanging
     try {
       logger.info('Attempting AI generation with Gemini...');
-      const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      const modelName = 'gemini-2.5-flash';
       
       const safetySettings = [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
