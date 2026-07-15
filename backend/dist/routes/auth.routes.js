@@ -34,11 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const authController = __importStar(require("../controllers/auth.controller"));
-const validators_1 = require("../validators");
+const authController = __importStar(require("../controllers/auth.controller.js"));
+const auth_js_1 = require("../middleware/auth.js");
+const index_js_1 = require("../validators/index.js");
 const router = (0, express_1.Router)();
-router.post('/register', validators_1.authValidator, authController.register);
+router.post('/register', index_js_1.authValidator, authController.register);
 router.post('/verify-2fa', authController.verify2FA);
-router.post('/login', validators_1.authValidator, authController.login);
+router.post('/login', index_js_1.authValidator, authController.login);
+router.get('/me', auth_js_1.authenticate, authController.getMe);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

@@ -1,4 +1,4 @@
-import { prisma, logger } from '../index';
+import { prisma, logger } from '../index.js';
 import { GoogleSheetsService } from './google-sheets.service';
 import { AiService } from './ai.service';
 

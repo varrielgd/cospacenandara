@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as discoveryController from '../controllers/discovery.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

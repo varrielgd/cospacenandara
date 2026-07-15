@@ -35,10 +35,10 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auditController = __importStar(require("../controllers/audit.controller"));
-const auth_1 = require("../middleware/auth");
+const auth_js_1 = require("../middleware/auth.js");
 const router = (0, express_1.Router)();
-router.use(auth_1.authenticate);
-router.use((0, auth_1.authorize)(['ADMIN']));
+router.use(auth_js_1.authenticate);
+router.use((0, auth_js_1.authorize)(['ADMIN']));
 router.get('/', auditController.getAuditLogs);
 exports.default = router;
 //# sourceMappingURL=audit.routes.js.map

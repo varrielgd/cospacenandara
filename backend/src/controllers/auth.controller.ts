@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../prisma';
-import { JWT_SECRET, JWT_EXPIRES_IN, ALLOWED_EMAILS } from '../config/auth';
-import type { AuthRequest } from '../middleware/auth';
+import { prisma } from '../prisma.js';
+import { JWT_SECRET, JWT_EXPIRES_IN, ALLOWED_EMAILS } from '../config/auth.js';
+import type { AuthRequest } from '../middleware/auth.js';
 
 // Simple logger implementation since ../utils/logger is missing
 const logger = {

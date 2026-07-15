@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { prisma, logger } from '../index';
+import { prisma, logger } from '../index.js';
 
 /**
  * Snapshot of current coffee market conditions

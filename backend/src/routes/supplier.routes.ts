@@ -7,7 +7,7 @@ import {
   deleteSupplier,
   importSuppliers
 } from '../controllers/supplier.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/auth.js';
 import multer from 'multer';
 
 const router = express.Router();

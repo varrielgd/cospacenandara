@@ -7,7 +7,7 @@ exports.PdfService = void 0;
 const pdfkit_1 = __importDefault(require("pdfkit"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const index_1 = require("../index");
+const index_js_1 = require("../index.js");
 class PdfService {
     static async generateQuotationPdf(quotation, importer) {
         return new Promise((resolve, reject) => {
@@ -55,7 +55,7 @@ class PdfService {
                 });
             }
             catch (error) {
-                index_1.logger.error('PDF Generation error:', error);
+                index_js_1.logger.error('PDF Generation error:', error);
                 reject(error);
             }
         });

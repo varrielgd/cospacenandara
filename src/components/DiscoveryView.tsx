@@ -1,26 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Lead } from '../types';
 import { api } from '../utils/api';
-import { 
-  Search, 
-  MapPin, 
-  Plus, 
-  Mail, 
-  AlertCircle, 
-  Compass, 
-  ArrowRight,
-  Link as LinkIcon,
-  Phone,
-  Linkedin,
-  Clock,
-  Check,
-  RefreshCw,
-  Loader2,
-  Copy,
-  FileSpreadsheet,
-  FileSpreadsheet as FileSpreadsheetIcon,
-  Sparkles
-} from 'lucide-react';
+
 
 interface DiscoveryViewProps {
   onAddLeads: (newLeads: Lead[]) => void;
@@ -438,31 +419,30 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a1a12]">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-6 border-b border-[#1a3a2a]">
+      <div className="p-6 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#d4af37]">Importer Discovery Engine</h2>
-            <p className="text-[#8fb499] text-sm mt-1">AI-powered coffee entity scout & verifier</p>
+            <h2 className="text-xl font-bold text-[#05190F]">Importer Discovery Engine</h2>
+            <p className="text-gray-400 text-sm mt-1">Global coffee entity scout & verifier</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
                 showHistory 
-                  ? 'bg-[#d4af37] text-[#0a1a12]' 
-                  : 'bg-[#1a3a2a] text-[#8fb499] hover:text-[#d4af37]'
+                  ? 'bg-[#05190F] text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <Clock className="w-4 h-4" />
               {showHistory ? 'New Search' : 'Discovery History'}
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="p-2 bg-[#1a3a2a] text-[#8fb499] rounded-md hover:text-[#d4af37] transition-colors"
+              className="px-3 py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors text-sm font-mono"
             >
-              <RefreshCw className="w-5 h-5" />
+              Refresh
             </button>
           </div>
         </div>
@@ -470,40 +450,36 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Search Form or History */}
-        <div className="w-1/3 border-r border-[#1a3a2a] p-6 overflow-y-auto">
+        <div className="w-1/3 border-r border-gray-200 bg-white p-6 overflow-y-auto">
           {showHistory ? (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#d4af37] mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                Past Discoveries
-              </h3>
+              <h3 className="text-sm font-bold text-[#05190F] mb-4 uppercase tracking-widest">Past Discoveries</h3>
               {recentSessions.length === 0 ? (
-                <p className="text-[#8fb499] text-sm italic">No history found.</p>
+                <p className="text-gray-400 text-sm italic">No history found.</p>
               ) : (
                 recentSessions.map((session) => (
                   <div
                     key={session.id}
                     onClick={() => loadSession(session.id)}
-                    className="p-4 bg-[#0f2318] border border-[#1a3a2a] rounded-lg hover:border-[#d4af37] cursor-pointer transition-all group"
+                    className="p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-[#05190F] cursor-pointer transition-all group"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
-                        session.status === 'COMPLETED' ? 'bg-green-900/30 text-green-400' :
-                        session.status === 'FAILED' ? 'bg-red-900/30 text-red-400' :
-                        'bg-blue-900/30 text-blue-400 animate-pulse'
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase ${
+                        session.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700' :
+                        session.status === 'FAILED' ? 'bg-red-50 text-red-700' :
+                        'bg-blue-50 text-blue-600 animate-pulse'
                       }`}>
                         {session.status}
                       </span>
-                      <span className="text-[10px] text-[#8fb499]">
+                      <span className="text-[10px] text-gray-400">
                         {new Date(session.createdAt).toLocaleDateString()}
                       </span>
                     </div>
-                    <p className="text-sm text-white font-medium line-clamp-2 group-hover:text-[#d4af37]">
+                    <p className="text-sm text-[#05190F] font-semibold line-clamp-2 group-hover:text-[#1a4d2e]">
                       {session.query}
                     </p>
-                    <div className="mt-3 flex items-center justify-between text-xs text-[#8fb499]">
+                    <div className="mt-3 text-xs text-gray-400">
                       <span>{session.totalFound || 0} Found</span>
-                      <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
                 ))
@@ -565,14 +541,11 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
               <div className="space-y-6">
                 
                 {/* Market-Driven Target Recommendations */}
-                <div className="p-4 bg-[#0a1a12] border border-[#d4af37]/30 rounded-lg shadow-inner">
-                  <h3 className="text-sm font-semibold text-[#d4af37] flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4" />
-                    AI Market Target Suggestions
-                  </h3>
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h3 className="text-sm font-bold text-[#05190F] mb-3 uppercase tracking-widest">Market Target Suggestions</h3>
                   {loadingRecs ? (
-                    <div className="flex items-center text-[#8fb499] text-xs gap-2">
-                      <Loader2 className="w-3 h-3 animate-spin" /> Analyzing live market data...
+                    <div className="flex items-center text-gray-400 text-xs gap-2">
+                      <div className="w-3 h-3 border-2 border-[#05190F] border-t-transparent rounded-full animate-spin" /> Analyzing market data...
                     </div>
                   ) : marketRecs.length > 0 ? (
                     <div className="space-y-2">

@@ -1,6 +1,6 @@
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
-import { prisma, logger } from '../index';
+import { prisma, logger } from '../index.js';
 
 export class EmailSyncService {
   private static config = {

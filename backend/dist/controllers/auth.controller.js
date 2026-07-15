@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.verify2FA = exports.register = void 0;
+exports.login = exports.getMe = exports.verify2FA = exports.register = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const prisma_1 = require("../prisma");
-const auth_1 = require("../config/auth");
+const prisma_js_1 = require("../prisma.js");
+const auth_js_1 = require("../config/auth.js");
 // Simple logger implementation since ../utils/logger is missing
 const logger = {
     info: (msg, meta) => console.log(`[INFO] ${msg}`, meta || ''),
@@ -29,11 +29,11 @@ const register = async (req, res) => {
     try {
         const { email, password, firstName, lastName } = req.body;
         // Check if total users >= 4 (limit to 4 admin emails)
-        const userCount = await prisma_1.prisma.user.count();
+        const userCount = await prisma_js_1.prisma.user.count();
         if (userCount >= 4) {
             return res.status(403).json({ message: 'Registration limit reached (Maximum 4 admin accounts)' });
         }
-        const existingUser = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma_js_1.prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: 'Email already registered' });
         }
@@ -41,7 +41,7 @@ const register = async (req, res) => {
         // Generate 2FA verification code
         const verificationCode = crypto_1.default.randomInt(100000, 999999).toString();
         const verificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
-        const user = await prisma_1.prisma.user.create({
+        const user = await prisma_js_1.prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
@@ -92,7 +92,7 @@ exports.register = register;
 const verify2FA = async (req, res) => {
     try {
         const { email, code } = req.body;
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const user = await prisma_js_1.prisma.user.findUnique({ where: { email } });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -106,7 +106,7 @@ const verify2FA = async (req, res) => {
             return res.status(400).json({ message: 'Verification code has expired' });
         }
         // Mark as verified
-        const updatedUser = await prisma_1.prisma.user.update({
+        const updatedUser = await prisma_js_1.prisma.user.update({
             where: { email },
             data: {
                 isVerified: true,
@@ -134,6 +134,33 @@ const verify2FA = async (req, res) => {
     }
 };
 exports.verify2FA = verify2FA;
+const getMe = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: 'Not authenticated' });
+        }
+        const user = await prisma_js_1.prisma.user.findUnique({
+            where: { email: req.user.email },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                isVerified: true
+            }
+        });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        return res.json(user);
+    }
+    catch (error) {
+        logger.error('Get me error:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getMe = getMe;
 const login = async (req, res) => {
     console.log("================================");
     console.log("LOGIN ROUTE HIT");
@@ -142,14 +169,14 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         console.log("EMAIL RECEIVED:", email);
-        if (!auth_1.ALLOWED_EMAILS.includes(email)) {
+        if (!auth_js_1.ALLOWED_EMAILS.includes(email)) {
             console.log("EMAIL NOT IN WHITELIST");
             return res.status(403).json({
                 message: "ACCESS_DENIED"
             });
         }
         console.log("EMAIL PASSED WHITELIST");
-        const user = await prisma_1.prisma.user.findUnique({
+        const user = await prisma_js_1.prisma.user.findUnique({
             where: { email }
         });
         console.log("USER FOUND:", !!user);
@@ -166,14 +193,14 @@ const login = async (req, res) => {
                 message: "Invalid credentials"
             });
         }
-        console.log("JWT_SECRET LENGTH:", auth_1.JWT_SECRET?.length);
-        console.log("JWT_EXPIRES_IN:", auth_1.JWT_EXPIRES_IN);
+        console.log("JWT_SECRET LENGTH:", auth_js_1.JWT_SECRET?.length);
+        console.log("JWT_EXPIRES_IN:", auth_js_1.JWT_EXPIRES_IN);
         const token = jsonwebtoken_1.default.sign({
             id: user.id,
             email: user.email,
             role: user.role
-        }, auth_1.JWT_SECRET, {
-            expiresIn: auth_1.JWT_EXPIRES_IN
+        }, auth_js_1.JWT_SECRET, {
+            expiresIn: auth_js_1.JWT_EXPIRES_IN
         });
         console.log("TOKEN CREATED");
         return res.json({

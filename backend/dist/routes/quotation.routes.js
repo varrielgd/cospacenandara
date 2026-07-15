@@ -35,10 +35,11 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const quotationController = __importStar(require("../controllers/quotation.controller"));
-const auth_1 = require("../middleware/auth");
+const auth_js_1 = require("../middleware/auth.js");
 const router = (0, express_1.Router)();
-router.use(auth_1.authenticate);
+router.use(auth_js_1.authenticate);
 router.get('/', quotationController.getAllQuotations);
+router.post('/suggest-price', quotationController.suggestPrice); // POST to pass product & incoterm in body
 router.post('/', quotationController.createQuotation);
 router.put('/:id', quotationController.updateQuotation);
 router.delete('/:id', quotationController.deleteQuotation);

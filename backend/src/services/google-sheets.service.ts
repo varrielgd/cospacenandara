@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { logger } from '../index';
+import { logger } from '../index.js';
 
 export class GoogleSheetsService {
   private static scriptUrl = process.env.GOOGLE_SCRIPT_URL;

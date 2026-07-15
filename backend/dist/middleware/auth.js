@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.authenticate = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const auth_1 = require("../config/auth");
-const prisma_1 = require("../prisma");
+const auth_js_1 = require("../config/auth.js");
+const prisma_js_1 = require("../prisma.js");
 // Avoid importing `logger` from `index` to prevent circular imports during startup.
 const logger = {
     warn: (...args) => console.warn(...args),
@@ -27,9 +27,9 @@ const authenticate = async (req, res, next) => {
         }
         const token = authHeader.split(' ')[1];
         try {
-            const decoded = jsonwebtoken_1.default.verify(token, auth_1.JWT_SECRET);
+            const decoded = jsonwebtoken_1.default.verify(token, auth_js_1.JWT_SECRET);
             // CRITICAL FIX: Lookup by EMAIL as requested (Email is authoritative)
-            const user = await prisma_1.prisma.user.findUnique({
+            const user = await prisma_js_1.prisma.user.findUnique({
                 where: { email: decoded.email },
                 select: { id: true, email: true, role: true }
             });

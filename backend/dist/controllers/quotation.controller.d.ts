@@ -1,5 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.js';
+export declare const suggestPrice: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const getAllQuotations: (_req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const createQuotation: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const updateQuotation: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;

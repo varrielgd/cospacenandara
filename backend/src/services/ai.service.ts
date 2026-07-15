@@ -1,6 +1,6 @@
 import Groq from 'groq-sdk';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
-import { logger } from '../index';
+import { logger } from '../index.js';
 
 export class AiService {
   private static readonly MASTER_BUSINESS_CONTEXT = `

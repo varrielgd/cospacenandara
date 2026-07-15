@@ -1,20 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDashboardStats = void 0;
-const index_1 = require("../index");
+const index_js_1 = require("../index.js");
 const getDashboardStats = async (req, res) => {
     try {
         const [importersCount, samplesCount, quotationsCount, emailsCount, recentActivities, statusDistribution] = await Promise.all([
-            index_1.prisma.importer.count(),
-            index_1.prisma.sample.count(),
-            index_1.prisma.quotation.count(),
-            index_1.prisma.email.count({ where: { status: 'SENT' } }),
-            index_1.prisma.activity.findMany({
+            index_js_1.prisma.importer.count(),
+            index_js_1.prisma.sample.count(),
+            index_js_1.prisma.quotation.count(),
+            index_js_1.prisma.email.count({ where: { status: 'SENT' } }),
+            index_js_1.prisma.activity.findMany({
                 take: 10,
                 orderBy: { createdAt: 'desc' },
                 include: { user: { select: { firstName: true, lastName: true } }, importer: { select: { companyName: true } } }
             }),
-            index_1.prisma.importer.groupBy({
+            index_js_1.prisma.importer.groupBy({
                 by: ['status'],
                 _count: { _all: true }
             })
@@ -38,7 +38,7 @@ const getDashboardStats = async (req, res) => {
         });
     }
     catch (error) {
-        index_1.logger.error('Error fetching dashboard stats:', error);
+        index_js_1.logger.error('Error fetching dashboard stats:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };

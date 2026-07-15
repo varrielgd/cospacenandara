@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import * as emailController from '../controllers/email.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

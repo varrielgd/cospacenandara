@@ -1,18 +1,56 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteQuotation = exports.updateQuotation = exports.createQuotation = exports.getAllQuotations = void 0;
-const index_1 = require("../index");
+exports.deleteQuotation = exports.updateQuotation = exports.createQuotation = exports.getAllQuotations = exports.suggestPrice = void 0;
+const index_js_1 = require("../index.js");
 const pdf_service_1 = require("../services/pdf.service");
+const market_data_service_1 = require("../services/market-data.service");
+const suggestPrice = async (req, res) => {
+    try {
+        const { product, incoterm } = req.body;
+        const snap = await market_data_service_1.MarketDataService.getSnapshot();
+        if (!snap.arabicaPrice) {
+            return res.status(503).json({ message: 'Live market data temporarily unavailable' });
+        }
+        const basePricePerKg = snap.arabicaPrice * 2.2046; // Convert USD/lb to USD/kg
+        let margin = 0.80; // Default margin
+        // Adjust margin based on product string match
+        const pLower = (product || '').toLowerCase();
+        if (pLower.includes('gayo') || pLower.includes('toraja') || pLower.includes('lintong') || pLower.includes('mandheling')) {
+            margin = 1.00; // Higher margin for premium origins
+        }
+        else if (pLower.includes('robusta')) {
+            // Robusta pricing logic (using flat rate or lower margin from Arabica base if robusta futures not tracked yet)
+            margin = -0.50; // Hack: price robusta lower than arabica base
+        }
+        let calculatedPrice = basePricePerKg + margin;
+        // Adjust for incoterm
+        const iLower = (incoterm || '').toLowerCase();
+        if (iLower.includes('cif')) {
+            calculatedPrice += 0.50; // Add freight estimate
+        }
+        return res.json({
+            suggestedPrice: parseFloat(calculatedPrice.toFixed(2)),
+            arabicaPrice: snap.arabicaPrice,
+            marginApplied: margin,
+            message: `Suggested price calculated based on live Arabica futures ($${snap.arabicaPrice}/lb).`
+        });
+    }
+    catch (error) {
+        index_js_1.logger.error('Error suggesting price:', error);
+        return res.status(500).json({ message: 'Internal server error calculating dynamic price' });
+    }
+};
+exports.suggestPrice = suggestPrice;
 const getAllQuotations = async (_req, res) => {
     try {
-        const quotations = await index_1.prisma.quotation.findMany({
+        const quotations = await index_js_1.prisma.quotation.findMany({
             include: { importer: { select: { companyName: true } } },
             orderBy: { createdAt: 'desc' }
         });
         return res.json(quotations);
     }
     catch (error) {
-        index_1.logger.error('Error fetching quotations:', error);
+        index_js_1.logger.error('Error fetching quotations:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -20,7 +58,7 @@ exports.getAllQuotations = getAllQuotations;
 const createQuotation = async (req, res) => {
     try {
         const { importerId, product, quantity, price, type, shipmentType, packaging, paymentTerms, incoterm, currency, validUntil } = req.body;
-        const importer = await index_1.prisma.importer.findUnique({ where: { id: importerId } });
+        const importer = await index_js_1.prisma.importer.findUnique({ where: { id: importerId } });
         if (!importer)
             return res.status(404).json({ message: 'Importer not found' });
         // Business Logic: MOQ Check based on infographic
@@ -41,7 +79,7 @@ const createQuotation = async (req, res) => {
             }
         }
         const quotationNumber = `QTN-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        const quotation = await index_1.prisma.quotation.create({
+        const quotation = await index_js_1.prisma.quotation.create({
             data: {
                 quotationNumber,
                 importerId: importerId,
@@ -62,16 +100,16 @@ const createQuotation = async (req, res) => {
         // Generate PDF
         try {
             const pdfPath = await pdf_service_1.PdfService.generateQuotationPdf(quotation, importer);
-            await index_1.prisma.quotation.update({
+            await index_js_1.prisma.quotation.update({
                 where: { id: quotation.id },
                 data: { pdfPath }
             });
         }
         catch (pdfError) {
-            index_1.logger.error('Failed to generate PDF during quotation creation:', pdfError);
+            index_js_1.logger.error('Failed to generate PDF during quotation creation:', pdfError);
         }
         if (req.user) {
-            await index_1.prisma.activity.create({
+            await index_js_1.prisma.activity.create({
                 data: {
                     userId: req.user.id,
                     importerId: quotation.importerId,
@@ -83,7 +121,7 @@ const createQuotation = async (req, res) => {
         return res.status(201).json(quotation);
     }
     catch (error) {
-        index_1.logger.error('Error creating quotation:', error);
+        index_js_1.logger.error('Error creating quotation:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -94,14 +132,14 @@ const updateQuotation = async (req, res) => {
         if (!id)
             return res.status(400).json({ message: 'ID is required' });
         const quotationData = req.body;
-        const quotation = await index_1.prisma.quotation.update({
+        const quotation = await index_js_1.prisma.quotation.update({
             where: { id: id },
             data: quotationData
         });
         return res.json(quotation);
     }
     catch (error) {
-        index_1.logger.error('Error updating quotation:', error);
+        index_js_1.logger.error('Error updating quotation:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -111,11 +149,11 @@ const deleteQuotation = async (req, res) => {
         const { id } = req.params;
         if (!id)
             return res.status(400).json({ message: 'ID is required' });
-        await index_1.prisma.quotation.delete({ where: { id: id } });
+        await index_js_1.prisma.quotation.delete({ where: { id: id } });
         return res.status(204).send();
     }
     catch (error) {
-        index_1.logger.error('Error deleting quotation:', error);
+        index_js_1.logger.error('Error deleting quotation:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };

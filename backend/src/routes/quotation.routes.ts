@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as quotationController from '../controllers/quotation.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

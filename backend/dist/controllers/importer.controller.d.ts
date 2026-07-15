@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.js';
 export declare const getAllImporters: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const getImporterById: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const createImporter: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;

@@ -1,26 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "Playfair Display", "Georgia", serif;
   --font-sans: "Plus Jakarta Sans", "Inter", "Helvetica Neue", Arial, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* Premium Luxury Palette */
+  /* Minimalist Dark Green & White Palette */
   --color-primary: #05190F;
-  --color-gold: #D4AF37;
-  --color-gold-hover: #bfa232;
-  --color-bg-ivory: #F6F2E8;
-  --color-text-dim: #4A5568;
-  
-  --shadow-luxury: 0 4px 20px -2px rgba(5, 25, 15, 0.04), 0 2px 10px -1px rgba(5, 25, 15, 0.02);
-  --shadow-luxury-hover: 0 10px 30px -4px rgba(5, 25, 15, 0.08), 0 4px 15px -2px rgba(5, 25, 15, 0.04);
+  --color-primary-hover: #0a2e1a;
+  --color-accent: #1a4d2e;
+  --color-bg-body: #05190F;
+  --color-bg-card: #ffffff;
+  --color-bg-muted: #f5f5f5;
+  --color-text-dim: #6b7280;
+  --color-border: #e5e7eb;
+  --color-border-dark: rgba(255,255,255,0.08);
+
+  /* Flat minimal shadow */
+  --shadow-card: 0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Reset font everywhere */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-bg-ivory);
+  background-color: var(--color-bg-body);
   color: var(--color-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Google Translate Overrides */
@@ -49,8 +60,8 @@ body {
 /* Style the literal select box from Google Translate */
 .goog-te-combo {
   background-color: transparent;
-  color: #D4AF37;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.2);
   padding: 4px 8px;
   border-radius: 4px;
   font-family: "JetBrains Mono", monospace;
@@ -62,7 +73,7 @@ body {
 }
 .goog-te-combo option {
   background-color: #05190F;
-  color: #D4AF37;
+  color: #ffffff;
 }
 
 /* Hide the powered by google logo */

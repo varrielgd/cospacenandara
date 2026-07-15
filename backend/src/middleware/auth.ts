@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/auth';
-import { prisma } from '../prisma';
+import { JWT_SECRET } from '../config/auth.js';
+import { prisma } from '../prisma.js';
 
 // Avoid importing `logger` from `index` to prevent circular imports during startup.
 const logger = {

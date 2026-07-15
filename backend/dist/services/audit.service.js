@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditService = void 0;
-const prisma_1 = require("../prisma");
+const prisma_js_1 = require("../prisma.js");
 class AuditService {
     static async log(userId, action, entity, entityId, details, ipAddress) {
         try {
-            await prisma_1.prisma.auditLog.create({
+            await prisma_js_1.prisma.auditLog.create({
                 data: {
                     userId,
                     action,

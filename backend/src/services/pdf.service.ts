@@ -1,7 +1,7 @@
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
-import { logger } from '../index';
+import { logger } from '../index.js';
 
 export class PdfService {
   static async generateQuotationPdf(quotation: any, importer: any): Promise<string> {

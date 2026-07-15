@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GoogleSheetsService = void 0;
 const axios_1 = __importDefault(require("axios"));
-const index_1 = require("../index");
+const index_js_1 = require("../index.js");
 class GoogleSheetsService {
     static scriptUrl = process.env.GOOGLE_SCRIPT_URL;
     /**
@@ -13,7 +13,7 @@ class GoogleSheetsService {
      */
     static async syncImporter(importer) {
         if (!this.scriptUrl) {
-            index_1.logger.warn('Google Script URL not configured, skipping sheet sync');
+            index_js_1.logger.warn('Google Script URL not configured, skipping sheet sync');
             return;
         }
         try {
@@ -31,10 +31,10 @@ class GoogleSheetsService {
                     createdAt: importer.createdAt
                 }
             });
-            index_1.logger.info(`Synced importer ${importer.companyName} to Google Sheets`);
+            index_js_1.logger.info(`Synced importer ${importer.companyName} to Google Sheets`);
         }
         catch (error) {
-            index_1.logger.error('Google Sheets sync error:', error);
+            index_js_1.logger.error('Google Sheets sync error:', error);
         }
     }
     /**
@@ -42,7 +42,7 @@ class GoogleSheetsService {
      */
     static async syncAll(data) {
         if (!this.scriptUrl) {
-            index_1.logger.warn('Google Script URL not configured, skipping bulk sync');
+            index_js_1.logger.warn('Google Script URL not configured, skipping bulk sync');
             return;
         }
         try {
@@ -50,10 +50,10 @@ class GoogleSheetsService {
                 action: 'syncAll',
                 ...data
             });
-            index_1.logger.info('Bulk sync to Google Sheets completed');
+            index_js_1.logger.info('Bulk sync to Google Sheets completed');
         }
         catch (error) {
-            index_1.logger.error('Google Sheets bulk sync error:', error);
+            index_js_1.logger.error('Google Sheets bulk sync error:', error);
         }
     }
 }

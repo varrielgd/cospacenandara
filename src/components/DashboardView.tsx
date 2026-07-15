@@ -1,19 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lead, Sample, Quotation, EmailLog } from '../types';
-import { 
-  Users, 
-  Mail, 
-  Beaker, 
-  DollarSign, 
-  TrendingUp, 
-  Layers, 
-  Award,
-  Globe,
-  Coffee,
-  TrendingDown,
-  RefreshCw,
-  AlertCircle
-} from 'lucide-react';
+
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { api } from '../utils/api';
 
@@ -173,99 +160,78 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
 
   return (
     <div className="space-y-8" id="dashboard-container">
-      {/* Brand Hero Cover */}
-      <div className="p-8 sm:p-12 rounded-lg bg-primary border border-gold/30 relative overflow-hidden text-white" id="brand-welcome-hero">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent pointer-events-none" />
+      {/* Brand Hero */}
+      <div className="p-8 sm:p-10 rounded-lg bg-[#05190F] relative overflow-hidden text-white" id="brand-welcome-hero">
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-white/[0.03] to-transparent pointer-events-none" />
         <div className="max-w-2xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gold/10 border border-gold/30 text-gold rounded-sm text-[10px] font-mono uppercase tracking-widest">
+          <div className="inline-flex items-center px-2.5 py-1 bg-white/10 border border-white/20 text-white/70 rounded-md text-[9px] font-mono uppercase tracking-widest">
             Nandara Nusa Montierra
           </div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-medium tracking-wide text-white leading-tight">
-            Coffee Importer <span className="text-gold italic">Intelligence</span> System
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
+            Coffee Importer <span className="text-white/60">Intelligence</span> System
           </h1>
-          <p className="text-gray-300 text-sm font-light leading-relaxed">
+          <p className="text-white/60 text-sm font-light leading-relaxed">
             Empowering the direct global export of Indonesian Specialty Green Coffee. Track international green importers, extract targeted business emails, grade leads, and automate sample distribution.
           </p>
-          <div className="pt-2 flex flex-wrap gap-2 text-[9px] text-[#D4AF37] font-mono tracking-wider uppercase">
-            <span className="bg-white/5 border border-gold/10 px-2.5 py-1 rounded-sm">Aceh Gayo G1</span>
-            <span className="bg-white/5 border border-gold/10 px-2.5 py-1 rounded-sm">Gayo Wild Natural</span>
-            <span className="bg-white/5 border border-gold/10 px-2.5 py-1 rounded-sm">Toraja Specialty</span>
-            <span className="bg-white/5 border border-gold/10 px-2.5 py-1 rounded-sm">Flores Bajawa</span>
+          <div className="pt-2 flex flex-wrap gap-2 text-[9px] text-white/50 font-mono tracking-wider uppercase">
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md">Aceh Gayo G1</span>
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md">Gayo Wild Natural</span>
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md">Toraja Specialty</span>
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-md">Flores Bajawa</span>
           </div>
         </div>
       </div>
 
       {/* Main KPI Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6" id="kpi-grid">
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury flex items-center gap-4 transition-all hover:shadow-luxury-hover">
-          <div className="p-3 bg-primary/5 text-primary rounded-sm">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest">Total Leads</p>
-            <h3 className="text-3xl font-serif font-medium text-primary mt-1">{totalLeads}</h3>
-            <div className="flex gap-1.5 mt-1.5 text-[9px] text-[#D4AF37] font-mono uppercase tracking-wider">
-              <span>★ A-LEADS: {aLeads}</span>
-            </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-grid">
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+          <p className="text-[10px] font-sans text-gray-400 uppercase tracking-widest font-semibold">Total Leads</p>
+          <h3 className="text-4xl font-bold text-[#05190F] mt-2">{totalLeads}</h3>
+          <div className="mt-2 text-[9px] text-[#05190F]/50 font-mono uppercase tracking-wider">
+            A-LEADS: {aLeads}
           </div>
         </div>
 
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury flex items-center gap-4 transition-all hover:shadow-luxury-hover">
-          <div className="p-3 bg-primary/5 text-primary rounded-sm">
-            <Mail className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest">Outreach Emails</p>
-            <h3 className="text-3xl font-serif font-medium text-primary mt-1">{emailsSent}</h3>
-            <p className="text-[9px] text-emerald-800 font-mono tracking-wide uppercase mt-1.5">✓ Replies: {replies}</p>
-          </div>
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+          <p className="text-[10px] font-sans text-gray-400 uppercase tracking-widest font-semibold">Outreach Emails</p>
+          <h3 className="text-4xl font-bold text-[#05190F] mt-2">{emailsSent}</h3>
+          <p className="text-[9px] text-emerald-600 font-mono tracking-wide uppercase mt-2">Replies: {replies}</p>
         </div>
 
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury flex items-center gap-4 transition-all hover:shadow-luxury-hover">
-          <div className="p-3 bg-primary/5 text-primary rounded-sm">
-            <Beaker className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest">Samples Sent</p>
-            <h3 className="text-3xl font-serif font-medium text-primary mt-1">{samplesSent}</h3>
-            <p className="text-[9px] text-text-dim font-mono uppercase mt-1.5">Prep: {samples.filter(s => s.status === 'Preparing').length}</p>
-          </div>
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+          <p className="text-[10px] font-sans text-gray-400 uppercase tracking-widest font-semibold">Samples Sent</p>
+          <h3 className="text-4xl font-bold text-[#05190F] mt-2">{samplesSent}</h3>
+          <p className="text-[9px] text-gray-400 font-mono uppercase mt-2">Prep: {samples.filter(s => s.status === 'Preparing').length}</p>
         </div>
 
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury flex items-center gap-4 transition-all hover:shadow-luxury-hover">
-          <div className="p-3 bg-primary/5 text-primary rounded-sm">
-            <TrendingUp className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest">Conversion Rate</p>
-            <h3 className="text-3xl font-serif font-medium text-primary mt-1">
-              {conversionRate.toFixed(1)}%
-            </h3>
-            <p className="text-[9px] text-[#D4AF37] font-mono uppercase mt-1.5">Confirmed: {closedWonCount}</p>
-          </div>
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+          <p className="text-[10px] font-sans text-gray-400 uppercase tracking-widest font-semibold">Conversion Rate</p>
+          <h3 className="text-4xl font-bold text-[#05190F] mt-2">
+            {conversionRate.toFixed(1)}%
+          </h3>
+          <p className="text-[9px] text-gray-400 font-mono uppercase mt-2">Confirmed: {closedWonCount}</p>
         </div>
       </div>
 
-      {/* Advanced Analytic Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="charts-and-actions">
-        {/* Chart 1: Pipeline Breakdown (Large Grid) */}
-        <div className="lg:col-span-2 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury">
+      {/* Analytic Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" id="charts-and-actions">
+        {/* Chart 1: Pipeline Breakdown */}
+        <div className="lg:col-span-2 p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)]">
           <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
             <div>
-              <h3 className="text-xs font-semibold tracking-widest text-primary uppercase font-mono">Export Pipeline Funnel</h3>
-              <p className="text-xs text-text-dim font-sans mt-0.5">Sales cycle progression of international prospects</p>
+              <h3 className="text-xs font-bold tracking-widest text-[#05190F] uppercase">Export Pipeline Funnel</h3>
+              <p className="text-xs text-gray-400 font-sans mt-0.5">Sales cycle progression of international prospects</p>
             </div>
-            <span className="p-1 px-2.5 text-[9px] bg-primary/5 text-primary rounded-sm border border-primary/10 font-mono uppercase tracking-widest">Live Sync</span>
+            <span className="p-1 px-2.5 text-[9px] bg-[#05190F]/5 text-[#05190F] rounded-md border border-[#05190F]/10 font-mono uppercase tracking-widest">Live</span>
           </div>
 
           <div className="h-64 mt-4" id="pipeline-bar-chart">
             {leads.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                <Layers className="w-10 h-10 stroke-1 mb-2 text-gray-300" />
                 <p className="text-xs">No active pipeline data available.</p>
                 <button 
                   onClick={() => onNavigate('discovery')}
-                  className="mt-3 text-xs text-gold underline font-mono hover:text-primary tracking-wider uppercase"
+                  className="mt-3 text-xs text-[#05190F] underline font-mono hover:opacity-70 tracking-wider uppercase"
                 >
                   Discover Leads
                 </button>
@@ -291,11 +257,11 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
           </div>
         </div>
 
-        {/* Chart 2: Lead Grades & Breakdown */}
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury">
+        {/* Chart 2: Lead Grades */}
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)]">
           <div className="border-b border-gray-100 pb-4 mb-4">
-            <h3 className="text-xs font-semibold tracking-widest text-[#05190F] uppercase font-mono">Lead Quality Scores</h3>
-            <p className="text-xs text-text-dim mt-0.5 font-sans">Structured automatic grading distribution</p>
+            <h3 className="text-xs font-bold tracking-widest text-[#05190F] uppercase">Lead Quality Scores</h3>
+            <p className="text-xs text-gray-400 mt-0.5 font-sans">Automatic grading distribution</p>
           </div>
 
           <div className="h-44 flex items-center justify-center relative">
@@ -318,37 +284,37 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#05190F', border: '1px solid #D4AF37', borderRadius: '4px' }}
+                    contentStyle={{ backgroundColor: '#05190F', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' }}
                     itemStyle={{ color: '#FFF', fontSize: '11px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             )}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-serif font-medium text-primary">{aLeads}</span>
-              <span className="text-[8px] uppercase tracking-widest text-[#4A5568] font-mono mt-0.5">A-Grade</span>
+              <span className="text-3xl font-bold text-[#05190F]">{aLeads}</span>
+              <span className="text-[8px] uppercase tracking-widest text-gray-400 font-mono mt-0.5">A-Grade</span>
             </div>
           </div>
 
           <div className="mt-4 space-y-2 pt-2 border-t border-gray-100">
             <div className="flex justify-between text-[11px] items-center">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
-                <span className="text-gray-600 font-mono">A Leads (Micro-lot Importers)</span>
+                <span className="w-2 h-2 rounded-full bg-[#05190F]" />
+                <span className="text-gray-500 font-mono">A Leads</span>
               </div>
               <span className="font-bold text-[#05190F]">{aLeads}</span>
             </div>
             <div className="flex justify-between text-[11px] items-center">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#05190F]" />
-                <span className="text-gray-600 font-mono">B Leads (Specialty Roasters)</span>
+                <span className="w-2 h-2 rounded-full bg-[#2C5E43]" />
+                <span className="text-gray-500 font-mono">B Leads</span>
               </div>
               <span className="font-bold text-[#05190F]">{bLeads}</span>
             </div>
             <div className="flex justify-between text-[11px] items-center">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#6B8E23]" />
-                <span className="text-gray-600 font-mono">C Leads (Smaller Shops)</span>
+                <span className="text-gray-500 font-mono">C Leads</span>
               </div>
               <span className="font-bold text-[#05190F]">{cLeads}</span>
             </div>
@@ -357,11 +323,11 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
       </div>
 
       {/* Origin Distribution & Strategic Guidance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" id="origin-and-intelligence">
-        {/* Origin Target Match Analysis (Product focus) */}
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury">
-          <h3 className="text-xs font-semibold tracking-widest text-[#05190F] uppercase font-mono mb-1">Origin Market Interest</h3>
-          <p className="text-xs text-text-dim mb-6 font-sans">Indonesian Specialty demand analytics</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" id="origin-and-intelligence">
+        {/* Origin Target Match Analysis */}
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)]">
+          <h3 className="text-xs font-bold tracking-widest text-[#05190F] uppercase mb-1">Origin Market Interest</h3>
+          <p className="text-xs text-gray-400 mb-6 font-sans">Indonesian Specialty demand analytics</p>
           
           <div className="space-y-4">
             {originData.length === 0 ? (
@@ -385,9 +351,9 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
         </div>
 
         {/* Global Hub Target List */}
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury">
-          <h3 className="text-xs font-semibold tracking-widest text-[#05190F] uppercase font-mono mb-1">Top Country Targets</h3>
-          <p className="text-xs text-text-dim mb-6 font-sans">Active target geographies in pipeline</p>
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)]">
+          <h3 className="text-xs font-bold tracking-widest text-[#05190F] uppercase mb-1">Top Country Targets</h3>
+          <p className="text-xs text-gray-400 mb-6 font-sans">Active target geographies in pipeline</p>
 
           <div className="divide-y divide-gray-100">
             {countryData.length === 0 ? (
@@ -412,11 +378,11 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
           </div>
         </div>
 
-        {/* Nandara Export Suggested Actions / Workspace Control */}
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury flex flex-col justify-between">
+        {/* Recommended Actions */}
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] flex flex-col justify-between">
           <div>
-            <h3 className="text-xs font-semibold tracking-widest text-[#05190F] uppercase font-mono mb-1">Recommended Actions</h3>
-            <p className="text-xs text-text-dim mb-4 font-sans">Intelligent suggestions for global growth</p>
+            <h3 className="text-xs font-bold tracking-widest text-[#05190F] uppercase mb-1">Recommended Actions</h3>
+            <p className="text-xs text-gray-400 mb-4 font-sans">Strategic suggestions for growth</p>
             
             <div className="space-y-3">
               {suggestedActions.length === 0 ? (
@@ -425,10 +391,10 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
                 </div>
               ) : (
                 suggestedActions.map((act, idx) => (
-                  <div key={idx} className="p-3 bg-bg-ivory/60 border border-primary/5 rounded-sm space-y-1">
-                    <p className="text-xs font-semibold text-primary font-sans leading-tight">{act.title}</p>
-                    <p className="text-[10px] text-text-dim font-sans leading-tight">{act.desc}</p>
-                  </div>
+                <div key={idx} className="p-3 bg-gray-50 border border-gray-100 rounded-md space-y-1">
+                  <p className="text-xs font-semibold text-[#05190F] font-sans leading-tight">{act.title}</p>
+                  <p className="text-[10px] text-gray-400 font-sans leading-tight">{act.desc}</p>
+                </div>
                 ))
               )}
             </div>
@@ -436,82 +402,81 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
 
           <button 
             onClick={() => onNavigate('discovery')}
-            className="w-full mt-5 py-2.5 bg-primary hover:bg-neutral-950 text-white hover:text-gold text-[10px] font-mono uppercase tracking-widest rounded-sm border border-gold/40 transition-all cursor-pointer font-bold"
+            className="w-full mt-5 py-2.5 bg-[#05190F] hover:bg-[#0a2e1a] text-white text-[11px] font-bold uppercase tracking-widest rounded-md border border-[#05190F] transition-all cursor-pointer"
           >
-            Launch Importer Discovery
+            Launch Discovery
           </button>
         </div>
 
         {/* Market Pulse Widget */}
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury col-span-2 lg:col-span-1">
-          <div className="flex justify-between items-center mb-6 border-b border-primary/5 pb-4">
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] col-span-2 lg:col-span-1">
+          <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
             <div>
-              <h2 className="text-xl font-serif font-medium text-primary flex items-center gap-2">
-                <Globe className="w-5 h-5 text-gold" />
+              <h2 className="text-base font-bold text-[#05190F]">
                 Market Pulse
               </h2>
-              <p className="text-[10px] font-sans text-text-dim mt-1 uppercase tracking-widest">Real-time Coffee & FX</p>
+              <p className="text-[10px] font-sans text-gray-400 mt-1 uppercase tracking-widest">Real-time Coffee & FX</p>
             </div>
             <button 
               onClick={() => fetchMarket(true)} 
               disabled={marketLoading}
-              className="p-1.5 hover:bg-bg-ivory rounded-sm text-text-dim hover:text-primary transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-[9px] font-mono uppercase tracking-wider border border-gray-200 rounded-md hover:bg-gray-50 text-gray-500 hover:text-[#05190F] transition-colors disabled:opacity-50"
               title="Force Refresh Data"
             >
-              <RefreshCw className={`w-4 h-4 ${marketLoading ? 'animate-spin text-gold' : ''}`} />
+              Refresh
             </button>
           </div>
 
           {marketLoading && !market ? (
-            <div className="py-12 text-center text-text-dim text-sm font-mono flex flex-col items-center gap-3">
-              <RefreshCw className="w-6 h-6 animate-spin text-gold" />
+            <div className="py-12 text-center text-gray-400 text-sm font-mono flex flex-col items-center gap-3">
+              <div className="w-5 h-5 border-2 border-[#05190F] border-t-transparent rounded-full animate-spin" />
               Syncing Market Data...
             </div>
           ) : marketError ? (
-            <div className="py-8 text-center text-red-800 text-sm font-mono flex flex-col items-center gap-3 bg-red-50 rounded-sm">
-              <AlertCircle className="w-6 h-6" />
-              Unable to fetch market data.
+            <div className="py-8 text-center text-red-700 text-sm font-mono flex flex-col items-center gap-3 bg-red-50 rounded-md">
+              Market data unavailable.
               <button onClick={() => fetchMarket()} className="underline text-xs mt-2">Try Again</button>
             </div>
           ) : market ? (
             <div className="space-y-5">
               {/* Arabica Block */}
-              <div className="p-4 bg-bg-ivory/60 border border-primary/5 rounded-sm">
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-md">
                 <div className="flex justify-between items-start mb-2">
-                  <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest font-semibold">Arabica C-Futures (NYSE)</p>
+                  <p className="text-[10px] font-sans text-gray-400 uppercase tracking-widest font-semibold">Arabica C-Futures (NYSE)</p>
                   {market.arabicaChange !== null && (
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-sm flex items-center gap-1 ${market.arabicaChange > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                      {market.arabicaChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                      {Math.abs(market.arabicaChange)}%
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                      market.arabicaChange > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                    }`}>
+                      {market.arabicaChange > 0 ? '▲' : '▼'} {Math.abs(market.arabicaChange)}%
                     </span>
                   )}
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <h3 className="text-2xl font-serif text-primary">${market.arabicaPrice || '--'}</h3>
-                  <span className="text-xs text-text-dim">/ lb</span>
+                  <h3 className="text-2xl font-bold text-[#05190F]">${market.arabicaPrice || '--'}</h3>
+                  <span className="text-xs text-gray-400">/ lb</span>
                 </div>
-                <p className="text-[10px] text-text-dim font-mono mt-2">Est. Spot FOB Sumatra: <span className="text-gold font-bold">~${market.estimatedFobSumatra || '--'}/kg</span></p>
+                <p className="text-[10px] text-gray-400 font-mono mt-2">Est. FOB Sumatra: <span className="text-[#05190F] font-bold">~${market.estimatedFobSumatra || '--'}/kg</span></p>
               </div>
 
               {/* FX Block */}
-              <div className="p-4 bg-bg-ivory/60 border border-primary/5 rounded-sm">
-                <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest font-semibold mb-3">Live Exchange Rates</p>
+              <div className="p-4 bg-gray-50 border border-gray-100 rounded-md">
+                <p className="text-[10px] font-sans text-gray-400 uppercase tracking-widest font-semibold mb-3">Live Exchange Rates</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <p className="text-[9px] text-text-dim font-mono mb-1">USD/IDR</p>
-                    <p className="text-sm font-semibold text-primary">{market.usdIdr?.toLocaleString('id-ID') || '--'}</p>
+                    <p className="text-[9px] text-gray-400 font-mono mb-1">USD/IDR</p>
+                    <p className="text-sm font-bold text-[#05190F]">{market.usdIdr?.toLocaleString('id-ID') || '--'}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] text-text-dim font-mono mb-1">EUR/USD</p>
-                    <p className="text-sm font-semibold text-primary">{market.eurUsd || '--'}</p>
+                    <p className="text-[9px] text-gray-400 font-mono mb-1">EUR/USD</p>
+                    <p className="text-sm font-bold text-[#05190F]">{market.eurUsd || '--'}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] text-text-dim font-mono mb-1">GBP/USD</p>
-                    <p className="text-sm font-semibold text-primary">{market.gbpUsd || '--'}</p>
+                    <p className="text-[9px] text-gray-400 font-mono mb-1">GBP/USD</p>
+                    <p className="text-sm font-bold text-[#05190F]">{market.gbpUsd || '--'}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] text-text-dim font-mono mb-1">USD/JPY</p>
-                    <p className="text-sm font-semibold text-primary">{market.jpyUsd || '--'}</p>
+                    <p className="text-[9px] text-gray-400 font-mono mb-1">USD/JPY</p>
+                    <p className="text-sm font-bold text-[#05190F]">{market.jpyUsd || '--'}</p>
                   </div>
                 </div>
               </div>

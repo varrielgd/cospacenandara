@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, Loader2, ShieldCheck, Shield } from 'lucide-react';
+
 import { api } from '../utils/api';
 
 interface LoginViewProps {
@@ -54,27 +54,26 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   return (
     <div className="min-h-screen bg-[#05190F] flex items-center justify-center p-4 font-sans relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_#0A2A1A_0%,_transparent_40%),radial-gradient(circle_at_80%_80%,_#082416_0%,_transparent_40%)]"></div>
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
       
       <div className="max-w-lg w-full relative z-10">
         <div className="text-center mb-12">
-          <h1 className="font-serif text-4xl lg:text-5xl font-medium text-white tracking-tight mb-4 drop-shadow-sm">
+          <h1 className="font-sans font-bold text-4xl lg:text-5xl text-white tracking-tight mb-4">
             Nandara Nusa Montierra
           </h1>
           
           <div className="flex flex-col items-center gap-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#C9A227]/10 border border-[#C9A227]/30 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse"></span>
-              <span className="text-[10px] font-mono font-bold text-[#C9A227] tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 border border-white/20 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+              <span className="text-[10px] font-mono font-bold text-white/70 tracking-widest uppercase">
                 SECURE NETWORK
               </span>
             </div>
             
             <div className="space-y-1">
-              <p className="text-[11px] font-mono text-[#C9A227] tracking-[0.4em] uppercase font-semibold">
+              <p className="text-[11px] font-mono text-white/50 tracking-[0.4em] uppercase font-semibold">
                 GLOBAL COFFEE EXPORT INTELLIGENCE PLATFORM
               </p>
-              <p className="text-[9px] font-mono text-white/40 tracking-wider">
+              <p className="text-[9px] font-mono text-white/30 tracking-wider">
                 cospace.nandaranusamontierra.com
               </p>
             </div>
@@ -89,39 +88,32 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                   <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 font-bold ml-1">
                     Corporate Identity
                   </label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#05190F] opacity-40 group-focus-within:opacity-100 transition-opacity" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#C9A227] focus:bg-white transition-all rounded-lg py-4 pl-12 pr-4 text-sm outline-none placeholder:text-gray-300"
-                      placeholder="admin@nandaranusamontierra.com"
-                    />
-                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#05190F] focus:bg-white transition-all rounded-lg py-4 px-4 text-sm outline-none placeholder:text-gray-300"
+                    placeholder="admin@nandaranusamontierra.com"
+                  />
                 </div>
 
                 <div className="space-y-3">
                   <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-gray-400 font-bold ml-1">
                     Access Key
                   </label>
-                  <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#05190F] opacity-40 group-focus-within:opacity-100 transition-opacity" />
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#C9A227] focus:bg-white transition-all rounded-lg py-4 pl-12 pr-4 text-sm outline-none placeholder:text-gray-300"
-                      placeholder="••••••••••••"
-                    />
-                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#05190F] focus:bg-white transition-all rounded-lg py-4 px-4 text-sm outline-none placeholder:text-gray-300"
+                    placeholder="••••••••••••"
+                  />
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-600 text-[11px] font-medium flex items-center gap-3">
-                    <Shield className="w-4 h-4 shrink-0" />
+                  <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-600 text-[11px] font-medium">
                     {error}
                   </div>
                 )}
@@ -129,10 +121,10 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#05190F] hover:bg-[#0A2A1A] text-[#C9A227] font-bold py-5 rounded-lg transition-all shadow-2xl active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-70"
+                  className="w-full bg-[#05190F] hover:bg-[#0A2A1A] text-white font-bold py-4 rounded-lg transition-all active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                   {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <span className="tracking-[0.3em] text-xs uppercase">ACCESS PLATFORM</span>
                   )}
@@ -142,9 +134,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               <form onSubmit={handleVerify2FA} className="space-y-8">
                 <div className="text-center space-y-4 mb-8">
                   <div className="inline-flex p-4 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
-                    <ShieldCheck className="w-8 h-8" />
+                    <span className="text-3xl">🔐</span>
                   </div>
-                  <h3 className="font-serif text-2xl text-[#05190F]">Multi-Factor Protocol</h3>
+                  <h3 className="font-sans font-bold text-2xl text-[#05190F]">Multi-Factor Protocol</h3>
                   <p className="text-xs text-gray-500 leading-relaxed">
                     Security code transmitted to <br/>
                     <span className="font-bold text-[#05190F]">{email}</span>
@@ -167,8 +159,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                 </div>
 
                 {error && (
-                  <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-600 text-[11px] font-medium flex items-center gap-3">
-                    <Shield className="w-4 h-4 shrink-0" />
+                  <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-600 text-[11px] font-medium">
                     {error}
                   </div>
                 )}
@@ -176,10 +167,10 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-[#05190F] hover:bg-[#0A2A1A] text-[#C9A227] font-bold py-5 rounded-lg transition-all shadow-2xl active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-70"
+                  className="w-full bg-[#05190F] hover:bg-[#0A2A1A] text-white font-bold py-4 rounded-lg transition-all active:scale-[0.99] flex items-center justify-center gap-3 disabled:opacity-70"
                 >
                   {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <span className="tracking-[0.3em] text-xs uppercase">VERIFY & ENTER</span>
                   )}

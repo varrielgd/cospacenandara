@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { prisma, logger } from '../index';
-import { AuthRequest } from '../middleware/auth';
+import { prisma, logger } from '../index.js';
+import { AuthRequest } from '../middleware/auth.js';
 import { PdfService } from '../services/pdf.service';
 import { MarketDataService } from '../services/market-data.service';
 

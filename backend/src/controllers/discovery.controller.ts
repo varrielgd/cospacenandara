@@ -1,9 +1,9 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.js';
 import { DiscoveryService } from '../services/discovery.service';
 import { MarketDataService } from '../services/market-data.service';
 import { AiService } from '../services/ai.service';
-import { prisma } from '../prisma';
+import { prisma } from '../prisma.js';
 import winston from 'winston';
 
 const logger = winston.createLogger({

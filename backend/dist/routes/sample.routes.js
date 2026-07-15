@@ -34,14 +34,14 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const sampleController = __importStar(require("../controllers/sample.controller"));
-const auth_1 = require("../middleware/auth");
-const validators_1 = require("../validators");
+const sampleController = __importStar(require("../controllers/sample.controller.js"));
+const auth_js_1 = require("../middleware/auth.js");
+const index_js_1 = require("../validators/index.js");
 const router = (0, express_1.Router)();
-router.use(auth_1.authenticate);
+router.use(auth_js_1.authenticate);
 router.get('/', sampleController.getAllSamples);
-router.post('/', validators_1.sampleValidator, sampleController.createSample);
-router.put('/:id', validators_1.sampleValidator, sampleController.updateSample);
+router.post('/', index_js_1.sampleValidator, sampleController.createSample);
+router.put('/:id', index_js_1.sampleValidator, sampleController.updateSample);
 router.delete('/:id', sampleController.deleteSample);
 exports.default = router;
 //# sourceMappingURL=sample.routes.js.map

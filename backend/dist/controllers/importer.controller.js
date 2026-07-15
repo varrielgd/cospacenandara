@@ -34,13 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.importImportersFromExcel = exports.syncToSheets = exports.bulkCreateImporters = exports.deleteImporter = exports.updateImporter = exports.createImporter = exports.getImporterById = exports.getAllImporters = void 0;
-const index_1 = require("../index");
+const index_js_1 = require("../index.js");
 const google_sheets_service_1 = require("../services/google-sheets.service");
 const XLSX = __importStar(require("xlsx"));
 const fs = __importStar(require("fs"));
 const getAllImporters = async (req, res) => {
     try {
-        const importers = await index_1.prisma.importer.findMany({
+        const importers = await index_js_1.prisma.importer.findMany({
             include: {
                 contacts: true,
                 _count: {
@@ -52,7 +52,7 @@ const getAllImporters = async (req, res) => {
         return res.json(importers);
     }
     catch (error) {
-        index_1.logger.error('Error fetching importers:', error);
+        index_js_1.logger.error('Error fetching importers:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -62,7 +62,7 @@ const getImporterById = async (req, res) => {
         const { id } = req.params;
         if (!id)
             return res.status(400).json({ message: 'ID is required' });
-        const importer = await index_1.prisma.importer.findUnique({
+        const importer = await index_js_1.prisma.importer.findUnique({
             where: { id: id },
             include: {
                 contacts: true,
@@ -83,7 +83,7 @@ const getImporterById = async (req, res) => {
         return res.json(importer);
     }
     catch (error) {
-        index_1.logger.error('Error fetching importer:', error);
+        index_js_1.logger.error('Error fetching importer:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -98,11 +98,11 @@ const createImporter = async (req, res) => {
             phone: importerData.phone && importerData.phone.trim() !== '' ? importerData.phone : null,
             linkedin: importerData.linkedin && importerData.linkedin.trim() !== '' ? importerData.linkedin : null,
         };
-        const importer = await index_1.prisma.importer.create({
+        const importer = await index_js_1.prisma.importer.create({
             data: cleanData
         });
         // Log activity
-        await index_1.prisma.activity.create({
+        await index_js_1.prisma.activity.create({
             data: {
                 userId: req.user.id,
                 importerId: importer.id,
@@ -115,7 +115,7 @@ const createImporter = async (req, res) => {
         return res.status(201).json(importer);
     }
     catch (error) {
-        index_1.logger.error('Error creating importer:', error);
+        index_js_1.logger.error('Error creating importer:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -126,14 +126,14 @@ const updateImporter = async (req, res) => {
         if (!id)
             return res.status(400).json({ message: 'ID is required' });
         const importerData = req.body;
-        const importer = await index_1.prisma.importer.update({
+        const importer = await index_js_1.prisma.importer.update({
             where: { id: id },
             data: importerData
         });
         return res.json(importer);
     }
     catch (error) {
-        index_1.logger.error('Error updating importer:', error);
+        index_js_1.logger.error('Error updating importer:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -143,11 +143,11 @@ const deleteImporter = async (req, res) => {
         const { id } = req.params;
         if (!id)
             return res.status(400).json({ message: 'ID is required' });
-        await index_1.prisma.importer.delete({ where: { id: id } });
+        await index_js_1.prisma.importer.delete({ where: { id: id } });
         return res.status(204).send();
     }
     catch (error) {
-        index_1.logger.error('Error deleting importer:', error);
+        index_js_1.logger.error('Error deleting importer:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -161,7 +161,7 @@ const bulkCreateImporters = async (req, res) => {
         const createdImporters = [];
         for (const data of importers) {
             // Basic check for existing
-            const existing = await index_1.prisma.importer.findFirst({
+            const existing = await index_js_1.prisma.importer.findFirst({
                 where: {
                     OR: [
                         { companyName: data.companyName },
@@ -171,7 +171,7 @@ const bulkCreateImporters = async (req, res) => {
                 }
             });
             if (!existing) {
-                const created = await index_1.prisma.importer.create({
+                const created = await index_js_1.prisma.importer.create({
                     data: {
                         companyName: data.companyName,
                         website: data.website && data.website.trim() !== '' ? data.website : null,
@@ -187,7 +187,7 @@ const bulkCreateImporters = async (req, res) => {
                 });
                 createdImporters.push(created);
                 // Activity log
-                await index_1.prisma.activity.create({
+                await index_js_1.prisma.activity.create({
                     data: {
                         userId: req.user.id,
                         importerId: created.id,
@@ -205,7 +205,7 @@ const bulkCreateImporters = async (req, res) => {
         });
     }
     catch (error) {
-        index_1.logger.error('Error bulk creating importers:', error);
+        index_js_1.logger.error('Error bulk creating importers:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -215,7 +215,7 @@ const syncToSheets = async (req, res) => {
         const { importerId } = req.body;
         if (!importerId)
             return res.status(400).json({ message: 'Importer ID is required' });
-        const importer = await index_1.prisma.importer.findUnique({
+        const importer = await index_js_1.prisma.importer.findUnique({
             where: { id: importerId }
         });
         if (!importer)
@@ -224,7 +224,7 @@ const syncToSheets = async (req, res) => {
         return res.json({ message: 'Successfully synced to Google Sheets' });
     }
     catch (error) {
-        index_1.logger.error('Error syncing to sheets:', error);
+        index_js_1.logger.error('Error syncing to sheets:', error);
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -241,7 +241,7 @@ const importImportersFromExcel = async (req, res) => {
         const data = XLSX.utils.sheet_to_json(sheet);
         const createdImporters = [];
         for (const row of data) {
-            const existing = await index_1.prisma.importer.findFirst({
+            const existing = await index_js_1.prisma.importer.findFirst({
                 where: {
                     OR: [
                         { companyName: row.companyName },
@@ -251,7 +251,7 @@ const importImportersFromExcel = async (req, res) => {
                 }
             });
             if (!existing) {
-                const created = await index_1.prisma.importer.create({
+                const created = await index_js_1.prisma.importer.create({
                     data: {
                         companyName: row.companyName,
                         website: row.website || null,
@@ -269,7 +269,7 @@ const importImportersFromExcel = async (req, res) => {
                     }
                 });
                 createdImporters.push(created);
-                await index_1.prisma.activity.create({
+                await index_js_1.prisma.activity.create({
                     data: {
                         userId: req.user.id,
                         importerId: created.id,
@@ -287,7 +287,7 @@ const importImportersFromExcel = async (req, res) => {
         });
     }
     catch (error) {
-        index_1.logger.error('Error importing importers:', error);
+        index_js_1.logger.error('Error importing importers:', error);
         return res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };

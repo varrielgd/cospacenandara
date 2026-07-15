@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DiscoveryService = void 0;
-const index_1 = require("../index");
+const index_js_1 = require("../index.js");
 const google_sheets_service_1 = require("./google-sheets.service");
 const ai_service_1 = require("./ai.service");
 class DiscoveryService {
@@ -16,7 +16,7 @@ class DiscoveryService {
         const targetCount = 30;
         const batchSize = 10;
         try {
-            index_1.logger.info(`Starting ULTIMATE AI discovery for query: ${query}, session: ${sessionId}`);
+            index_js_1.logger.info(`Starting ULTIMATE AI discovery for query: ${query}, session: ${sessionId}`);
             const targetCountry = options.country || 'Global';
             const targetRegion = options.region || '';
             const targetType = options.importerType || 'Coffee Importer';
@@ -25,7 +25,7 @@ class DiscoveryService {
             const maxAttempts = 5;
             while (discoveredImporters.length < targetCount && attempts < maxAttempts) {
                 attempts++;
-                index_1.logger.info(`Discovery batch attempt ${attempts}/${maxAttempts}. Current count: ${discoveredImporters.length}`);
+                index_js_1.logger.info(`Discovery batch attempt ${attempts}/${maxAttempts}. Current count: ${discoveredImporters.length}`);
                 const systemPrompt = `
           You are a Senior B2B Market Research Analyst specializing in the Global Coffee Supply Chain.
           Your task is to identify and list REAL, verifiable coffee business entities (importers, roasters, or distributors).
@@ -66,7 +66,7 @@ class DiscoveryService {
                     ];
                     const aiResponse = await ai_service_1.AiService.generateContent(`${userPrompts[attempts - 1] || userPrompts[0]} Ensure they are real businesses with working websites.`, { systemPrompt, responseMimeType: 'application/json' });
                     if (!aiResponse) {
-                        index_1.logger.warn(`Batch ${attempts} returned empty response`);
+                        index_js_1.logger.warn(`Batch ${attempts} returned empty response`);
                         continue;
                     }
                     // More robust JSON cleaning
@@ -89,7 +89,7 @@ class DiscoveryService {
                         batch = JSON.parse(cleanedResponse);
                     }
                     catch (parseError) {
-                        index_1.logger.error(`JSON Parse error in batch ${attempts}:`, parseError);
+                        index_js_1.logger.error(`JSON Parse error in batch ${attempts}:`, parseError);
                         // Try one more time by stripping any non-JSON characters at the start/end
                         try {
                             const stripped = cleanedResponse.replace(/^[^{\[]+/, '').replace(/[^}\]]+$/, '');
@@ -125,12 +125,12 @@ class DiscoveryService {
                     // Filter duplicates
                     const newUniqueLeads = validatedBatch.filter((newLead) => !discoveredImporters.some((existing) => existing.companyName.toLowerCase() ===
                         newLead.companyName.toLowerCase()));
-                    index_1.logger.info(`Batch ${attempts}: Found ${validatedBatch.length} total, ${newUniqueLeads.length} unique new leads`);
+                    index_js_1.logger.info(`Batch ${attempts}: Found ${validatedBatch.length} total, ${newUniqueLeads.length} unique new leads`);
                     // Process and save new leads immediately to show progress in UI
                     for (const lead of newUniqueLeads) {
                         try {
                             // Enhanced check to prevent duplicates in DB
-                            const existing = await index_1.prisma.importer.findFirst({
+                            const existing = await index_js_1.prisma.importer.findFirst({
                                 where: {
                                     OR: [
                                         { companyName: { equals: lead.companyName, mode: 'insensitive' } },
@@ -141,10 +141,10 @@ class DiscoveryService {
                             let importerId;
                             if (existing) {
                                 importerId = existing.id;
-                                index_1.logger.info(`Lead already exists: ${lead.companyName} (${importerId})`);
+                                index_js_1.logger.info(`Lead already exists: ${lead.companyName} (${importerId})`);
                             }
                             else {
-                                const created = await index_1.prisma.importer.create({
+                                const created = await index_js_1.prisma.importer.create({
                                     data: {
                                         companyName: lead.companyName,
                                         website: lead.website || '',
@@ -159,7 +159,7 @@ class DiscoveryService {
                                     }
                                 });
                                 importerId = created.id;
-                                index_1.logger.info(`Created new lead: ${lead.companyName} (${importerId})`);
+                                index_js_1.logger.info(`Created new lead: ${lead.companyName} (${importerId})`);
                                 // Sync to Google Sheets
                                 google_sheets_service_1.GoogleSheetsService.syncImporter(created).catch(() => { });
                             }
@@ -168,13 +168,13 @@ class DiscoveryService {
                             }
                         }
                         catch (err) {
-                            index_1.logger.warn(`Failed to process lead ${lead.companyName}:`, err);
+                            index_js_1.logger.warn(`Failed to process lead ${lead.companyName}:`, err);
                         }
                     }
                     discoveredImporters = [...discoveredImporters, ...newUniqueLeads];
                     if (sessionId) {
-                        index_1.logger.info(`Updating session ${sessionId}: ${foundImporterIds.length} importers total`);
-                        await index_1.prisma.discoverySession.update({
+                        index_js_1.logger.info(`Updating session ${sessionId}: ${foundImporterIds.length} importers total`);
+                        await index_js_1.prisma.discoverySession.update({
                             where: { id: sessionId },
                             data: {
                                 totalFound: foundImporterIds.length,
@@ -189,17 +189,17 @@ class DiscoveryService {
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 catch (error) {
-                    index_1.logger.error(`Batch ${attempts} execution failed:`, error);
+                    index_js_1.logger.error(`Batch ${attempts} execution failed:`, error);
                     // Don't throw, just continue to next attempt or simulation
                     continue;
                 }
             }
             if (discoveredImporters.length === 0) {
-                index_1.logger.warn('AI Discovery failed or refused for all batches. Using simulation...');
+                index_js_1.logger.warn('AI Discovery failed or refused for all batches. Using simulation...');
                 const simulated = this.generateSimulatedImporters(query, targetCountry);
                 for (const lead of simulated) {
                     try {
-                        const created = await index_1.prisma.importer.create({
+                        const created = await index_js_1.prisma.importer.create({
                             data: {
                                 companyName: lead.companyName,
                                 website: lead.website,
@@ -220,7 +220,7 @@ class DiscoveryService {
             }
             // Mark session as completed
             if (sessionId) {
-                await index_1.prisma.discoverySession.update({
+                await index_js_1.prisma.discoverySession.update({
                     where: { id: sessionId },
                     data: {
                         status: 'COMPLETED',
@@ -231,13 +231,13 @@ class DiscoveryService {
                     }
                 }).catch(() => { });
             }
-            index_1.logger.info(`Discovery completed with ${foundImporterIds.length} importers processed`);
+            index_js_1.logger.info(`Discovery completed with ${foundImporterIds.length} importers processed`);
             return foundImporterIds;
         }
         catch (error) {
-            index_1.logger.error('Discovery error:', error);
+            index_js_1.logger.error('Discovery error:', error);
             if (sessionId) {
-                await index_1.prisma.discoverySession.update({
+                await index_js_1.prisma.discoverySession.update({
                     where: { id: sessionId },
                     data: {
                         status: 'FAILED',

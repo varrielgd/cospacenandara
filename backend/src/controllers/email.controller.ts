@@ -1,9 +1,9 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
-import { AiService } from '../services/ai.service';
-import { prisma, logger } from '../index';
+import { AuthRequest } from '../middleware/auth.js';
+import { AiService } from '../services/ai.service.js';
+import { prisma, logger } from '../index.js';
 import nodemailer from 'nodemailer';
-import { EmailSyncService } from '../services/email-sync.service';
+import { EmailSyncService } from '../services/email-sync.service.js';
 import axios from 'axios';
 
 // SMTP Configuration for Hostinger

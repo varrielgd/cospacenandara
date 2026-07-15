@@ -7,7 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { rateLimit } from 'express-rate-limit';
-import { prisma } from './prisma';
+import { prisma } from './prisma.js';
 import winston from 'winston';
 import { Request, Response, NextFunction } from 'express';
 import authRoutes from './routes/auth.routes';
@@ -20,7 +20,7 @@ import emailRoutes from './routes/email.routes';
 import auditRoutes from './routes/audit.routes';
 import supplierRoutes from './routes/supplier.routes';
 import marketRoutes from './routes/market.routes';
-import { errorHandler } from './middleware/error';
+import { errorHandler } from './middleware/error.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -101,7 +101,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use(errorHandler);
 
 // Initialize permanent admin user and handle demo users
-import { ALLOWED_EMAILS } from './config/auth';
+import { ALLOWED_EMAILS } from './config/auth.js';
 
 async function initializeAdminUser() {
   try {

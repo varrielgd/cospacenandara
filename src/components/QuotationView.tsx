@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
 import { Quotation, Lead } from '../types';
-import { 
-  FileText, 
-  MapPin, 
-  Printer, 
-  DollarSign, 
-  Layers, 
-  Coffee, 
-  RotateCcw,
-  Check,
-  Award,
-  Globe2,
-  Sparkles,
-  Info
-} from 'lucide-react';
+
 import { api } from '../utils/api';
 
 interface QuotationViewProps {
@@ -129,25 +116,20 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
       `}} />
 
       {/* Left Column: Register Quotation Input */}
-      <div className="lg:col-span-1 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury space-y-4 print:hidden h-fit">
-        <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-          <div className="p-2.5 bg-primary text-gold rounded-sm">
-            <FileText className="w-5 h-5 text-gold" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">Invoice Generator</h3>
-            <p className="text-xs text-text-dim mt-0.5 font-sans">Formulate formal Export Proformas</p>
-          </div>
+      <div className="lg:col-span-1 p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] space-y-4 print:hidden h-fit">
+        <div className="pb-3 border-b border-gray-100">
+          <h3 className="text-sm font-bold tracking-widest text-[#05190F] uppercase">Invoice Generator</h3>
+          <p className="text-xs text-gray-400 mt-0.5 font-sans">Formulate formal Export Proformas</p>
         </div>
 
         {leads.length === 0 ? (
-          <div className="p-4 bg-[#F6F2E8] border border-primary/10 rounded-sm text-xs font-sans text-primary italic leading-relaxed">
-            Please register leads in the CRM registry before building premium export proformas.
+          <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-xs font-sans text-gray-500 leading-relaxed">
+            Please register leads in the CRM registry before building export proformas.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 text-xs font-mono">
             <div className="space-y-1.5">
-              <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Target Importer Lead</label>
+              <label className="text-[#05190F] font-bold uppercase tracking-widest text-[9px] block">Target Importer Lead</label>
               <select
                 required
                 value={activeLeadId}
@@ -158,7 +140,7 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
                     setBuyerName("Procurement Director");
                   }
                 }}
-                className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2.5 text-xs text-[#05190F] focus:ring-1 focus:ring-[#05190F] focus:border-[#05190F] outline-hidden font-sans"
               >
                 <option value="">Select Importer...</option>
                 {leads.map(lead => (
@@ -170,22 +152,22 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Buyer Attn. Representative</label>
+              <label className="text-[#05190F] font-bold uppercase tracking-widest text-[9px] block">Buyer Attn. Representative</label>
               <input
                 type="text"
                 required
                 value={buyerName}
                 onChange={e => setBuyerName(e.target.value)}
-                className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-xs text-[#05190F] focus:ring-1 focus:ring-[#05190F] focus:border-[#05190F] outline-hidden font-sans"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Specialty Coffee Product</label>
+              <label className="text-[#05190F] font-bold uppercase tracking-widest text-[9px] block">Specialty Coffee Product</label>
               <select
                 value={product}
                 onChange={e => setProduct(e.target.value)}
-                className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2.5 text-xs text-[#05190F] focus:ring-1 focus:ring-[#05190F] focus:border-[#05190F] outline-hidden font-sans"
               >
                 {productsList.map(p => (
                   <option key={p} value={p}>{p}</option>
@@ -194,29 +176,28 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Consignment Quantity</label>
+              <label className="text-[#05190F] font-bold uppercase tracking-widest text-[9px] block">Consignment Quantity</label>
               <input
                 type="text"
                 required
                 placeholder="e.g. 19.2 Metric Tons (1 Container)"
                 value={quantity}
                 onChange={e => setQuantity(e.target.value)}
-                className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+                className="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-xs text-[#05190F] focus:ring-1 focus:ring-[#05190F] focus:border-[#05190F] outline-hidden font-sans"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Price (USD / Ton)</label>
+                  <label className="text-[#05190F] font-bold uppercase tracking-widest text-[9px] block">Price (USD / Ton)</label>
                   <button 
                     type="button" 
                     onClick={handleSuggestPrice}
                     disabled={isSuggesting}
-                    className="text-[9px] flex items-center gap-1 text-gold hover:text-yellow-600 uppercase font-bold tracking-widest disabled:opacity-50"
+                    className="text-[9px] flex items-center gap-1 text-[#05190F] hover:text-[#1a4d2e] uppercase font-bold tracking-widest disabled:opacity-50"
                   >
-                    <Sparkles className="w-3 h-3" />
-                    {isSuggesting ? 'Calculating...' : 'AI Suggest Price'}
+                    {isSuggesting ? 'Calculating...' : 'Suggest Price'}
                   </button>
                 </div>
                 <input
@@ -224,22 +205,21 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
                   required
                   value={price}
                   onChange={e => setPrice(Number(e.target.value))}
-                  className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2 text-xs text-[#05190F] focus:ring-1 focus:ring-[#05190F] focus:border-[#05190F] outline-hidden font-sans"
                 />
                 {suggestMessage && (
-                  <p className="text-[9px] font-sans text-emerald-700 flex items-start gap-1 mt-1 leading-tight">
-                    <Info className="w-3 h-3 shrink-0" />
+                  <p className="text-[9px] font-sans text-emerald-700 mt-1 leading-tight">
                     {suggestMessage}
                   </p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">Incoterm Terms</label>
+                <label className="text-[#05190F] font-bold uppercase tracking-widest text-[9px] block">Incoterm Terms</label>
                 <select
                   value={incoterm}
                   onChange={e => setIncoterm(e.target.value)}
-                  className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2.5 text-xs text-[#05190F] focus:ring-1 focus:ring-[#05190F] focus:border-[#05190F] outline-hidden font-sans"
                 >
                   {incotermList.map(inco => (
                     <option key={inco} value={inco}>{inco}</option>
@@ -250,7 +230,7 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
 
             <button
               type="submit"
-              className="w-full py-3 bg-primary text-white hover:bg-neutral-950 hover:text-gold border border-gold/45 text-xs font-mono uppercase tracking-widest rounded-sm font-bold cursor-pointer transition-all"
+              className="w-full py-3 bg-[#05190F] text-white hover:bg-[#0a2e1a] text-xs font-bold uppercase tracking-widest rounded-md transition-all cursor-pointer"
             >
               Issue New Quotation
             </button>
@@ -261,11 +241,11 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
       {/* Right Column: Ledger List & Detailed Live Print Preview */}
       <div className="lg:col-span-2 space-y-6">
         {/* Invoice selection index list */}
-        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury print:hidden">
-          <h3 className="text-[10px] font-bold tracking-widest text-primary uppercase font-mono mb-3">Issued Quotation Register</h3>
+        <div className="p-6 rounded-lg bg-white border border-gray-100 shadow-[var(--shadow-card)] print:hidden">
+          <h3 className="text-[10px] font-bold tracking-widest text-[#05190F] uppercase mb-3">Issued Quotation Register</h3>
           <div className="flex flex-wrap gap-2.5">
             {quotations.length === 0 ? (
-              <p className="text-xs font-mono text-text-dim italic">No exporter proformas generated yet.</p>
+              <p className="text-xs font-mono text-gray-400 italic">No proformas generated yet.</p>
             ) : (
               quotations.map((q) => {
                 const lead = leads.find(l => l.id === q.leadId);
@@ -273,13 +253,12 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
                   <button
                     key={q.quoteNumber}
                     onClick={() => setSelectedQuote(q)}
-                    className={`px-3 py-2.5 border rounded-sm text-xs font-mono text-left transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-2.5 border rounded-md text-xs font-mono text-left transition-all flex items-center gap-1.5 cursor-pointer ${
                       selectedQuote?.quoteNumber === q.quoteNumber
-                        ? 'border-gold bg-primary text-gold font-bold shadow-xs'
-                        : 'border-primary/10 hover:border-gold/40 text-primary bg-bg-ivory/20'
+                        ? 'border-[#05190F] bg-[#05190F] text-white font-bold'
+                        : 'border-gray-200 hover:border-[#05190F]/40 text-[#05190F] bg-gray-50'
                     }`}
                   >
-                    <FileText className="w-3.5 h-3.5" />
                     <span>#{q.quoteNumber} - {lead ? lead.companyName : "Unknown Entity"}</span>
                   </button>
                 );
@@ -450,7 +429,7 @@ export default function QuotationView({ quotations, leads, onAddQuotation, onUpd
           </div>
         ) : (
           <div className="py-24 text-center border border-dashed border-primary/15 bg-white rounded-sm text-primary/30 shadow-luxury">
-            <FileText className="w-12 h-12 stroke-1 text-gold/40 mx-auto mb-2" />
+            <p className="text-gray-300 text-4xl mx-auto mb-2 text-center">📋</p>
             <p className="text-xs font-mono uppercase tracking-widest">Select or generate an active invoice proforma above to render PDF view</p>
           </div>
         )}

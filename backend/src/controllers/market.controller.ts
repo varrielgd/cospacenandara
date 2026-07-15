@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
-import { MarketDataService } from '../services/market-data.service';
-import { logger } from '../index';
+import { AuthRequest } from '../middleware/auth.js';
+import { MarketDataService } from '../services/market-data.service.js';
+import { logger } from '../index.js';
 
 /**
  * GET /api/market

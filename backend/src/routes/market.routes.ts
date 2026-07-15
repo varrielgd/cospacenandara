@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as marketController from '../controllers/market.controller';
-import { authenticate } from '../middleware/auth';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 

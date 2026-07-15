@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailSyncService = void 0;
 const imapflow_1 = require("imapflow");
 const mailparser_1 = require("mailparser");
-const index_1 = require("../index");
+const index_js_1 = require("../index.js");
 class EmailSyncService {
     static config = {
         host: process.env.IMAP_HOST || 'imap.hostinger.com',
@@ -15,7 +15,7 @@ class EmailSyncService {
         },
     };
     static async syncInbox() {
-        index_1.logger.info(`Attempting IMAP sync for ${this.config.auth.user} at ${this.config.host}:${this.config.port}`);
+        index_js_1.logger.info(`Attempting IMAP sync for ${this.config.auth.user} at ${this.config.host}:${this.config.port}`);
         const client = new imapflow_1.ImapFlow({
             host: this.config.host,
             port: this.config.port,
@@ -28,15 +28,15 @@ class EmailSyncService {
         });
         try {
             await client.connect();
-            index_1.logger.info('IMAP connected successfully');
+            index_js_1.logger.info('IMAP connected successfully');
             const lock = await client.getMailboxLock('INBOX');
             try {
                 const mailbox = client.mailbox;
                 if (!mailbox) {
-                    index_1.logger.error('Mailbox INBOX not found after connection');
+                    index_js_1.logger.error('Mailbox INBOX not found after connection');
                     throw new Error('Mailbox not found');
                 }
-                index_1.logger.info(`Inbox found. Total messages: ${mailbox.exists}`);
+                index_js_1.logger.info(`Inbox found. Total messages: ${mailbox.exists}`);
                 // Fetch last 50 emails to sync
                 const startSeq = Math.max(1, mailbox.exists - 49);
                 const sequence = `${startSeq}:*`;
@@ -46,17 +46,17 @@ class EmailSyncService {
                         continue;
                     const messageId = message.envelope.messageId || `gen-${Date.now()}-${syncedCount}`;
                     // Check if already exists in DB
-                    const existing = await index_1.prisma.email.findUnique({
+                    const existing = await index_js_1.prisma.email.findUnique({
                         where: { messageId }
                     });
                     if (!existing) {
                         const parsed = await (0, mailparser_1.simpleParser)(message.source);
                         const fromEmail = message.envelope.from?.[0]?.address || '';
                         // Try to find matching importer by email
-                        const importer = await index_1.prisma.importer.findFirst({
+                        const importer = await index_js_1.prisma.importer.findFirst({
                             where: { email: fromEmail }
                         });
-                        await index_1.prisma.email.create({
+                        await index_js_1.prisma.email.create({
                             data: {
                                 messageId,
                                 importerId: importer?.id || null,
@@ -72,7 +72,7 @@ class EmailSyncService {
                         syncedCount++;
                     }
                 }
-                index_1.logger.info(`IMAP Sync completed. ${syncedCount} new emails added.`);
+                index_js_1.logger.info(`IMAP Sync completed. ${syncedCount} new emails added.`);
             }
             finally {
                 lock.release();
@@ -80,7 +80,7 @@ class EmailSyncService {
             await client.logout();
         }
         catch (error) {
-            index_1.logger.error('IMAP Sync Error Details:', {
+            index_js_1.logger.error('IMAP Sync Error Details:', {
                 message: error.message,
                 stack: error.stack,
                 config: { ...this.config, pass: '***' }

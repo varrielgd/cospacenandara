@@ -11,9 +11,21 @@ export declare class AiService {
         responseMimeType?: string;
     }): Promise<string>;
     /**
+     * Strips markdown formatting, emojis, and symbols from AI-generated text
+     */
+    private static sanitizeDraft;
+    /**
      * Generates an email draft with automatic failover between Groq and Gemini
      */
-    static generateEmailDraft(importerName: string, context: string, tone?: string): Promise<{
+    /**
+     * Generates an email draft with RAG context (historical lead data + market data)
+     * @param importerName  Company name of the lead
+     * @param context       Base lead info (type, country, coffeeInterest, contact)
+     * @param tone          Email tone (professional, warm, etc.)
+     * @param ragContext    Historical context retrieved from DB (past emails, quotations, samples, notes)
+     * @param marketContext Current market data (coffee price, FX rates, market trends)
+     */
+    static generateEmailDraft(importerName: string, context: string, tone?: string, ragContext?: string, marketContext?: string): Promise<{
         subject: string;
         body: string;
     }>;

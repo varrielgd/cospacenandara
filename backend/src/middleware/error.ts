@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { logger } from '../index';
+import { logger } from '../index.js';
 
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   logger.error(`${err.message} - ${req.method} ${req.url} - ${req.ip}`);

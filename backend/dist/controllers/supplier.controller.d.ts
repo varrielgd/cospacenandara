@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.js';
 export declare const getAllSuppliers: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const getSupplierById: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const createSupplier: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;

@@ -8,12 +8,11 @@ const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables immediately
 dotenv_1.default.config();
 const express_1 = __importDefault(require("express"));
-const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = require("express-rate-limit");
-const prisma_1 = require("./prisma");
-Object.defineProperty(exports, "prisma", { enumerable: true, get: function () { return prisma_1.prisma; } });
+const prisma_js_1 = require("./prisma.js");
+Object.defineProperty(exports, "prisma", { enumerable: true, get: function () { return prisma_js_1.prisma; } });
 const winston_1 = __importDefault(require("winston"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const importer_routes_1 = __importDefault(require("./routes/importer.routes"));
@@ -24,7 +23,8 @@ const discovery_routes_1 = __importDefault(require("./routes/discovery.routes"))
 const email_routes_1 = __importDefault(require("./routes/email.routes"));
 const audit_routes_1 = __importDefault(require("./routes/audit.routes"));
 const supplier_routes_1 = __importDefault(require("./routes/supplier.routes"));
-const error_1 = require("./middleware/error");
+const market_routes_1 = __importDefault(require("./routes/market.routes"));
+const error_js_1 = require("./middleware/error.js");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const app = (0, express_1.default)();
 exports.app = app;
@@ -42,19 +42,22 @@ const logger = winston_1.default.createLogger({
     ],
 });
 exports.logger = logger;
+// Global CORS headers - must be first before any other middleware
+app.use((_req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    if (_req.method === 'OPTIONS') {
+        res.sendStatus(204);
+        return;
+    }
+    next();
+});
 // Security Middleware
 app.use((0, helmet_1.default)({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-app.use((0, cors_1.default)({
-    origin: [
-        'https://nandaracorporation.vercel.app',
-        'https://nandaracorporation-8yzm3o79w.vercel.app',
-        'https://cospace.nandaranusamontierra.com',
-        'http://localhost:3000',
-        'http://localhost:5173'
-    ],
-    credentials: true
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false
 }));
 // Rate limiting
 const limiter = (0, express_rate_limit_1.rateLimit)({
@@ -80,23 +83,24 @@ app.use('/api/discovery', discovery_routes_1.default);
 app.use('/api/emails', email_routes_1.default);
 app.use('/api/audit', audit_routes_1.default);
 app.use('/api/suppliers', supplier_routes_1.default);
+app.use('/api/market', market_routes_1.default);
 // Basic Health Check
 app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 // Error handling
-app.use(error_1.errorHandler);
+app.use(error_js_1.errorHandler);
 // Initialize permanent admin user and handle demo users
-const auth_1 = require("./config/auth");
+const auth_js_1 = require("./config/auth.js");
 async function initializeAdminUser() {
     try {
         const hashedPassword = await bcryptjs_1.default.hash('Ghfso#!@!5246!#!@g7', 10);
-        for (const email of auth_1.ALLOWED_EMAILS) {
-            const existing = await prisma_1.prisma.user.findUnique({ where: { email } });
+        for (const email of auth_js_1.ALLOWED_EMAILS) {
+            const existing = await prisma_js_1.prisma.user.findUnique({ where: { email } });
             const firstName = email.includes('nandara') ? 'Nandara' : 'Nanda';
             const lastName = email.includes('nandara') ? 'Nusa' : 'Latifani';
             if (!existing) {
-                await prisma_1.prisma.user.create({
+                await prisma_js_1.prisma.user.create({
                     data: {
                         email,
                         firstName,
@@ -109,7 +113,7 @@ async function initializeAdminUser() {
                 logger.info(`SUPER_ADMIN ${email} created`);
             }
             else {
-                await prisma_1.prisma.user.update({
+                await prisma_js_1.prisma.user.update({
                     where: { email },
                     data: { role: 'SUPER_ADMIN', password: hashedPassword, isVerified: true }
                 });
@@ -132,14 +136,8 @@ app.listen(port, async () => {
         }
         const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ':****@');
         logger.info(`Attempting to connect to database: ${maskedUrl}`);
-        await prisma_1.prisma.$connect();
+        await prisma_js_1.prisma.$connect();
         logger.info('Database connection established successfully');
-        await prisma_1.prisma.$connect();
-        logger.info('Database connection established successfully');
-        // initializeAdminUser disabled for production
-        // await initializeAdminUser();
-        console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
-        logger.info(`Server started on port ${port}`);
         console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
         logger.info(`Server started on port ${port}`);
     }

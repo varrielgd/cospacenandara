@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as importerController from '../controllers/importer.controller';       
-import { authenticate } from '../middleware/auth';
-import { importerValidator } from '../validators';
+import * as importerController from '../controllers/importer.controller.js';
+import { authenticate } from '../middleware/auth.js';
+import { importerValidator } from '../validators/index.js';
 import multer from 'multer';
 
 const router = Router();

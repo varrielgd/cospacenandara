@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as sampleController from '../controllers/sample.controller';
-import { authenticate } from '../middleware/auth';
-import { sampleValidator } from '../validators';
+import * as sampleController from '../controllers/sample.controller.js';
+import { authenticate } from '../middleware/auth.js';
+import { sampleValidator } from '../validators/index.js';
 
 const router = Router();
 

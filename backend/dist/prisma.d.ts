@@ -1,9 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 export declare const prisma: PrismaClient<{
-    datasources: {
-        db: {
-            url: string;
-        };
-    };
-}, never, import("@prisma/client/runtime/library").DefaultArgs>;
+    adapter: PrismaPg;
+}, never, import("@prisma/client/runtime/client").DefaultArgs>;
 //# sourceMappingURL=prisma.d.ts.map
