@@ -7,38 +7,36 @@ import { EmailSyncService } from '../services/email-sync.service';
 import axios from 'axios';
 
 // SMTP Configuration for Hostinger
-// IMPORTANT: If Cloudflare proxy is active on smtp.hostinger.com domain,
-// SMTP connections will TIMEOUT because Cloudflare only proxies HTTP/HTTPS (ports 80, 443),
-// NOT SMTP (ports 25, 465, 587).
+// FIX: Cloud hosting platforms (Render, Heroku, etc.) commonly block outbound port 465 (SMTP SSL)
+// to prevent spam. Use port 587 with STARTTLS (secure: false + requireTLS: true) instead.
 //
-// Solution: Use the direct Hostinger mail server hostname that bypasses Cloudflare.
-// Common Hostinger direct mail server hostnames:
-//   - mx1.hostinger.com
-//   - mx2.hostinger.com  
-//   - The server hostname from your Hostinger control panel (e.g., srv1.hostinger.com or similar)
+// Port 465 → SSL/TLS directly (often BLOCKED by cloud providers)
+// Port 587 → STARTTLS (upgrades to TLS after connection — usually ALLOWED)
 //
-// To find your direct mail server:
-// 1. Login to Hostinger hPanel → Emails → Email Accounts
-// 2. Look for "Mail Server" or "Incoming/Outgoing Server" settings
-// 3. Use that hostname here instead of smtp.hostinger.com
-//
-// Alternatively, in Cloudflare DNS:
-// - Change the mail subdomain record from Proxied (orange cloud) to DNS Only (grey cloud)
-// - Or add a separate record like "mail.yourdomain.com" pointing to Hostinger IP (DNS Only)
+// If smtp.hostinger.com still times out, it may be behind a Cloudflare proxy.
+// In that case, check Hostinger hPanel → Email Accounts for the raw server hostname.
 const smtpHost = process.env.SMTP_HOST || 'smtp.hostinger.com';
+const smtpPort = parseInt(process.env.SMTP_PORT || '587');
+// Port 587 uses STARTTLS: secure must be false, requireTLS ensures upgrade happens
+const smtpSecure = smtpPort === 465;
 
 const smtpConfig = {
   host: smtpHost,
-  port: parseInt(process.env.SMTP_PORT || '465'),
-  secure: process.env.SMTP_SECURE === 'true',
+  port: smtpPort,
+  secure: smtpSecure,        // true only for port 465 (direct SSL)
+  requireTLS: !smtpSecure,   // force STARTTLS upgrade on port 587
   auth: {
     user: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
-    pass: process.env.SMTP_PASS || 'Ghfso#!@!5246!#!@g7',
+    pass: process.env.SMTP_PASS || '',
   },
-  // Timeout settings to prevent hanging
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
+  tls: {
+    rejectUnauthorized: false, // allow self-signed certs (common on shared hosting)
+    minVersion: 'TLSv1.2' as const,
+  },
+  // Generous timeout settings for cloud-hosted backend
+  connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 45000,
 };
 
 const transporter = nodemailer.createTransport(smtpConfig);
@@ -217,16 +215,27 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
       return res.json({ message: 'Email simulated (SMTP not configured)', messageId: 'simulated' });
     }
 
-    // Create a transport with timeout
+    // Create a transport with STARTTLS on port 587 (cloud-hosting friendly)
+    // Port 465 (SSL) is commonly blocked by Render/Heroku/etc. Port 587 (STARTTLS) is not.
+    const resolvedPort = parseInt(process.env.SMTP_PORT || '587');
+    const resolvedSecure = resolvedPort === 465;
+
     const tempTransporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-      port: parseInt(process.env.SMTP_PORT || '465'),
-      secure: process.env.SMTP_SECURE === 'true',
+      port: resolvedPort,
+      secure: resolvedSecure,
+      requireTLS: !resolvedSecure,
       auth: { user: smtpUser, pass: smtpPass },
-      connectionTimeout: 10000, // 10 second timeout
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2' as const,
+      },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 45000,
     });
+
+    logger.info(`Attempting SMTP send via ${process.env.SMTP_HOST || 'smtp.hostinger.com'}:${resolvedPort} (secure=${resolvedSecure})`);
 
     const info: any = await tempTransporter.sendMail({
       from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${smtpUser}>`,
