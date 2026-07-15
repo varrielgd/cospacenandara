@@ -1560,6 +1560,81 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                       We offer free 500g physical sample bags shipped globally via DHL Express or FedEx Priority to verified international green coffee importers and commercial roasters. Feedback cupping logs are politely requested within 14 calendar days of receipt.
                     </p>
                   </div>
+
+                  {/* Email attachment sequencing guide */}
+                  <div className="space-y-2 font-sans">
+                    <span className="text-[9px] uppercase tracking-widest text-primary block font-bold font-mono">Email Attachment Sequence Guide:</span>
+                    <div className="border border-primary/10 rounded-sm overflow-hidden text-[10px] leading-relaxed">
+                      <div className="grid grid-cols-[1.2fr_1fr] bg-bg-ivory/50 p-2 font-bold uppercase text-primary border-b border-primary/10">
+                        <div>Email Sequence</div>
+                        <div>Attachment</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">FIRST_CONTACT</div>
+                        <div className="text-gray-600">Company Profile, Catalogue</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">FOLLOW_UP_1</div>
+                        <div className="text-gray-600">No new attachment needed, or Company Profile if first email was not opened</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">FOLLOW_UP_2</div>
+                        <div className="text-gray-600">Price List</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">SAMPLE_OFFER</div>
+                        <div className="text-gray-600">Sample Program</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">SAMPLE_SENT</div>
+                        <div className="text-gray-600">No attachment needed; include tracking number if available</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">SAMPLE_FEEDBACK</div>
+                        <div className="text-gray-600">No attachment needed</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">QUOTATION</div>
+                        <div className="text-gray-600">Quotation, Price List</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">NEGOTIATION</div>
+                        <div className="text-gray-600">Revised Quotation if terms change</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">PRICE_UPDATE</div>
+                        <div className="text-gray-600">Latest Price List</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">NEW_HARVEST</div>
+                        <div className="text-gray-600">Latest Catalogue, Latest Price List</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">REENGAGEMENT</div>
+                        <div className="text-gray-600">Company Profile optional, Latest Price List</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">MEETING_THANKYOU</div>
+                        <div className="text-gray-600">Meeting summary PDF optional</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">SHIPMENT_READY</div>
+                        <div className="text-gray-600">Proforma Invoice</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">SHIPMENT_SENT</div>
+                        <div className="text-gray-600">Invoice / Shipping Docs later</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 border-b border-primary/10 bg-white">
+                        <div className="font-semibold text-gray-700">CONTRACT_REMINDER</div>
+                        <div className="text-gray-600">Proforma Invoice, Latest Quotation</div>
+                      </div>
+                      <div className="grid grid-cols-[1.2fr_1fr] p-2 bg-white">
+                        <div className="font-semibold text-gray-700">LONG_TERM_PARTNERSHIP</div>
+                        <div className="text-gray-600">Latest Company Profile, Latest Catalogue</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
