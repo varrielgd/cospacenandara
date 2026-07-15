@@ -164,8 +164,9 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
       <div className="p-8 sm:p-10 rounded-lg bg-[#05190F] relative overflow-hidden text-white" id="brand-welcome-hero">
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-white/[0.03] to-transparent pointer-events-none" />
         <div className="max-w-2xl space-y-4">
-          <div className="inline-flex items-center px-2.5 py-1 bg-white/10 border border-white/20 text-white/70 rounded-md text-[9px] font-mono uppercase tracking-widest">
-            Nandara Nusa Montierra
+          <div className="inline-flex items-center gap-3 px-3 py-1.5 bg-white/10 border border-white/20 rounded-md">
+            <img src="/assets/images/logo/logo-nnm.png" alt="Nandara Nusa Montierra" className="h-6 w-auto object-contain" />
+            <span className="text-white/70 text-[10px] font-mono uppercase tracking-widest font-semibold">Export Intelligence</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
             Coffee Importer <span className="text-white/60">Intelligence</span> System

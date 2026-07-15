@@ -57,9 +57,9 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
       
       <div className="max-w-lg w-full relative z-10">
         <div className="text-center mb-12">
-          <h1 className="font-sans font-bold text-4xl lg:text-5xl text-white tracking-tight mb-4">
-            Nandara Nusa Montierra
-          </h1>
+          <div className="flex justify-center mb-6">
+            <img src="/assets/images/logo/logo-nnm.png" alt="Nandara Nusa Montierra" className="h-20 w-auto object-contain" />
+          </div>
           
           <div className="flex flex-col items-center gap-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 border border-white/20 rounded-full">
