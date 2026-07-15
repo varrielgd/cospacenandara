@@ -545,6 +545,23 @@ CTA SOFT: "I would be happy to prepare a proposal for your team to review at you
       attachments = attachMatch[1].trim();
     }
 
+    // Fix common typos in AI output
+    body = body
+      .replace(/\beort\b/gi, 'export')
+      .replace(/\beorter\b/gi, 'exporter')
+      .replace(/\beort relations\b/gi, 'export relations')
+      .replace(/\bexort\b/gi, 'export')
+      .replace(/\bexorter\b/gi, 'exporter');
+
+    subjects = subjects.map(s =>
+      s
+        .replace(/\beort\b/gi, 'export')
+        .replace(/\beorter\b/gi, 'exporter')
+        .replace(/\beort relations\b/gi, 'export relations')
+        .replace(/\bexort\b/gi, 'export')
+        .replace(/\bexorter\b/gi, 'exporter')
+    );
+
     // Use first subject as primary or generate one
     const primarySubject = subjects[0] || `Partnership Inquiry: Premium Indonesian Coffee`;
 
