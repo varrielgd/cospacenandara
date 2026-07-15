@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
 import { Lead } from '../types';
+import {
+  Layers,
+  ClipboardList,
+  Calculator,
+  Handshake,
+  Ship,
+  FileText,
+  Flame,
+  Coffee,
+  ShieldAlert,
+  HelpCircle
+} from 'lucide-react';
 
 const ROAST_PROFILES_MAP: Record<string, {
   name: string;
@@ -3098,13 +3110,13 @@ export@nandaramontierra.id`,
                             }`}
                             title="Salin Tanya-Jawab ke Clipboard"
                           >
-                            {isCopied ? <span className="text-[10px] font-mono font-bold text-emerald-700 px-1">✓ Copied</span> : }
+                            {isCopied ? <span className="text-[10px] font-mono font-bold text-emerald-700 px-1">✓ Copied</span> : <span className="text-[10px] font-mono px-1">Copy</span>}
                           </button>
                           <span>
                             {isExpanded ? (
-                              
+                              <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
                             ) : (
-                              
+                              <svg className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                             )}
                           </span>
                         </div>

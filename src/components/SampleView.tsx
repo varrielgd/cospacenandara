@@ -72,10 +72,10 @@ export default function SampleView({ samples, leads, onAddSample, onUpdateSample
 
   const getStatusIcon = (st: Sample['status']) => {
     switch(st) {
-      case 'Preparing': return ;
-      case 'Shipped': return ;
-      case 'Delivered': return ;
-      default: return ;
+      case 'Preparing': return <span className="text-[11px]">📦</span>;
+      case 'Shipped': return <span className="text-[11px]">🚚</span>;
+      case 'Delivered': return <span className="text-[11px]">✅</span>;
+      default: return <span className="text-[11px]">◻</span>;
     }
   };
 

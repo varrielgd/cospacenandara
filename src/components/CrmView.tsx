@@ -821,7 +821,7 @@ export default function CrmView({
             <div className="flex justify-between items-center pb-3 border-b border-primary/10">
               <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">Create Custom Export Lead</h3>
               <button onClick={() => setShowAddModal(false)} className="text-[#05190F] opacity-60 hover:opacity-100 cursor-pointer">
-                <X className="w-4 h-4" />
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
 
