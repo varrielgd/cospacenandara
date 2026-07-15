@@ -608,6 +608,52 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
       logger.warn('[RAG] Market data unavailable, proceeding without it:', mktErr);
     }
 
+    // ── Determine timeline count and days since last contact ──────────────────
+    let timelineCount = 0;
+    let daysSinceLastContact: number | null = null;
+    let latestSampleStatus: string | null = null;
+    let latestQuoteStatus: string | null = null;
+    let leadStatus: string = 'New Lead';
+
+    if (leadId) {
+      try {
+        const lead = await prisma.importer.findUnique({
+          where: { id: leadId as string },
+          select: { status: true, updatedAt: true }
+        });
+        if (lead) {
+          leadStatus = lead.status || 'New Lead';
+          // Use updatedAt as proxy for last contact time
+          const lastContactDate = new Date(lead.updatedAt);
+          daysSinceLastContact = Math.floor((Date.now() - lastContactDate.getTime()) / (1000 * 60 * 60 * 24));
+        }
+
+        // Count past emails
+        const emailCount = await prisma.email.count({
+          where: { importerId: leadId as string, direction: 'OUTBOUND' }
+        });
+        timelineCount = emailCount;
+
+        // Get latest sample status
+        const latestSample = await prisma.sample.findFirst({
+          where: { importerId: leadId as string },
+          orderBy: { createdAt: 'desc' },
+          select: { status: true }
+        });
+        if (latestSample) latestSampleStatus = latestSample.status;
+
+        // Get latest quote status
+        const latestQuote = await prisma.quotation.findFirst({
+          where: { importerId: leadId as string },
+          orderBy: { createdAt: 'desc' },
+          select: { status: true }
+        });
+        if (latestQuote) latestQuoteStatus = latestQuote.status;
+      } catch (err) {
+        logger.warn('[EmailGen] Failed to determine timeline, using defaults:', err);
+      }
+    }
+
     // ── Generate email with enriched context ──────────────────────────────────
     const baseContext = `Lead Type: ${leadType}, Country: ${country}, Coffee Interest: ${coffeeInterest}, Contact Name: ${contactName}`;
     const draft = await AiService.generateEmailDraft(
@@ -615,10 +661,27 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
       baseContext,
       'professional',
       ragContext,
-      marketContext
+      marketContext,
+      {
+        leadStatus,
+        timelineCount,
+        coffeeInterest,
+        contactName,
+        buyerWebsite: '',
+        latestSampleStatus,
+        latestQuoteStatus,
+        daysSinceLastContact,
+        buyerCountry: country
+      }
     );
 
-    return res.json({ subject: draft.subject, body: draft.body });
+    return res.json({ 
+      subject: draft.subject, 
+      body: draft.body,
+      subjects: draft.subjects,
+      attachments: draft.attachments,
+      emailType: AiService.determineEmailType(leadStatus, timelineCount, latestSampleStatus, latestQuoteStatus, daysSinceLastContact)
+    });
   } catch (error) {
     logger.error('Lead email generation error:', error);
     return res.status(500).json({ message: 'Internal server error' });
