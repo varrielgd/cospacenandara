@@ -37,8 +37,17 @@ FORMATTING RULES (CRITICAL):
         apiKey: process.env.GROQ_API_KEY || ''
     });
     static genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    // Use Groq as primary — faster & more reliable on Render (Gemini can timeout)
-    static primaryProvider = 'groq';
+    // Determine primary provider based on available API keys
+    static primaryProvider = (() => {
+        const hasGroqKey = !!process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 0;
+        const hasGeminiKey = !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0;
+        if (hasGroqKey)
+            return 'groq';
+        if (hasGeminiKey)
+            return 'gemini';
+        index_js_1.logger.warn('No AI API keys available — will always use fallback draft');
+        return 'groq'; // Default to groq, will fail and use fallback
+    })();
     /**
      * Generates content using available AI providers with automatic fallback
      */
