@@ -44,38 +44,36 @@ const logger = winston.createLogger({
 
 // Security Middleware
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false
 }));
 
-const corsOptions = {
+const allowedOrigins = [
+  'https://nandaracorporation.vercel.app',
+  'https://nandaracorporation-8yzm3o79w.vercel.app',
+  'https://cospacenandara.vercel.app',
+  'https://cospace.nandaranusamontierra.com',
+  'http://localhost:3000',
+  'http://localhost:5173'
+];
+
+// CORS preflight middleware - must run before ANY route
+const corsMiddleware = cors({
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    const allowedOrigins = [
-      'https://nandaracorporation.vercel.app',
-      'https://nandaracorporation-8yzm3o79w.vercel.app',
-      'https://cospacenandara.vercel.app',
-      'https://cospace.nandaranusamontierra.com',
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ];
-    
-    // Allow requests with no origin (like curl, Postman, or server-to-server)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     } else {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+      return callback(new Error('CORS not allowed'), false);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 204
+});
 
-app.use(cors(corsOptions));
-// In Express 5, the cors middleware already handles OPTIONS requests, so we don't need separate app.options()!
-// The cors package handles preflight automatically when credentials are true!
+app.use(corsMiddleware);
 
 
 // Rate limiting
@@ -168,14 +166,7 @@ app.listen(port, async () => {
 
     await prisma.$connect();
     logger.info('Database connection established successfully');
-    await prisma.$connect();
-logger.info('Database connection established successfully');
 
-// initializeAdminUser disabled for production
-// await initializeAdminUser();
-
-console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
-logger.info(`Server started on port ${port}`);
     console.log(`[server]: CIIS Backend is running at http://localhost:${port}`);
     logger.info(`Server started on port ${port}`);
   } catch (error) {
