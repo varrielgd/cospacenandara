@@ -72,6 +72,21 @@ function mapStatusToFrontend(status: string): string {
   return frontendMap[status] || status;
 }
 
+function normalizeEmailForFrontend<T extends {
+  importerId?: string | null;
+  subject?: string | null;
+  body?: string | null;
+  to?: string | null;
+}>(email: T) {
+  return {
+    ...email,
+    leadId: email.importerId ?? undefined,
+    emailSubject: email.subject ?? '',
+    emailBody: email.body ?? '',
+    recipientEmail: email.to ?? '',
+  };
+}
+
 export const generateDraft = async (req: AuthRequest, res: Response) => {
   try {
     const { importerId, context, tone } = req.body;
@@ -175,7 +190,7 @@ export const getAllEmails = async (_req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     const mapped = emails.map(email => ({
-      ...email,
+      ...normalizeEmailForFrontend(email),
       status: mapStatusToFrontend(email.status)
     }));
     return res.json(mapped);
@@ -368,7 +383,7 @@ export const getInbox = async (_req: AuthRequest, res: Response) => {
       take: 50
     });
     const mapped = emails.map(email => ({
-      ...email,
+      ...normalizeEmailForFrontend(email),
       status: mapStatusToFrontend(email.status)
     }));
     return res.json(mapped);
@@ -396,7 +411,7 @@ export const getEmailsByImporter = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
     const mapped = emails.map(email => ({
-      ...email,
+      ...normalizeEmailForFrontend(email),
       status: mapStatusToFrontend(email.status)
     }));
     return res.json(mapped);
@@ -429,7 +444,7 @@ export const createEmail = async (req: AuthRequest, res: Response) => {
 
     // Map status back to frontend-friendly format
     const frontendStatus = status || 'Draft Generated';
-    return res.json({ ...email, status: frontendStatus });
+    return res.json({ ...normalizeEmailForFrontend(email), status: frontendStatus });
   } catch (error) {
     logger.error('Create email error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -468,7 +483,7 @@ export const updateEmail = async (req: AuthRequest, res: Response) => {
     });
 
     const frontendStatus = status || mapStatusToFrontend(email.status);
-    return res.json({ ...email, status: frontendStatus });
+    return res.json({ ...normalizeEmailForFrontend(email), status: frontendStatus });
   } catch (error) {
     logger.error('Update email error:', error);
     return res.status(500).json({ message: 'Internal server error' });

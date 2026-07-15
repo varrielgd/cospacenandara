@@ -110,15 +110,15 @@ export default function EmailGeneratorView({
     if (isGenerating) return;
 
     // Search for existing email log for this lead
-    const existing = emailLogs.find(log => log.leadId === activeLead.id);
+    const existing = emailLogs.find(log => (log.leadId || log.importerId) === activeLead.id);
     
     if (existing) {
       setCurrentEmailId(existing.id);
-      setRecipientEmail(existing.recipientEmail || activeLead.email || '');
+      setRecipientEmail(existing.recipientEmail || existing.to || activeLead.email || '');
       setCc(existing.cc || '');
       setBcc(existing.bcc || '');
-      setSubject(existing.emailSubject);
-      setBody(existing.emailBody);
+      setSubject(existing.emailSubject || existing.subject || '');
+      setBody(existing.emailBody || existing.body || '');
       setAttachPdfQuotation(existing.attachPdfQuotation || 'none');
       setAttachCatalogue(existing.attachCatalogue || false);
       setCatalogueDriveLink(existing.catalogueDriveLink || '');

@@ -62,6 +62,7 @@ export type EmailStatus =
 export interface EmailLog {
   id: string;
   leadId?: string; // matches importerId in Prisma
+  importerId?: string;
   subject?: string;
   body?: string;
   to?: string; // recipient email

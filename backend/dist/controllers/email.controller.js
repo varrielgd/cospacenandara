@@ -70,6 +70,15 @@ function mapStatusToFrontend(status) {
     };
     return frontendMap[status] || status;
 }
+function normalizeEmailForFrontend(email) {
+    return {
+        ...email,
+        leadId: email.importerId ?? undefined,
+        emailSubject: email.subject ?? '',
+        emailBody: email.body ?? '',
+        recipientEmail: email.to ?? '',
+    };
+}
 const generateDraft = async (req, res) => {
     try {
         const { importerId, context, tone } = req.body;
@@ -169,7 +178,7 @@ const getAllEmails = async (_req, res) => {
             orderBy: { createdAt: 'desc' }
         });
         const mapped = emails.map(email => ({
-            ...email,
+            ...normalizeEmailForFrontend(email),
             status: mapStatusToFrontend(email.status)
         }));
         return res.json(mapped);
@@ -336,7 +345,7 @@ const getInbox = async (_req, res) => {
             take: 50
         });
         const mapped = emails.map(email => ({
-            ...email,
+            ...normalizeEmailForFrontend(email),
             status: mapStatusToFrontend(email.status)
         }));
         return res.json(mapped);
@@ -366,7 +375,7 @@ const getEmailsByImporter = async (req, res) => {
             orderBy: { createdAt: 'desc' }
         });
         const mapped = emails.map(email => ({
-            ...email,
+            ...normalizeEmailForFrontend(email),
             status: mapStatusToFrontend(email.status)
         }));
         return res.json(mapped);
@@ -397,7 +406,7 @@ const createEmail = async (req, res) => {
         });
         // Map status back to frontend-friendly format
         const frontendStatus = status || 'Draft Generated';
-        return res.json({ ...email, status: frontendStatus });
+        return res.json({ ...normalizeEmailForFrontend(email), status: frontendStatus });
     }
     catch (error) {
         index_js_1.logger.error('Create email error:', error);
@@ -426,7 +435,7 @@ const updateEmail = async (req, res) => {
             include: { importer: true }
         });
         const frontendStatus = status || mapStatusToFrontend(email.status);
-        return res.json({ ...email, status: frontendStatus });
+        return res.json({ ...normalizeEmailForFrontend(email), status: frontendStatus });
     }
     catch (error) {
         index_js_1.logger.error('Update email error:', error);
