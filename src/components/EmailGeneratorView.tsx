@@ -139,10 +139,10 @@ export default function EmailGeneratorView({
   // Load existing email or initialize when activeLead change
   useEffect(() => {
     if (!activeLead) return;
-    // Don't reset form while a draft is being generated — avoids race condition
-    // where refreshEmails() fires and wipes the newly-generated draft from the UI.
+    // Don't reset form while a draft is being generated or while the current draft is already populated.
     if (isGenerating) return;
-    if (status === 'Draft Generated' && generatedLeadId === activeLead.id && (subject || body)) return;
+    const hasDraftContent = Boolean(subject || body || currentEmailId);
+    if ((status === 'Draft Generated' || status === 'Approved' || status === 'Sent') && generatedLeadId === activeLead.id && hasDraftContent) return;
 
     setEmailType(getRecommendedEmailType(activeLead, emailLogs));
 
