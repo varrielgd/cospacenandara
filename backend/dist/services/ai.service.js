@@ -237,7 +237,7 @@ Nandara Nusa Montierra Team`
     static async tryGemini(prompt, systemInstruction, responseMimeType) {
         try {
             index_js_1.logger.info('Attempting AI generation with Gemini...');
-            const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+            const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
             const safetySettings = [
                 { category: generative_ai_1.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: generative_ai_1.HarmBlockThreshold.BLOCK_NONE },
                 { category: generative_ai_1.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: generative_ai_1.HarmBlockThreshold.BLOCK_NONE },
