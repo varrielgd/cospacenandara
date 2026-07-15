@@ -536,9 +536,6 @@ export default function EmailGeneratorView({
       {/* Left Column: Form Settings & Selection */}
       <div className="lg:col-span-1 p-6 rounded-lg bg-white border border-primary/5 shadow-luxury space-y-5" id="outreach-config">
         <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-          <div className="p-2.5 bg-primary text-gold rounded-sm">
-            
-          </div>
           <div>
             <h3 className="text-sm font-semibold tracking-widest text-[#05190F] uppercase font-mono">B2B Sourcing Target</h3>
             <p className="text-xs text-text-dim mt-0.5">Scout and trigger drafting</p>
@@ -616,10 +613,9 @@ export default function EmailGeneratorView({
         <button
           onClick={handleGenerate}
           disabled={!activeLead || isGenerating}
-          className="w-full py-3 bg-primary hover:bg-[#0c3320] text-gold hover:text-white text-xs font-mono uppercase tracking-widest border border-gold/45 rounded-sm select-none cursor-pointer transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 font-bold"
+          className="w-full py-3 bg-primary hover:bg-[#0c3320] text-white hover:text-gold text-xs font-mono uppercase tracking-widest border border-gold/45 rounded-sm select-none cursor-pointer transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 font-bold"
         >
-          
-          {isGenerating ? "Molding Cooperative Draft..." : "Generate Draft"}
+          {isGenerating ? "Generating Draft..." : "Generate Draft"}
         </button>
       </div>
 
@@ -640,7 +636,7 @@ export default function EmailGeneratorView({
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
                   : 'bg-amber-50 text-amber-800 border-amber-200'
               }`}>
-                {isApproved ?  : }
+                {isApproved ? '✓' : '⚠'}
                 {isApproved ? 'Approved = TRUE (Unlocked)' : 'Approved = FALSE (Locked)'}
               </span>
             </div>

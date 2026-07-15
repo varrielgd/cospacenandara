@@ -194,7 +194,7 @@ export default function EmailManagementView() {
                   disabled={isSending}
                   className="px-8 py-3 bg-primary text-gold rounded-md text-xs font-mono uppercase tracking-widest flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50"
                 >
-                  {isSending ?  : }
+                  {isSending ? '...' : '→'}
                   Send Email
                 </button>
               </div>

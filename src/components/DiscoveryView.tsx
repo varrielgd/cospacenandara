@@ -619,7 +619,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                 {/* Status or Error Message */}
                 {(statusMessage || error) && (
                   <div className={`p-3 rounded-md text-[10px] font-mono uppercase tracking-widest ${error ? 'bg-red-900/30 text-red-400' : 'bg-[#1a3a2a] text-[#8fb499]'}`}>
-                    {error ?  : }
+                    {error ? '✕' : '✓'}
                     {error || statusMessage}
                   </div>
                 )}
@@ -772,7 +772,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                         }`}
                         title="Copy to clipboard"
                       >
-                        {copiedId === lead.id ?  : }
+                        {copiedId === lead.id ? '✓' : '⎘'}
                         {copiedId === lead.id ? 'Copied' : 'Copy'}
                       </button>
                       <button
@@ -785,7 +785,7 @@ export default function DiscoveryView({ onAddLeads, existingLeads }: DiscoveryVi
                         }`}
                         title="Push to Google Sheets"
                       >
-                        {isSyncingId === lead.id ?  : }
+                        {isSyncingId === lead.id ? '...' : '↑'}
                         {isSyncingId === lead.id ? 'Syncing' : 'Sheets'}
                       </button>
                     </div>

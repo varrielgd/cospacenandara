@@ -35,8 +35,15 @@ FORMATTING RULES (CRITICAL):
 
   private static genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-  // Track the primary provider to avoid unnecessary failures if one is rate limited
-  private static primaryProvider: 'groq' | 'gemini' = 'gemini';
+  // Determine primary provider based on available API keys
+  private static primaryProvider: 'groq' | 'gemini' = (() => {
+    const hasGroqKey = !!process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 0;
+    const hasGeminiKey = !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0;
+    if (hasGroqKey) return 'groq';
+    if (hasGeminiKey) return 'gemini';
+    logger.warn('No AI API keys available — will always use fallback draft');
+    return 'groq'; // Default to groq, will fail and use fallback
+  })();
 
   /**
    * Generates content using available AI providers with automatic fallback
@@ -245,6 +252,7 @@ Nandara Nusa Montierra Team`
   }
 
   private static async tryGemini(prompt: string, systemInstruction: string, responseMimeType?: string) {
+    const TIMEOUT_MS = 25000; // 25 second timeout to prevent hanging
     try {
       logger.info('Attempting AI generation with Gemini...');
       const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
@@ -269,7 +277,14 @@ Nandara Nusa Montierra Team`
         safetySettings
       });
 
-      const result = await model.generateContent(prompt);
+      // Race Gemini against a timeout to prevent indefinite hanging on Render
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Gemini request timed out after 25s')), TIMEOUT_MS)
+        )
+      ]);
+
       const response = await result.response;
       const text = response.text();
 

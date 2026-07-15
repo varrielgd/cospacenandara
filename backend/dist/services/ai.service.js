@@ -37,8 +37,8 @@ FORMATTING RULES (CRITICAL):
         apiKey: process.env.GROQ_API_KEY || ''
     });
     static genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    // Track the primary provider to avoid unnecessary failures if one is rate limited
-    static primaryProvider = 'gemini';
+    // Use Groq as primary — faster & more reliable on Render (Gemini can timeout)
+    static primaryProvider = 'groq';
     /**
      * Generates content using available AI providers with automatic fallback
      */
@@ -235,6 +235,7 @@ Nandara Nusa Montierra Team`
         }
     }
     static async tryGemini(prompt, systemInstruction, responseMimeType) {
+        const TIMEOUT_MS = 25000; // 25 second timeout to prevent hanging
         try {
             index_js_1.logger.info('Attempting AI generation with Gemini...');
             const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
@@ -256,7 +257,11 @@ Nandara Nusa Montierra Team`
                 },
                 safetySettings
             });
-            const result = await model.generateContent(prompt);
+            // Race Gemini against a timeout to prevent indefinite hanging on Render
+            const result = await Promise.race([
+                model.generateContent(prompt),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Gemini request timed out after 25s')), TIMEOUT_MS))
+            ]);
             const response = await result.response;
             const text = response.text();
             if (text) {

@@ -678,7 +678,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
       {/* Subtab Navigation Panel */}
       <div className="border-b border-[#05190F]/10 flex flex-wrap gap-1 md:gap-2 pb-1" id="curriculum-subtabs">
         {[
-          { id: 'blueprint', label: 'Secrets of Pecah Telur', icon: },
+          { id: 'blueprint', label: 'Secrets of Pecah Telur', icon: null },
           { id: 'funnel', label: 'B2B Marketing Funnel', icon: Layers },
           { id: 'sample_flow', label: 'Sample Flow Analysis', icon: ClipboardList },
           { id: 'sample_quotation', label: 'Sample Quotation Builder', icon: Calculator },
@@ -704,7 +704,7 @@ export default function CurriculumView({ leads = [] }: CurriculumViewProps) {
                   : 'text-[#05190F]/70 hover:text-[#05190F] hover:bg-[#05190F]/5 border-transparent'
               }`}
             >
-              
+              {IconComp ? <IconComp size={13} /> : null}
               <span>{tab.label}</span>
             </button>
           );

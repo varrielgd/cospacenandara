@@ -479,7 +479,7 @@ function mapHeaderToKey(h, tabName) {
               onClick={handleCopyCode}
               className="px-3.5 py-2 bg-bg-ivory/40 hover:bg-white border border-primary/10 hover:border-gold rounded-sm text-[9px] font-mono uppercase tracking-widest flex items-center gap-1.5 cursor-pointer transition-all text-primary font-bold"
             >
-              {isCopied ?  : }
+              {isCopied ? '✓' : '⎘'}
               {isCopied ? "Copied" : "Copy Code"}
             </button>
           </div>

@@ -759,17 +759,17 @@ export default function BrandPortalView({ leads, onAddSample, onAddLeadManual, g
                   {
                     title: "Curated Origin",
                     desc: "Sourcing the world’s most distinct volcanic microlots directly from microclimates in Gayo, Toraja, Java Preanger, Bali, and Flores.",
-                    icon: 
+                    icon: '◉'
                   },
                   {
                     title: "Quality First",
                     desc: "Every single delivery is rigorously cupped, moisture-checked, and hand-graded strictly to ensure Specialty Q-Grading excellence.",
-                    icon: 
+                    icon: '✦'
                   },
                   {
                     title: "Reliable Partner",
                     desc: "Delivering consistent, impeccably packed container lots and professional export logistics for sustainable long-term partnerships.",
-                    icon: 
+                    icon: '⊕'
                   }
                 ].map((pillar, idx) => (
                   <div key={idx} className="p-6 bg-white border border-primary/5 rounded-lg shadow-luxury space-y-3 hover:border-gold/30 transition-colors">
