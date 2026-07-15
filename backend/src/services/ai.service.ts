@@ -132,28 +132,66 @@ FORMATTING RULES (CRITICAL):
   /**
    * Generates an email draft with automatic failover between Groq and Gemini
    */
-  static async generateEmailDraft(importerName: string, context: string, tone: string = 'professional') {
-    const prompt = `
-      Generate a professional B2B introductory email for a coffee importer.
-      
-      Importer Name: ${importerName}
-      Context: ${context}
-      Tone: ${tone}
-      
-      IMPORTANT FORMATTING RULES:
-      - Write as a natural human email from a CMO (Chief Marketing Officer)
-      - Do NOT use any markdown formatting (no **bold**, no *italic*, no bullet points)
-      - Do NOT use any emojis, emoticons, or symbols
-      - Do NOT use quotation marks for emphasis within sentences
-      - Use plain text only, with proper paragraph breaks
-      - Keep the tone professional, warm, and persuasive
-      - The email should be well-structured with clear paragraphs
-      - Do not include subject line in the body
-      - Do not use lists - write in flowing narrative paragraphs
-      - Do not use asterisks or special characters for formatting
-    `;
+  /**
+   * Generates an email draft with RAG context (historical lead data + market data)
+   * @param importerName  Company name of the lead
+   * @param context       Base lead info (type, country, coffeeInterest, contact)
+   * @param tone          Email tone (professional, warm, etc.)
+   * @param ragContext    Historical context retrieved from DB (past emails, quotations, samples, notes)
+   * @param marketContext Current market data (coffee price, FX rates, market trends)
+   */
+  static async generateEmailDraft(
+    importerName: string,
+    context: string,
+    tone: string = 'professional',
+    ragContext: string = '',
+    marketContext: string = ''
+  ) {
+    const hasHistory = ragContext.trim().length > 0;
+    const hasMarketData = marketContext.trim().length > 0;
 
-    const subject = `Partnership Inquiry: Premium Indonesian Coffee for ${importerName}`;
+    // Compose the subject line dynamically based on context
+    const subject = hasHistory
+      ? `Following Up — Our Coffee Partnership with ${importerName}`
+      : `Partnership Inquiry: Premium Indonesian Coffee for ${importerName}`;
+
+    const prompt = `
+Generate a professional B2B ${hasHistory ? 'follow-up' : 'introductory'} email for a coffee buyer/importer.
+
+COMPANY INFO:
+Importer/Company: ${importerName}
+Context: ${context}
+Tone: ${tone}
+${hasHistory ? `\n${ragContext}` : ''}
+${hasMarketData ? `\n${marketContext}` : ''}
+
+INSTRUCTIONS:
+${hasHistory
+  ? `- This is a FOLLOW-UP email, NOT a first introduction. Reference the history above naturally.
+- Acknowledge past interactions (emails sent, samples shipped, quotations given) where relevant.
+- If there is sample feedback, mention it and build on it.
+- If there are open quotations, reference them to create urgency or offer an update.
+- If there are notes about buyer preferences, tailor the offer accordingly.`
+  : `- This is a FIRST INTRODUCTION email. Be compelling and spark curiosity.
+- Briefly introduce PT. Nandara Nusa Montierra as a premium Indonesian coffee exporter.
+- Highlight key differentiators: single-origin, traceable, specialty-grade Indonesian coffee.`
+}
+${hasMarketData
+  ? `- Weave in the market data naturally to add credibility and urgency (e.g., mention price trends or favorable exchange rates).`
+  : ''}
+
+FORMATTING RULES (CRITICAL):
+- Write as a natural human email from a CMO (Chief Marketing Officer)
+- Do NOT use any markdown formatting (no **bold**, no *italic*, no bullet points)
+- Do NOT use any emojis, emoticons, or symbols
+- Do NOT use quotation marks for emphasis within sentences
+- Use plain text only, with proper paragraph breaks
+- Keep the tone professional, warm, and persuasive
+- Do not include a subject line in the body
+- Do not use lists — write in flowing narrative paragraphs
+- Do not use asterisks or special characters for formatting
+- Sign off professionally as: "Warm regards, Marketing Team, PT. Nandara Nusa Montierra"
+    `;
 
     try {
       const result = await this.generateContent(prompt);

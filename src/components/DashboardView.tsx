@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lead, Sample, Quotation, EmailLog } from '../types';
 import { 
   Users, 
@@ -9,9 +9,13 @@ import {
   Layers, 
   Award,
   Globe,
-  Coffee
+  Coffee,
+  TrendingDown,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import { api } from '../utils/api';
 
 interface DashboardViewProps {
   leads: Lead[];
@@ -21,7 +25,45 @@ interface DashboardViewProps {
   onNavigate: (tab: string) => void;
 }
 
+interface MarketPulse {
+  arabicaPrice: number | null;
+  arabicaChange: number | null;
+  arabicaPricePerKg: number | null;
+  estimatedFobSumatra: number | null;
+  usdIdr: number | null;
+  eurUsd: number | null;
+  gbpUsd: number | null;
+  jpyUsd: number | null;
+  marketSentiment: string;
+  fetchedAt: string;
+}
+
 export default function DashboardView({ leads, samples, quotations, emails, onNavigate }: DashboardViewProps) {
+  const [market, setMarket] = useState<MarketPulse | null>(null);
+  const [marketLoading, setMarketLoading] = useState(true);
+  const [marketError, setMarketError] = useState(false);
+
+  const fetchMarket = async (forceRefresh = false) => {
+    setMarketLoading(true);
+    setMarketError(false);
+    try {
+      const data = forceRefresh
+        ? await api.post('/api/market/refresh', {})
+        : await api.get('/api/market');
+      
+      const snap = forceRefresh ? (data as any).data ?? data : data;
+      setMarket(snap as MarketPulse);
+    } catch (err) {
+      console.error('Market fetch error:', err);
+      setMarketError(true);
+    } finally {
+      setMarketLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMarket();
+  }, []);
   // Compute Metrics
   const totalLeads = leads.length;
   const aLeads = leads.filter(l => l.leadScore === 'A').length;
@@ -398,6 +440,88 @@ export default function DashboardView({ leads, samples, quotations, emails, onNa
           >
             Launch Importer Discovery
           </button>
+        </div>
+
+        {/* Market Pulse Widget */}
+        <div className="p-6 rounded-lg bg-white border border-primary/5 shadow-luxury col-span-2 lg:col-span-1">
+          <div className="flex justify-between items-center mb-6 border-b border-primary/5 pb-4">
+            <div>
+              <h2 className="text-xl font-serif font-medium text-primary flex items-center gap-2">
+                <Globe className="w-5 h-5 text-gold" />
+                Market Pulse
+              </h2>
+              <p className="text-[10px] font-sans text-text-dim mt-1 uppercase tracking-widest">Real-time Coffee & FX</p>
+            </div>
+            <button 
+              onClick={() => fetchMarket(true)} 
+              disabled={marketLoading}
+              className="p-1.5 hover:bg-bg-ivory rounded-sm text-text-dim hover:text-primary transition-colors disabled:opacity-50"
+              title="Force Refresh Data"
+            >
+              <RefreshCw className={`w-4 h-4 ${marketLoading ? 'animate-spin text-gold' : ''}`} />
+            </button>
+          </div>
+
+          {marketLoading && !market ? (
+            <div className="py-12 text-center text-text-dim text-sm font-mono flex flex-col items-center gap-3">
+              <RefreshCw className="w-6 h-6 animate-spin text-gold" />
+              Syncing Market Data...
+            </div>
+          ) : marketError ? (
+            <div className="py-8 text-center text-red-800 text-sm font-mono flex flex-col items-center gap-3 bg-red-50 rounded-sm">
+              <AlertCircle className="w-6 h-6" />
+              Unable to fetch market data.
+              <button onClick={() => fetchMarket()} className="underline text-xs mt-2">Try Again</button>
+            </div>
+          ) : market ? (
+            <div className="space-y-5">
+              {/* Arabica Block */}
+              <div className="p-4 bg-bg-ivory/60 border border-primary/5 rounded-sm">
+                <div className="flex justify-between items-start mb-2">
+                  <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest font-semibold">Arabica C-Futures (NYSE)</p>
+                  {market.arabicaChange !== null && (
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-sm flex items-center gap-1 ${market.arabicaChange > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                      {market.arabicaChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      {Math.abs(market.arabicaChange)}%
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-2xl font-serif text-primary">${market.arabicaPrice || '--'}</h3>
+                  <span className="text-xs text-text-dim">/ lb</span>
+                </div>
+                <p className="text-[10px] text-text-dim font-mono mt-2">Est. Spot FOB Sumatra: <span className="text-gold font-bold">~${market.estimatedFobSumatra || '--'}/kg</span></p>
+              </div>
+
+              {/* FX Block */}
+              <div className="p-4 bg-bg-ivory/60 border border-primary/5 rounded-sm">
+                <p className="text-[10px] font-sans text-text-dim uppercase tracking-widest font-semibold mb-3">Live Exchange Rates</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-[9px] text-text-dim font-mono mb-1">USD/IDR</p>
+                    <p className="text-sm font-semibold text-primary">{market.usdIdr?.toLocaleString('id-ID') || '--'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-text-dim font-mono mb-1">EUR/USD</p>
+                    <p className="text-sm font-semibold text-primary">{market.eurUsd || '--'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-text-dim font-mono mb-1">GBP/USD</p>
+                    <p className="text-sm font-semibold text-primary">{market.gbpUsd || '--'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-text-dim font-mono mb-1">USD/JPY</p>
+                    <p className="text-sm font-semibold text-primary">{market.jpyUsd || '--'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center text-[9px] text-gray-400 font-mono pt-2">
+                <span>Sentiment: <span className={market.marketSentiment === 'Bullish' ? 'text-emerald-600' : market.marketSentiment === 'Bearish' ? 'text-red-600' : ''}>{market.marketSentiment}</span></span>
+                <span>Updated: {new Date(market.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

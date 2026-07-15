@@ -477,13 +477,132 @@ export const updateEmail = async (req: AuthRequest, res: Response) => {
 
 export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
   try {
-    const { companyName, country, leadType, coffeeInterest, contactName } = req.body;
-    
-    // Create context string for AI
-    const context = `Lead Type: ${leadType}, Country: ${country}, Coffee Interest: ${coffeeInterest}, Contact Name: ${contactName}`;
-    
-    const draft = await AiService.generateEmailDraft(companyName, context, 'professional');
-    
+    const { companyName, country, leadType, coffeeInterest, contactName, leadId } = req.body;
+
+    // ── Phase 1: Retrieve internal historical context (RAG) ──────────────────
+    let ragContext = '';
+    if (leadId) {
+      try {
+        const [pastEmails, quotations, samples, notes, activities] = await Promise.all([
+          prisma.email.findMany({
+            where: { importerId: leadId },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            select: { subject: true, direction: true, status: true, createdAt: true, body: true }
+          }),
+          prisma.quotation.findMany({
+            where: { importerId: leadId },
+            orderBy: { createdAt: 'desc' },
+            take: 3,
+            select: { quotationNumber: true, product: true, quantity: true, price: true, currency: true, incoterm: true, status: true, validUntil: true }
+          }),
+          prisma.sample.findMany({
+            where: { importerId: leadId },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            select: { product: true, format: true, weight: true, destination: true, status: true, feedback: true, createdAt: true }
+          }),
+          prisma.note.findMany({
+            where: { importerId: leadId },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+            select: { content: true, createdAt: true }
+          }),
+          prisma.activity.findMany({
+            where: { importerId: leadId },
+            orderBy: { createdAt: 'desc' },
+            take: 8,
+            select: { type: true, description: true, createdAt: true }
+          })
+        ]);
+
+        const ragParts: string[] = [];
+
+        if (pastEmails.length > 0) {
+          ragParts.push(
+            `PREVIOUS EMAIL HISTORY (${pastEmails.length} emails):\n` +
+            pastEmails.map(e => {
+              const date = new Date(e.createdAt).toLocaleDateString('en-GB');
+              const dir  = e.direction === 'OUTBOUND' ? 'Sent' : 'Received';
+              return `  [${date}] ${dir}: "${e.subject}" (Status: ${e.status})`;
+            }).join('\n')
+          );
+        }
+
+        if (quotations.length > 0) {
+          ragParts.push(
+            `QUOTATION HISTORY (${quotations.length} quotations):\n` +
+            quotations.map(q => {
+              const valid = new Date(q.validUntil).toLocaleDateString('en-GB');
+              return `  ${q.quotationNumber}: ${q.product} ${q.quantity}kg @ $${q.price}/${q.currency} ${q.incoterm} — Status: ${q.status} — Valid Until: ${valid}`;
+            }).join('\n')
+          );
+        }
+
+        if (samples.length > 0) {
+          ragParts.push(
+            `SAMPLE SHIPMENT HISTORY (${samples.length} samples):\n` +
+            samples.map(s => {
+              const fb = s.feedback ? ` — Buyer Feedback: "${s.feedback}"` : '';
+              return `  ${s.product} (${s.format}, ${s.weight}) shipped to ${s.destination} — Status: ${s.status}${fb}`;
+            }).join('\n')
+          );
+        }
+
+        if (notes.length > 0) {
+          ragParts.push(
+            `INTERNAL NOTES:\n` +
+            notes.map(n => {
+              const date = new Date(n.createdAt).toLocaleDateString('en-GB');
+              return `  [${date}] ${n.content}`;
+            }).join('\n')
+          );
+        }
+
+        if (activities.length > 0) {
+          ragParts.push(
+            `RECENT ACTIVITIES:\n` +
+            activities.map(a => {
+              const date = new Date(a.createdAt).toLocaleDateString('en-GB');
+              return `  [${date}] ${a.type}: ${a.description}`;
+            }).join('\n')
+          );
+        }
+
+        if (ragParts.length > 0) {
+          ragContext = `\n=== HISTORICAL CONTEXT FOR THIS LEAD ===\n${ragParts.join('\n\n')}\n=== END HISTORICAL CONTEXT ===\n`;
+          logger.info(`[RAG] Built context for lead ${leadId}: ${ragParts.length} sections`);
+        } else {
+          logger.info(`[RAG] No historical data found for lead ${leadId} — using generic intro`);
+        }
+      } catch (ragErr) {
+        logger.warn('[RAG] Failed to build historical context, proceeding without it:', ragErr);
+      }
+    }
+
+    // ── Phase 2: Retrieve market context ─────────────────────────────────────
+    let marketContext = '';
+    try {
+      const { MarketDataService } = await import('../services/market-data.service');
+      const snap = await MarketDataService.getSnapshot();
+      marketContext = MarketDataService.formatAsRagContext(snap);
+      if (marketContext) {
+        logger.info('[RAG] Market context injected into prompt');
+      }
+    } catch (mktErr) {
+      logger.warn('[RAG] Market data unavailable, proceeding without it:', mktErr);
+    }
+
+    // ── Generate email with enriched context ──────────────────────────────────
+    const baseContext = `Lead Type: ${leadType}, Country: ${country}, Coffee Interest: ${coffeeInterest}, Contact Name: ${contactName}`;
+    const draft = await AiService.generateEmailDraft(
+      companyName,
+      baseContext,
+      'professional',
+      ragContext,
+      marketContext
+    );
+
     return res.json({ subject: draft.subject, body: draft.body });
   } catch (error) {
     logger.error('Lead email generation error:', error);

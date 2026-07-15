@@ -225,6 +225,7 @@ export default function EmailGeneratorView({
 
     try {
       const data = await api.post('/api/emails/generate-email', {
+        leadId: activeLead.id,          // RAG: enables historical context retrieval
         companyName: activeLead.companyName,
         country: activeLead.country,
         leadType: activeLead.leadType,

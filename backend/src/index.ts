@@ -19,6 +19,7 @@ import discoveryRoutes from './routes/discovery.routes';
 import emailRoutes from './routes/email.routes';
 import auditRoutes from './routes/audit.routes';
 import supplierRoutes from './routes/supplier.routes';
+import marketRoutes from './routes/market.routes';
 import { errorHandler } from './middleware/error';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -89,6 +90,7 @@ app.use('/api/discovery', discoveryRoutes);
 app.use('/api/emails', emailRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/market', marketRoutes);
 
 // Basic Health Check
 app.get('/health', (_req: Request, res: Response) => {
