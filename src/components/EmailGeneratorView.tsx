@@ -74,6 +74,7 @@ export default function EmailGeneratorView({
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [generatedLeadId, setGeneratedLeadId] = useState<string | null>(null);
 
   const coffeeProducts = [
     'Aceh Gayo Grade 1 (Classic)',
@@ -141,6 +142,7 @@ export default function EmailGeneratorView({
     // Don't reset form while a draft is being generated — avoids race condition
     // where refreshEmails() fires and wipes the newly-generated draft from the UI.
     if (isGenerating) return;
+    if (status === 'Draft Generated' && generatedLeadId === activeLead.id && (subject || body)) return;
 
     setEmailType(getRecommendedEmailType(activeLead, emailLogs));
 
@@ -230,7 +232,7 @@ export default function EmailGeneratorView({
         }
       }
     }
-  }, [activeLead, emailLogs, isGenerating]);
+  }, [activeLead, emailLogs, isGenerating, status, subject, body, generatedLeadId]);
 
   const handleGenerate = async () => {
     if (!activeLead) return;
@@ -255,12 +257,13 @@ export default function EmailGeneratorView({
         selectedCoffeeProduct: coffeeInterest
       });
 
-      const generatedSub = data.subject || '';
-      const generatedBody = data.body || '';
+      const generatedSub = data?.subject || data?.emailSubject || data?.subjects?.[0] || '';
+      const generatedBody = data?.body || data?.emailBody || data?.draft || '';
 
       const now = getTimestamp();
       setSubject(generatedSub);
       setBody(generatedBody);
+      setGeneratedLeadId(activeLead.id);
       setStatus('Draft Generated');
       setIsApproved(false);
 

@@ -39,8 +39,8 @@ FORMATTING RULES (CRITICAL):
   private static primaryProvider: 'groq' | 'gemini' = (() => {
     const hasGroqKey = !!process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 0;
     const hasGeminiKey = !!process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0;
-    if (hasGroqKey) return 'groq';
     if (hasGeminiKey) return 'gemini';
+    if (hasGroqKey) return 'groq';
     logger.warn('No AI API keys available — will always use fallback draft');
     return 'groq'; // Default to groq, will fail and use fallback
   })();
@@ -59,14 +59,8 @@ FORMATTING RULES (CRITICAL):
       try {
         return await this.tryGemini(prompt, systemInstruction, options.responseMimeType);
       } catch (error: any) {
-        logger.warn(`Gemini failed (${error.message}), falling back to Groq`);
-        this.primaryProvider = 'groq';
-        try {
-          return await this.tryGroq(prompt, systemInstruction, options.responseMimeType);
-        } catch (groqError: any) {
-          logger.error(`Both AI providers failed. Groq error: ${groqError.message}`);
-          throw groqError;
-        }
+        logger.warn(`Gemini failed (${error.message})`);
+        throw error;
       }
     } else {
       try {
