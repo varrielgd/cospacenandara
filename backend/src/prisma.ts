@@ -1,17 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-// Prefer DIRECT_DATABASE_URL (direct Postgres, bypass PgBouncer) at runtime 
-// to avoid prepared statement issues. FALLBACK to DATABASE_URL if not available.
-let connectionUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '';
+// Use DIRECT_DATABASE_URL for direct PostgreSQL connection (bypass PgBouncer)
+// FALLBACK to DATABASE_URL if not available
+const connectionUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '';
 
-// If using DATABASE_URL (PgBouncer), add necessary query params
-if (connectionUrl && !process.env.DIRECT_DATABASE_URL) {
-  const url = new URL(connectionUrl);
-  url.searchParams.set('pgbouncer', 'true');
-  url.searchParams.set('statement_cache_size', '0');
-  connectionUrl = url.toString();
-}
+const adapter = new PrismaPg(connectionUrl);
 
 export const prisma = new PrismaClient({
-	datasources: { db: { url: connectionUrl } }
+  adapter,
 });
