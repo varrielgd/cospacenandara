@@ -42,38 +42,24 @@ const logger = winston.createLogger({
   ],
 });
 
+// Global CORS headers - must be first before any other middleware
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  if (_req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 // Security Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: false
 }));
-
-const allowedOrigins = [
-  'https://nandaracorporation.vercel.app',
-  'https://nandaracorporation-8yzm3o79w.vercel.app',
-  'https://cospacenandara.vercel.app',
-  'https://cospace.nandaranusamontierra.com',
-  'http://localhost:3000',
-  'http://localhost:5173'
-];
-
-// CORS preflight middleware - must run before ANY route
-const corsMiddleware = cors({
-  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    } else {
-      return callback(new Error('CORS not allowed'), false);
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 204
-});
-
-app.use(corsMiddleware);
 
 
 // Rate limiting

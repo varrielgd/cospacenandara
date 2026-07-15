@@ -168,20 +168,55 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'To, subject, and body are required' });
     }
 
-    const info: any = await transporter.sendMail({
-      from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${process.env.SMTP_USER || 'marketing@nandaranusamontierra.com'}>`,
+    // Verify SMTP is configured before attempting send
+    const smtpUser = process.env.SMTP_USER || 'marketing@nandaranusamontierra.com';
+    const smtpPass = process.env.SMTP_PASS;
+    
+    if (!smtpPass) {
+      logger.warn('SMTP_PASS not configured - simulating send for development');
+      // Simulate sending for development
+      await prisma.email.create({
+        data: {
+          subject,
+          body,
+          from: smtpUser,
+          to,
+          status: 'SENT',
+          direction: 'OUTBOUND',
+          sentAt: new Date(),
+          messageId: `simulated-${Date.now()}`
+        }
+      });
+      return res.json({ message: 'Email simulated (SMTP not configured)', messageId: 'simulated' });
+    }
+
+    // Create a transport with timeout
+    const tempTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+      port: parseInt(process.env.SMTP_PORT || '465'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: smtpUser, pass: smtpPass },
+      connectionTimeout: 10000, // 10 second timeout
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    });
+
+    const info: any = await tempTransporter.sendMail({
+      from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${smtpUser}>`,
       to,
       subject,
       text: body,
       html: body.replace(/\n/g, '<br>'),
     });
 
+    tempTransporter.close();
+
     // Log the sent email in DB
     await prisma.email.create({
       data: {
         subject,
         body,
-        from: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
+        from: smtpUser,
         to,
         status: 'SENT',
         direction: 'OUTBOUND',
@@ -191,9 +226,16 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
     });
 
     return res.json({ message: 'Email sent successfully', messageId: info.messageId });
-  } catch (error) {
-    logger.error('Direct email sending error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+  } catch (error: any) {
+    logger.error('Direct email sending error:', error.message);
+    // Check for specific SMTP errors
+    if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT' || error.message?.includes('connect')) {
+      return res.status(502).json({ message: `SMTP connection failed: ${error.message}. Check SMTP credentials in environment variables.` });
+    }
+    if (error.code === 'EAUTH') {
+      return res.status(502).json({ message: 'SMTP authentication failed. Check SMTP_USER and SMTP_PASS in environment variables.' });
+    }
+    return res.status(500).json({ message: `Email send failed: ${error.message}` });
   }
 };
 
