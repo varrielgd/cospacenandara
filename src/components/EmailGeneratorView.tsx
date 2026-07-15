@@ -25,6 +25,7 @@ export default function EmailGeneratorView({
   const [bcc, setBcc] = useState('');
   const [contactName, setContactName] = useState('Procurement Manager');
   const [coffeeInterest, setCoffeeInterest] = useState('Aceh Gayo Grade 1 (Classic)');
+  const [emailType, setEmailType] = useState('FIRST_CONTACT');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   
@@ -88,6 +89,38 @@ export default function EmailGeneratorView({
     'Temanggung Fine Robusta (Fine Robusta)'
   ];
 
+  const emailTypeOptions = [
+    { value: 'FIRST_CONTACT', label: 'First Contact' },
+    { value: 'FOLLOW_UP_1', label: 'Follow Up #1' },
+    { value: 'FOLLOW_UP_2', label: 'Follow Up #2' },
+    { value: 'SAMPLE_OFFER', label: 'Sample Offer' },
+    { value: 'SAMPLE_SENT', label: 'Sample Sent' },
+    { value: 'SAMPLE_FEEDBACK', label: 'Sample Feedback' },
+    { value: 'QUOTATION', label: 'Quotation' },
+    { value: 'NEGOTIATION', label: 'Negotiation' },
+    { value: 'PRICE_UPDATE', label: 'Price Update' },
+    { value: 'NEW_HARVEST', label: 'New Harvest' },
+    { value: 'REENGAGEMENT', label: 'Re-engagement' },
+    { value: 'MEETING_THANKYOU', label: 'Meeting Thank You' },
+    { value: 'SHIPMENT_READY', label: 'Shipment Ready' },
+    { value: 'SHIPMENT_SENT', label: 'Shipment Sent' },
+    { value: 'CONTRACT_REMINDER', label: 'Contract Reminder' },
+    { value: 'LONG_TERM_PARTNERSHIP', label: 'Long-term Partnership' }
+  ];
+
+  const getRecommendedEmailType = (lead: Lead | null, logs: EmailLog[]) => {
+    if (!lead) return 'FIRST_CONTACT';
+
+    const normalizedStatus = lead.status?.toLowerCase() || '';
+    if (normalizedStatus.includes('negotiat')) return 'NEGOTIATION';
+    if (normalizedStatus.includes('quotation') || normalizedStatus.includes('quote')) return 'QUOTATION';
+    if (normalizedStatus.includes('sample') && normalizedStatus.includes('sent')) return 'SAMPLE_FEEDBACK';
+    if (logs.length >= 2) return 'FOLLOW_UP_1';
+    if (logs.length >= 1) return 'FOLLOW_UP_1';
+
+    return 'FIRST_CONTACT';
+  };
+
   // Helper: Format Dates Beautifully
   const getTimestamp = () => {
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString();
@@ -109,6 +142,8 @@ export default function EmailGeneratorView({
     // where refreshEmails() fires and wipes the newly-generated draft from the UI.
     if (isGenerating) return;
 
+    setEmailType(getRecommendedEmailType(activeLead, emailLogs));
+
     // Search for existing email log for this lead
     const existing = emailLogs.find(log => (log.leadId || log.importerId) === activeLead.id);
     
@@ -117,8 +152,8 @@ export default function EmailGeneratorView({
       setRecipientEmail(existing.recipientEmail || existing.to || activeLead.email || '');
       setCc(existing.cc || '');
       setBcc(existing.bcc || '');
-      setSubject(existing.emailSubject || existing.subject || '');
-      setBody(existing.emailBody || existing.body || '');
+      setSubject('');
+      setBody('');
       setAttachPdfQuotation(existing.attachPdfQuotation || 'none');
       setAttachCatalogue(existing.attachCatalogue || false);
       setCatalogueDriveLink(existing.catalogueDriveLink || '');
@@ -181,6 +216,7 @@ export default function EmailGeneratorView({
       setTimestamps({
         pendingReviewAt: getTimestamp()
       });
+      setEmailType(getRecommendedEmailType(activeLead, emailLogs));
 
       // Auto recommendation alignment
       if (activeLead.analysisMatch) {
@@ -208,7 +244,15 @@ export default function EmailGeneratorView({
         country: activeLead.country,
         leadType: activeLead.leadType,
         coffeeInterest: coffeeInterest,
-        contactName: contactName
+        contactName: contactName,
+        emailType: emailType,
+        buyerName: activeLead.companyName,
+        buyerEmail: activeLead.email,
+        buyerWebsite: activeLead.website,
+        buyerContact: contactName,
+        crmNotes: activeLead.notes || '',
+        pipelineStage: activeLead.status || 'New Lead',
+        selectedCoffeeProduct: coffeeInterest
       });
 
       const generatedSub = data.subject || '';
@@ -606,6 +650,19 @@ export default function EmailGeneratorView({
           >
             {coffeeProducts.map(prod => (
               <option key={prod} value={prod}>{prod}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5 text-xs font-mono">
+          <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">EMAIL TYPE</label>
+          <select
+            value={emailType}
+            onChange={e => setEmailType(e.target.value)}
+            className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold font-sans outline-hidden"
+          >
+            {emailTypeOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
         </div>

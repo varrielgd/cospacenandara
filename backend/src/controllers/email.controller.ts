@@ -667,11 +667,18 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
         timelineCount,
         coffeeInterest,
         contactName,
-        buyerWebsite: '',
+        buyerName: req.body.buyerName || companyName,
+        buyerEmail: req.body.buyerEmail || '',
+        buyerWebsite: req.body.buyerWebsite || '',
+        buyerContact: req.body.buyerContact || contactName,
+        crmNotes: req.body.crmNotes || '',
+        pipelineStage: req.body.pipelineStage || leadStatus,
+        selectedCoffeeProduct: req.body.selectedCoffeeProduct || coffeeInterest,
         latestSampleStatus,
         latestQuoteStatus,
         daysSinceLastContact,
-        buyerCountry: country
+        buyerCountry: country,
+        emailType: req.body.emailType
       }
     );
 
@@ -680,7 +687,7 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
       body: draft.body,
       subjects: draft.subjects,
       attachments: draft.attachments,
-      emailType: AiService.determineEmailType(leadStatus, timelineCount, latestSampleStatus, latestQuoteStatus, daysSinceLastContact)
+      emailType: req.body.emailType || AiService.determineEmailType(leadStatus, timelineCount, latestSampleStatus, latestQuoteStatus, daysSinceLastContact)
     });
   } catch (error) {
     logger.error('Lead email generation error:', error);

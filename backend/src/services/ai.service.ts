@@ -210,18 +210,29 @@ FORMATTING RULES (CRITICAL):
       timelineCount?: number;
       coffeeInterest?: string;
       contactName?: string;
+      buyerName?: string;
+      buyerEmail?: string;
       buyerWebsite?: string;
+      buyerContact?: string;
+      crmNotes?: string;
+      pipelineStage?: string;
+      selectedCoffeeProduct?: string;
       latestSampleStatus?: string | null;
       latestQuoteStatus?: string | null;
       daysSinceLastContact?: number | null;
       buyerCountry?: string;
+      emailType?: string;
     } = {}
   ) {
     const hasHistory = ragContext.trim().length > 0;
     const hasMarketData = marketContext.trim().length > 0;
 
-    // Auto-detect email type
-    const emailType = this.determineEmailType(
+    const normalizeEmailType = (value?: string) => {
+      if (!value) return '';
+      return value.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    };
+
+    const emailType = normalizeEmailType(extraParams.emailType) || this.determineEmailType(
       extraParams.leadStatus || 'New Lead',
       extraParams.timelineCount || 0,
       extraParams.latestSampleStatus || null,
@@ -285,7 +296,13 @@ TONE: Professional and warm.`;
 
     // Build the prompt for the email
     const baseContext = context;
-    const productToFocus = extraParams.coffeeInterest || 'Premium Indonesian Coffee';
+    const productToFocus = extraParams.selectedCoffeeProduct || extraParams.coffeeInterest || 'Premium Indonesian Coffee';
+    const buyerName = extraParams.buyerName || importerName;
+    const buyerEmail = extraParams.buyerEmail || 'Not available';
+    const buyerWebsite = extraParams.buyerWebsite || 'Not available';
+    const buyerContact = extraParams.buyerContact || extraParams.contactName || 'Procurement Team';
+    const crmNotes = extraParams.crmNotes || 'No additional CRM notes provided.';
+    const pipelineStage = extraParams.pipelineStage || extraParams.leadStatus || 'New Lead';
 
     const prompt = `
 You are Fahril F., a professional coffee export specialist at PT Nandara Nusa Montierra in Indonesia. You are writing a real business email. Do not write as AI. Write as yourself.
@@ -301,16 +318,22 @@ Office: Jl. Kartini 3 No.25, Sawah Besar, Jakarta Pusat 10720, Indonesia
 Products: Single-origin specialty Indonesian coffee direct from smallholder cooperatives
 
 RECIPIENT:
-Company: ${importerName}
-Contact Person: ${extraParams.contactName || 'Procurement Team'}
-Country: ${extraParams.buyerCountry || 'International'}
-Website: ${extraParams.buyerWebsite || 'Not available'}
+Buyer Name: ${buyerName}
+Buyer Country: ${extraParams.buyerCountry || 'International'}
+Buyer Email: ${buyerEmail}
+Buyer Website: ${buyerWebsite}
+Buyer Contact: ${buyerContact}
+Selected Coffee Product: ${productToFocus}
+Selected Email Type: ${emailType}
+Current CRM Notes: ${crmNotes}
+Current Pipeline Stage: ${pipelineStage}
 Product Interest: ${productToFocus}
 ${baseContext ? `Context: ${baseContext}` : ''}
 
 ${hasHistory ? `\nHISTORICAL DATA:\n${ragContext}` : ''}
 ${hasMarketData ? `\nMARKET DATA:\n${marketContext}` : ''}
 
+email_type=${emailType}
 EMAIL TYPE: ${emailType}
 ${this.getEmailTypeInstructions(emailType, hasHistory, extraParams)}
 
