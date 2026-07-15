@@ -346,12 +346,15 @@ export default function App() {
       <aside className="w-60 bg-[#05190F] border-r border-white/8 flex flex-col justify-between print:hidden shrink-0">
         <div className="overflow-y-auto">
           {/* Brand Header */}
-          <div className="px-6 py-7 border-b border-white/8">
-            <h1 className="font-sans font-bold text-sm text-white uppercase tracking-wider leading-tight">
-              Nandara Nusa Montierra
-            </h1>
-            <div className="text-[9px] font-mono text-white/40 mt-1.5 tracking-widest uppercase">
-              CIIS • EXPORT INTELLIGENCE
+          <div className="px-6 py-5 border-b border-white/8 flex items-start gap-3">
+            <img src="/assets/images/logo/logo-nnm.png" alt="Nandara Nusa Montierra" className="h-8 w-8 object-contain flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <h1 className="font-sans font-bold text-xs text-white uppercase tracking-wider leading-tight">
+                Nandara Nusa Montierra
+              </h1>
+              <div className="text-[8px] font-mono text-white/40 mt-1 tracking-widest uppercase">
+                CIIS • EXPORT INTELLIGENCE
+              </div>
             </div>
           </div>
 
