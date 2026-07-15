@@ -16,6 +16,37 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * Maps frontend status strings to valid Prisma EmailStatus enum values
+ */
+function mapEmailStatus(status: string): string {
+  const statusMap: Record<string, string> = {
+    'Draft Generated': 'DRAFT',
+    'Pending Review': 'DRAFT',
+    'Edited By User': 'DRAFT',
+    'DRAFT': 'DRAFT',
+    'APPROVED': 'APPROVED',
+    'SENT': 'SENT',
+    'RECEIVED': 'RECEIVED',
+    'BOUNCED': 'BOUNCED'
+  };
+  return statusMap[status] || 'DRAFT';
+}
+
+/**
+ * Maps Prisma EmailStatus enum values back to frontend-friendly format
+ */
+function mapStatusToFrontend(status: string): string {
+  const frontendMap: Record<string, string> = {
+    'DRAFT': 'Draft Generated',
+    'APPROVED': 'Approved',
+    'SENT': 'Sent',
+    'RECEIVED': 'Received',
+    'BOUNCED': 'Bounced'
+  };
+  return frontendMap[status] || status;
+}
+
 export const generateDraft = async (req: AuthRequest, res: Response) => {
   try {
     const { importerId, context, tone } = req.body;
@@ -38,7 +69,7 @@ export const generateDraft = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    return res.json(email);
+    return res.json({ ...email, status: 'Draft Generated' });
   } catch (error) {
     logger.error('Email draft generation error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -54,7 +85,7 @@ export const approveEmail = async (req: AuthRequest, res: Response) => {
       where: { id: id as string },
       data: { status: 'APPROVED' }
     });
-    return res.json(email);
+    return res.json({ ...email, status: 'Approved' });
   } catch (error) {
     logger.error('Email approval error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -118,7 +149,11 @@ export const getAllEmails = async (_req: AuthRequest, res: Response) => {
       include: { importer: true },
       orderBy: { createdAt: 'desc' }
     });
-    return res.json(emails);
+    const mapped = emails.map(email => ({
+      ...email,
+      status: mapStatusToFrontend(email.status)
+    }));
+    return res.json(mapped);
   } catch (error) {
     logger.error('Get all emails error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -169,7 +204,11 @@ export const getInbox = async (_req: AuthRequest, res: Response) => {
       orderBy: { receivedAt: 'desc' },
       take: 50
     });
-    return res.json(emails);
+    const mapped = emails.map(email => ({
+      ...email,
+      status: mapStatusToFrontend(email.status)
+    }));
+    return res.json(mapped);
   } catch (error) {
     logger.error('Error fetching inbox:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -193,7 +232,11 @@ export const getEmailsByImporter = async (req: AuthRequest, res: Response) => {
       where: { importerId: importerId as string },
       orderBy: { createdAt: 'desc' }
     });
-    return res.json(emails);
+    const mapped = emails.map(email => ({
+      ...email,
+      status: mapStatusToFrontend(email.status)
+    }));
+    return res.json(mapped);
   } catch (error) {
     logger.error('Error fetching importer emails:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -204,6 +247,8 @@ export const createEmail = async (req: AuthRequest, res: Response) => {
   try {
     const { leadId, emailSubject, emailBody, recipientEmail, cc, bcc, status } = req.body;
 
+    const mappedStatus = mapEmailStatus(status || 'DRAFT');
+
     const email = await prisma.email.create({
       data: {
         importerId: leadId,
@@ -211,7 +256,7 @@ export const createEmail = async (req: AuthRequest, res: Response) => {
         body: emailBody || '',
         to: recipientEmail || '',
         from: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
-        status: (status as any) || 'DRAFT',
+        status: mappedStatus as any,
         direction: 'OUTBOUND',
         cc: cc || null,
         bcc: bcc || null
@@ -219,9 +264,50 @@ export const createEmail = async (req: AuthRequest, res: Response) => {
       include: { importer: true }
     });
 
-    return res.json(email);
+    // Map status back to frontend-friendly format
+    const frontendStatus = status || 'Draft Generated';
+    return res.json({ ...email, status: frontendStatus });
   } catch (error) {
     logger.error('Create email error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: 'ID is required' });
+
+    const {
+      leadId,
+      emailSubject,
+      emailBody,
+      recipientEmail,
+      cc,
+      bcc,
+      status
+    } = req.body;
+
+    const mappedStatus = mapEmailStatus(status || 'DRAFT');
+
+    const email = await prisma.email.update({
+      where: { id: id as string },
+      data: {
+        ...(leadId ? { importerId: leadId } : {}),
+        ...(emailSubject !== undefined ? { subject: emailSubject } : {}),
+        ...(emailBody !== undefined ? { body: emailBody } : {}),
+        ...(recipientEmail !== undefined ? { to: recipientEmail } : {}),
+        ...(cc !== undefined ? { cc: cc || null } : {}),
+        ...(bcc !== undefined ? { bcc: bcc || null } : {}),
+        ...(status !== undefined ? { status: mappedStatus as any } : {}),
+      },
+      include: { importer: true }
+    });
+
+    const frontendStatus = status || mapStatusToFrontend(email.status);
+    return res.json({ ...email, status: frontendStatus });
+  } catch (error) {
+    logger.error('Update email error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

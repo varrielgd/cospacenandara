@@ -16,6 +16,17 @@ TUGAS AI (ULTIMATE SCOUT):
 3. Untuk tugas Discovery, berikan URL official yang paling akurat.
 4. Jangan pernah mengarang URL atau perusahaan.
 5. Pahami bahwa target adalah buyer yang memiliki kapasitas untuk mengimpor kopi dari Indonesia.
+
+FORMATTING RULES (CRITICAL):
+- Jangan gunakan **bold**, *italic*, atau formatting markdown APAPUN di tengah kalimat.
+- Jangan gunakan emoticon, emoji, atau simbol seperti :), :-), atau icon lainnya.
+- Jangan gunakan tanda kutip ganda "" di dalam kalimat untuk penekanan.
+- Jangan gunakan tanda bintang * atau tanda strip - untuk bullet points di tengah paragraf.
+- Gunakan bahasa profesional dan natural seperti tulisan seorang CMO (Chief Marketing Officer).
+- Gunakan struktur paragraf yang rapi dengan spasi antar paragraf.
+- Hindari format daftar (list) - gunakan kalimat naratif yang mengalir.
+- Hasil harus formatted sebagai teks plain, tanpa markdown formatting.
+- Jika ingin memberikan penekanan, gunakan struktur kalimat yang natural, bukan formatting visual.
 `;
 
   private static groq = new Groq({
@@ -67,25 +78,87 @@ TUGAS AI (ULTIMATE SCOUT):
   }
 
   /**
+   * Strips markdown formatting, emojis, and symbols from AI-generated text
+   */
+  private static sanitizeDraft(text: string): string {
+    return text
+      // Remove **bold** markers
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      // Remove *italic* markers
+      .replace(/\*(.*?)\*/g, '$1')
+      // Remove __underline__ markers
+      .replace(/__(.*?)__/g, '$1')
+      // Remove markdown links [text](url)
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove triple backticks code blocks
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove inline `code` backticks
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove ### headings
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bullet points markers at line start
+      .replace(/^[\s]*[-*+]\s+/gm, '')
+      // Remove numbered list markers at line start
+      .replace(/^[\s]*\d+[.)]\s+/gm, '')
+      // Remove horizontal rules
+      .replace(/^---+$/gm, '')
+      .replace(/^___+$/gm, '')
+      .replace(/^\*\*\*+$/gm, '')
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Remove emojis and emoticons
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, '')  // Emoticons
+      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '')  // Misc symbols & pictographs
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '')  // Transport & map
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '')  // Flags
+      .replace(/[\u{2600}-\u{26FF}]/gu, '')     // Misc symbols
+      .replace(/[\u{2700}-\u{27BF}]/gu, '')     // Dingbats
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, '')     // Variation selectors
+      .replace(/[\u{200D}]/gu, '')              // Zero-width joiner
+      // Remove common emoticons like :), :(, :-), ;), etc.
+      .replace(/[:;=xX]-?[)D(\]PpOo\/\\|]/g, '')
+      // Remove excessive quotation marks
+      .replace(/""/g, '"')
+      .replace(/''/g, "'")
+      // Clean up multiple spaces
+      .replace(/[ \t]+/g, ' ')
+      // Clean up multiple newlines
+      .replace(/\n{3,}/g, '\n\n')
+      // Trim leading/trailing whitespace per line
+      .split('\n').map(line => line.trim()).join('\n')
+      .trim();
+  }
+
+  /**
    * Generates an email draft with automatic failover between Groq and Gemini
    */
   static async generateEmailDraft(importerName: string, context: string, tone: string = 'professional') {
     const prompt = `
       Generate a professional B2B introductory email for a coffee importer.
+      
       Importer Name: ${importerName}
       Context: ${context}
       Tone: ${tone}
       
-      The email should be persuasive but respectful. 
-      Focus on high-quality Indonesian coffee beans.
-      Do not include subject line in the body.
+      IMPORTANT FORMATTING RULES:
+      - Write as a natural human email from a CMO (Chief Marketing Officer)
+      - Do NOT use any markdown formatting (no **bold**, no *italic*, no bullet points)
+      - Do NOT use any emojis, emoticons, or symbols
+      - Do NOT use quotation marks for emphasis within sentences
+      - Use plain text only, with proper paragraph breaks
+      - Keep the tone professional, warm, and persuasive
+      - The email should be well-structured with clear paragraphs
+      - Do not include subject line in the body
+      - Do not use lists - write in flowing narrative paragraphs
+      - Do not use asterisks or special characters for formatting
     `;
 
     const subject = `Partnership Inquiry: Premium Indonesian Coffee for ${importerName}`;
 
     try {
       const result = await this.generateContent(prompt);
-      return { subject, body: result };
+      const sanitized = this.sanitizeDraft(result);
+      return { subject, body: sanitized };
     } catch (error) {
       return this.getFallbackDraft(importerName, subject);
     }
@@ -94,7 +167,12 @@ TUGAS AI (ULTIMATE SCOUT):
   private static getFallbackDraft(importerName: string, subject: string) {
     return {
       subject,
-      body: `Dear ${importerName},\n\nWe are interested in supplying premium Indonesian coffee to your company. We would like to discuss a potential partnership and share our catalog with you.\n\nBest regards,\nNandara Nusa Montierra Team`
+      body: `Dear ${importerName},
+
+We are interested in supplying premium Indonesian coffee to your company. We would like to discuss a potential partnership and share our catalog with you.
+
+Best regards,
+Nandara Nusa Montierra Team`
     };
   }
 
