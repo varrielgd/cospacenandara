@@ -185,6 +185,66 @@ export const getAllEmails = async (_req: AuthRequest, res: Response) => {
   }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HTTP-based email helpers (bypass SMTP port blocking on cloud platforms)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Send via Resend API (https://resend.com) — free 3,000 emails/month.
+ * Requires RESEND_API_KEY env var. Domain must be verified in Resend dashboard.
+ */
+async function sendViaResend(
+  to: string, subject: string, body: string,
+  fromName: string, fromEmail: string
+): Promise<string> {
+  const response = await axios.post(
+    'https://api.resend.com/emails',
+    {
+      from: `${fromName} <${fromEmail}>`,
+      to: [to],
+      subject,
+      html: body.replace(/\n/g, '<br>'),
+      text: body,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      timeout: 15000,
+    }
+  );
+  return (response.data as any).id || 'resend-sent';
+}
+
+/**
+ * Send via Brevo (Sendinblue) API — free 300 emails/day.
+ * Requires BREVO_API_KEY env var.
+ */
+async function sendViaBrevo(
+  to: string, subject: string, body: string,
+  fromName: string, fromEmail: string
+): Promise<string> {
+  const response = await axios.post(
+    'https://api.brevo.com/v3/smtp/email',
+    {
+      sender: { name: fromName, email: fromEmail },
+      to: [{ email: to }],
+      subject,
+      htmlContent: body.replace(/\n/g, '<br>'),
+      textContent: body,
+    },
+    {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      timeout: 15000,
+    }
+  );
+  return (response.data as any).messageId || 'brevo-sent';
+}
+
 export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
   try {
     const { to, subject, body } = req.body;
@@ -193,83 +253,108 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'To, subject, and body are required' });
     }
 
-    // Verify SMTP is configured before attempting send
-    const smtpUser = process.env.SMTP_USER || 'marketing@nandaranusamontierra.com';
-    const smtpPass = process.env.SMTP_PASS;
-    
-    if (!smtpPass) {
-      logger.warn('SMTP_PASS not configured - simulating send for development');
-      // Simulate sending for development
+    const smtpUser  = process.env.SMTP_USER  || 'marketing@nandaranusamontierra.com';
+    const smtpPass  = process.env.SMTP_PASS;
+    const fromName  = process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra';
+
+    let messageId: string;
+    let method: string;
+
+    // ── Priority 1: Resend HTTP API (recommended for cloud hosting) ──────────
+    if (process.env.RESEND_API_KEY) {
+      logger.info(`Sending via Resend API to ${to}`);
+      messageId = await sendViaResend(to, subject, body, fromName, smtpUser);
+      method = 'resend';
+
+    // ── Priority 2: Brevo HTTP API ───────────────────────────────────────────
+    } else if (process.env.BREVO_API_KEY) {
+      logger.info(`Sending via Brevo API to ${to}`);
+      messageId = await sendViaBrevo(to, subject, body, fromName, smtpUser);
+      method = 'brevo';
+
+    // ── Priority 3: SMTP (may be blocked on Render/Heroku/etc.) ─────────────
+    } else if (smtpPass) {
+      const resolvedPort   = parseInt(process.env.SMTP_PORT || '587');
+      const resolvedSecure = resolvedPort === 465;
+      const smtpHost       = process.env.SMTP_HOST || 'smtp.hostinger.com';
+
+      logger.info(`Sending via SMTP ${smtpHost}:${resolvedPort} (secure=${resolvedSecure}) to ${to}`);
+
+      const tempTransporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: resolvedPort,
+        secure: resolvedSecure,
+        requireTLS: !resolvedSecure,
+        auth: { user: smtpUser, pass: smtpPass },
+        tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' as const },
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 45000,
+      });
+
+      const info: any = await tempTransporter.sendMail({
+        from: `"${fromName}" <${smtpUser}>`,
+        to, subject,
+        text: body,
+        html: body.replace(/\n/g, '<br>'),
+      });
+      tempTransporter.close();
+      messageId = info.messageId;
+      method = 'smtp';
+
+    // ── Fallback: Simulate (dev/no credentials) ──────────────────────────────
+    } else {
+      logger.warn('No email credentials configured — simulating send');
       await prisma.email.create({
         data: {
-          subject,
-          body,
-          from: smtpUser,
-          to,
-          status: 'SENT',
-          direction: 'OUTBOUND',
+          subject, body,
+          from: smtpUser, to,
+          status: 'SENT', direction: 'OUTBOUND',
           sentAt: new Date(),
-          messageId: `simulated-${Date.now()}`
+          messageId: `simulated-${Date.now()}`,
         }
       });
-      return res.json({ message: 'Email simulated (SMTP not configured)', messageId: 'simulated' });
+      return res.json({ message: 'Email simulated (no credentials configured)', messageId: 'simulated' });
     }
 
-    // Create a transport with STARTTLS on port 587 (cloud-hosting friendly)
-    // Port 465 (SSL) is commonly blocked by Render/Heroku/etc. Port 587 (STARTTLS) is not.
-    const resolvedPort = parseInt(process.env.SMTP_PORT || '587');
-    const resolvedSecure = resolvedPort === 465;
-
-    const tempTransporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-      port: resolvedPort,
-      secure: resolvedSecure,
-      requireTLS: !resolvedSecure,
-      auth: { user: smtpUser, pass: smtpPass },
-      tls: {
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2' as const,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 45000,
-    });
-
-    logger.info(`Attempting SMTP send via ${process.env.SMTP_HOST || 'smtp.hostinger.com'}:${resolvedPort} (secure=${resolvedSecure})`);
-
-    const info: any = await tempTransporter.sendMail({
-      from: `"${process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra'}" <${smtpUser}>`,
-      to,
-      subject,
-      text: body,
-      html: body.replace(/\n/g, '<br>'),
-    });
-
-    tempTransporter.close();
-
-    // Log the sent email in DB
+    // ── Save to DB ───────────────────────────────────────────────────────────
     await prisma.email.create({
       data: {
-        subject,
-        body,
-        from: smtpUser,
-        to,
-        status: 'SENT',
-        direction: 'OUTBOUND',
+        subject, body,
+        from: smtpUser, to,
+        status: 'SENT', direction: 'OUTBOUND',
         sentAt: new Date(),
-        messageId: info.messageId
+        messageId,
       }
     });
 
-    return res.json({ message: 'Email sent successfully', messageId: info.messageId });
+    logger.info(`Email sent successfully via ${method}. messageId=${messageId}`);
+    return res.json({ message: 'Email sent successfully', messageId, method });
+
   } catch (error: any) {
-    logger.error('Direct email sending error:', error.message);
-    // Check for specific SMTP errors
+    // Log full error details to help diagnose issues
+    logger.error('Direct email sending error', {
+      message: error.message,
+      code:    error.code,
+      response: error.response?.data,
+      status:   error.response?.status,
+      stack:    error.stack,
+    });
+
     if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT' || error.message?.includes('connect')) {
-      return res.status(502).json({ message: `SMTP connection failed: ${error.message}. Check SMTP credentials in environment variables.` });
+      return res.status(502).json({
+        message: `SMTP connection failed: ${error.message}. ` +
+          'Tip: Set RESEND_API_KEY or BREVO_API_KEY environment variable to bypass SMTP blocking.',
+      });
     }
     if (error.code === 'EAUTH') {
-      return res.status(502).json({ message: 'SMTP authentication failed. Check SMTP_USER and SMTP_PASS in environment variables.' });
+      return res.status(502).json({ message: 'SMTP authentication failed. Check SMTP_USER and SMTP_PASS.' });
+    }
+    if (error.response?.status === 422 || error.response?.status === 403) {
+      return res.status(502).json({
+        message: `Email API error: ${JSON.stringify(error.response?.data)}. ` +
+          'If using Resend, make sure the domain is verified in the Resend dashboard.',
+      });
     }
     return res.status(500).json({ message: `Email send failed: ${error.message}` });
   }
