@@ -1,5 +1,6 @@
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cospacenandara.onrender.com';
+const isLocalHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isLocalHost ? window.location.origin : 'https://cospacenandara.onrender.com');
 
 console.log('[API DEBUG] import.meta.env:', import.meta.env);
 console.log('[API DEBUG] VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);

@@ -139,7 +139,7 @@ export default function EmailManagementView() {
             className="w-full py-2 border border-gray-200 text-gray-500 rounded-md text-[10px] font-mono uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 disabled:opacity-50"
           >
             
-            {isSyncing ? 'Syncing...' : 'Sync Inbox'}
+            {isSyncing ? 'Syncing...' : 'Sync Mailbox'}
           </button>
         </div>
       </div>
