@@ -6,15 +6,42 @@ import nodemailer from 'nodemailer';
 import { EmailSyncService } from '../services/email-sync.service';
 import axios from 'axios';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+// SMTP Configuration for Hostinger
+// IMPORTANT: If Cloudflare proxy is active on smtp.hostinger.com domain,
+// SMTP connections will TIMEOUT because Cloudflare only proxies HTTP/HTTPS (ports 80, 443),
+// NOT SMTP (ports 25, 465, 587).
+//
+// Solution: Use the direct Hostinger mail server hostname that bypasses Cloudflare.
+// Common Hostinger direct mail server hostnames:
+//   - mx1.hostinger.com
+//   - mx2.hostinger.com  
+//   - The server hostname from your Hostinger control panel (e.g., srv1.hostinger.com or similar)
+//
+// To find your direct mail server:
+// 1. Login to Hostinger hPanel → Emails → Email Accounts
+// 2. Look for "Mail Server" or "Incoming/Outgoing Server" settings
+// 3. Use that hostname here instead of smtp.hostinger.com
+//
+// Alternatively, in Cloudflare DNS:
+// - Change the mail subdomain record from Proxied (orange cloud) to DNS Only (grey cloud)
+// - Or add a separate record like "mail.yourdomain.com" pointing to Hostinger IP (DNS Only)
+const smtpHost = process.env.SMTP_HOST || 'smtp.hostinger.com';
+
+const smtpConfig = {
+  host: smtpHost,
   port: parseInt(process.env.SMTP_PORT || '465'),
   secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER || 'marketing@nandaranusamontierra.com',
     pass: process.env.SMTP_PASS || 'Ghfso#!@!5246!#!@g7',
   },
-});
+  // Timeout settings to prevent hanging
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
+};
+
+const transporter = nodemailer.createTransport(smtpConfig);
 
 /**
  * Maps frontend status strings to valid Prisma EmailStatus enum values
