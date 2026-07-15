@@ -127,6 +127,9 @@ export default function EmailGeneratorView({
   // Load existing email or initialize when activeLead change
   useEffect(() => {
     if (!activeLead) return;
+    // Don't reset form while a draft is being generated — avoids race condition
+    // where refreshEmails() fires and wipes the newly-generated draft from the UI.
+    if (isGenerating) return;
 
     // Search for existing email log for this lead
     const existing = emailLogs.find(log => log.leadId === activeLead.id);
@@ -213,7 +216,7 @@ export default function EmailGeneratorView({
         }
       }
     }
-  }, [activeLead, emailLogs]);
+  }, [activeLead, emailLogs, isGenerating]);
 
   const handleGenerate = async () => {
     if (!activeLead) return;
