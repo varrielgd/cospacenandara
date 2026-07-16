@@ -164,6 +164,7 @@ export default function AIBuyerIntelligence({ initialWebsiteUrl = '', onBuyerCre
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [analysisMode, setAnalysisMode] = useState<'cache' | 'refresh' | 'force'>('cache');
 
   const loadTimeline = async (importerId: string) => {
     try {
@@ -185,7 +186,10 @@ export default function AIBuyerIntelligence({ initialWebsiteUrl = '', onBuyerCre
     setCurrentPhase('Analyzing website...');
 
     try {
-      const data = await api.post('/api/auto-discover', { websiteUrl });
+      const isForce = analysisMode === 'force';
+      console.log(`[AI Buyer Intelligence] Mode: ${analysisMode.toUpperCase()}, Force: ${isForce}`);
+      
+      const data = await api.post('/api/auto-discover', { websiteUrl, force: isForce });
       
       setResult(data);
       setCurrentPhase('Analysis complete');
@@ -203,9 +207,9 @@ export default function AIBuyerIntelligence({ initialWebsiteUrl = '', onBuyerCre
       }
 
       if (data.cached) {
-        alert(`Analysis loaded from cache (${new Date().toLocaleDateString()})`);
+        alert(`📦 Analysis loaded from cache (${new Date().toLocaleDateString()})`);
       } else {
-        alert(`Analysis complete! ${data.isNewBuyer ? 'New buyer created' : 'Buyer updated'} in CRM.`);
+        alert(`✅ Analysis complete! ${data.isNewBuyer ? 'New buyer created' : 'Buyer updated'} in CRM.`);
       }
     } catch (err: any) {
       setError(err.message || 'Analysis failed');
@@ -710,6 +714,45 @@ export default function AIBuyerIntelligence({ initialWebsiteUrl = '', onBuyerCre
             placeholder="https://example-coffee-company.com"
             className="w-full bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[8px] uppercase tracking-wider text-gray-500 font-bold block">Analysis Mode</label>
+          <div className="flex gap-2">
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="analysisMode"
+                value="cache"
+                checked={analysisMode === 'cache'}
+                onChange={() => setAnalysisMode('cache')}
+                className="text-primary focus:ring-gold"
+              />
+              <span className="text-[9px] text-primary">Use Cache (30 days)</span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="analysisMode"
+                value="refresh"
+                checked={analysisMode === 'refresh'}
+                onChange={() => setAnalysisMode('refresh')}
+                className="text-primary focus:ring-gold"
+              />
+              <span className="text-[9px] text-primary">Refresh Analysis</span>
+            </label>
+            <label className="flex items-center gap-1.5 cursor-pointer">
+              <input
+                type="radio"
+                name="analysisMode"
+                value="force"
+                checked={analysisMode === 'force'}
+                onChange={() => setAnalysisMode('force')}
+                className="text-primary focus:ring-gold"
+              />
+              <span className="text-[9px] text-primary font-bold">Force Re-analyze</span>
+            </label>
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">

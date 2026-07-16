@@ -5,36 +5,46 @@ import { AutoDiscoverService } from '../services/auto-discover.service.js';
 
 export const executeAutoDiscover = async (req: AuthRequest, res: Response) => {
   try {
-    const { websiteUrl } = req.body;
+    const { websiteUrl, force = false } = req.body;
     const userId = req.user?.id;
 
     if (!websiteUrl) {
       return res.status(400).json({ message: 'Website URL is required' });
     }
 
-    logger.info(`[AutoDiscover] Starting execution for ${websiteUrl} by user ${userId}`);
+    logger.info(`[AutoDiscover] Starting execution for ${websiteUrl} by user ${userId} (force: ${force})`);
 
     // Check if we have a cached analysis for this website
     const existingImporter = await prisma.importer.findFirst({
       where: { website: websiteUrl }
     });
 
-    // If exists and recently analyzed (within 30 days), return cached
-    if (existingImporter && existingImporter.updatedAt) {
+    // If exists, recently analyzed (within 30 days), and NOT forced: return cached
+    if (existingImporter && existingImporter.updatedAt && !force) {
       const daysSinceUpdate = (Date.now() - new Date(existingImporter.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
       if (daysSinceUpdate < 30) {
-        logger.info(`[AutoDiscover] Returning cached analysis for ${websiteUrl} (${daysSinceUpdate.toFixed(1)} days old)`);
+        logger.info(`[AutoDiscover] CACHE HIT - Returning cached analysis for ${websiteUrl} (${daysSinceUpdate.toFixed(1)} days old)`);
         
-        // Build cached response
+        // Build cached response with all available fields
         const cachedResponse = {
           classification: {
             companyName: existingImporter.companyName,
+            tradingName: existingImporter.companyName, // Use companyName as tradingName for cached
             country: existingImporter.country || 'Unknown',
             city: existingImporter.city || 'Unknown',
+            address: existingImporter.address || undefined,
             website: existingImporter.website || websiteUrl,
             businessType: existingImporter.businessType || 'Unknown',
+            founded: undefined,
+            employeeEstimate: undefined,
+            businessScale: undefined,
             confidenceScore: existingImporter.confidenceScore ? Math.round(existingImporter.confidenceScore * 100) : 50,
             isCoffeeBusiness: true,
+            warning: existingImporter.confidenceScore && existingImporter.confidenceScore < 0.7 ? 'Cached analysis - confidence below 70%' : undefined,
+            coffeeCategories: undefined,
+            services: undefined,
+            industries: undefined,
+            targetCustomers: undefined,
           },
           contacts: {
             companyEmail: existingImporter.email,
@@ -46,21 +56,72 @@ export const executeAutoDiscover = async (req: AuthRequest, res: Response) => {
             linkedin: existingImporter.linkedin,
             contactPerson: existingImporter.primaryContactName,
             jobTitle: null,
+            priority: 'MEDIUM',
+          },
+          portfolio: {
+            origins: [],
+            products: [],
+            processingMethods: [],
+            certifications: [],
+            roastingStyle: 'Unknown',
+            currentSuppliers: [],
+            privateLabels: [],
+            buyingInterests: [],
+            packagingTypes: [],
+            estimatedAnnualVolume: 'Unknown',
+            specialtyFocus: 'Unknown',
+          },
+          productMatches: [],
+          bestProducts: [],
+          gapAnalysis: 'Cached analysis - full product matching not available.',
+          scores: {
+            opportunityScore: 50,
+            relationshipDifficulty: 50,
+            buyingPotential: 50,
+            estimatedVolume: 'Unknown',
+            premiumPotential: 50,
+            specialtyCoffeeInterest: 50,
+            decisionComplexity: 50,
+            priceSensitivity: 50,
+            responseProbability: 50,
+            riskLevel: 'Medium',
+          },
+          insight: {
+            businessSummary: existingImporter.notes || 'No business summary available in cache.',
+            businessModel: existingImporter.businessType || 'Unknown',
+            currentCoffeeStrategy: 'Unknown',
+            possiblePainPoints: [],
+            potentialOpportunities: [],
+            recommendedSalesAngle: 'Refresh analysis for updated insights.',
+            recommendedCommunicationStyle: 'Professional',
           },
           importerId: existingImporter.id,
           isNewBuyer: false,
-          timeline: ['Previous analysis cached'],
+          timeline: ['Previous analysis cached', `Last updated: ${new Date(existingImporter.updatedAt).toLocaleDateString()}`],
+          outreachStrategy: {
+            emailType: 'FIRST_CONTACT',
+            reason: 'Cached analysis - refresh for updated strategy.',
+          },
+          emailDraft: {
+            subject: '',
+            body: '',
+          },
+          recommendedAttachments: [],
           cached: true,
         };
 
         return res.json(cachedResponse);
+      } else {
+        logger.info(`[AutoDiscover] CACHE EXPIRED - Re-analyzing (${daysSinceUpdate.toFixed(1)} days old)`);
       }
+    } else if (force) {
+      logger.info(`[AutoDiscover] CACHE BYPASS - Force re-analysis requested for ${websiteUrl}`);
     }
 
     // Execute full auto-discover workflow
+    logger.info(`[AutoDiscover] AI REQUEST STARTED - Executing full workflow for ${websiteUrl}`);
     const result = await AutoDiscoverService.executeAutoDiscover(websiteUrl, userId || 'system');
-
-    logger.info(`[AutoDiscover] Completed for ${websiteUrl}. New buyer: ${result.isNewBuyer}, ImporterId: ${result.importerId}`);
+    logger.info(`[AutoDiscover] AI RESPONSE RECEIVED - Completed for ${websiteUrl}. New buyer: ${result.isNewBuyer}, ImporterId: ${result.importerId}`);
 
     return res.json({
       ...result,
