@@ -40,6 +40,9 @@ export interface PersonContact {
   name: string;
   email: string;
   jobTitle: string;
+  department: string;
+  phone?: string;
+  linkedin?: string;
   priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
@@ -144,10 +147,28 @@ export class AutoDiscoverService {
     const classification = await this.classifyCompany(websiteUrl, websiteContent);
     timeline.push(`Company classified: ${classification.companyName} (${classification.businessType})`);
 
-    // Step 3: Extract contacts
+    // Step 3: Extract multiple contacts with full details
     timeline.push('Extracting contacts...');
-    const contacts = await this.extractContacts(websiteUrl, websiteContent);
-    timeline.push(`Contacts extracted${contacts.companyEmail ? ': ' + contacts.companyEmail : ''}`);
+    const allContacts = await this.extractAllContacts(websiteUrl, websiteContent);
+    timeline.push(`Contacts extracted: ${allContacts.length} contacts found`);
+    
+    // Determine primary contact info for email generation
+    const primaryContact = this.selectPrimaryContact(allContacts);
+    const contacts: ContactInfo = {
+      companyEmail: primaryContact.email,
+      procurementEmail: primaryContact.department === 'Procurement' ? primaryContact.email : 
+                        allContacts.find(c => c.department === 'Procurement')?.email || null,
+      salesEmail: primaryContact.department === 'Sales' ? primaryContact.email : 
+                  allContacts.find(c => c.department === 'Sales')?.email || null,
+      coffeeBuyingEmail: primaryContact.department === 'Green Coffee Buying' ? primaryContact.email : 
+                         allContacts.find(c => c.department === 'Green Coffee Buying')?.email || null,
+      phone: primaryContact.phone || null,
+      whatsapp: primaryContact.phone || null,
+      linkedin: primaryContact.linkedin || null,
+      contactPerson: primaryContact.name,
+      jobTitle: primaryContact.jobTitle,
+      priority: primaryContact.priority,
+    };
 
     // Step 4: Analyze coffee portfolio
     timeline.push('Analyzing coffee portfolio...');
@@ -381,7 +402,118 @@ Return EXACTLY this JSON. Use "Unknown" or null when not found. NEVER fabricate.
   }
 
   /**
-   * Extract contact information from website
+   * Extract all contacts from website with full details and priority scoring
+   */
+  private static async extractAllContacts(websiteUrl: string, websiteContent: string): Promise<PersonContact[]> {
+    const prompt = `Extract ALL contacts from this company website.
+
+WEBSITE: ${websiteUrl}
+
+CONTENT:
+${websiteContent.substring(0, 15000)}
+
+Search for: Contact page, About page, Team page, Management, Staff directory, Footer, Header.
+
+Extract EVERY person mentioned with their details.
+
+Return EXACTLY this JSON array. NEVER fabricate. Use null when not found.
+
+[
+  {
+    "name": "Full Name",
+    "email": "email@example.com",
+    "jobTitle": "Job Title",
+    "department": "One of: Procurement / Purchasing / Green Coffee Buying / Coffee Trader / Import Manager / Trading Manager / Operations / Sales / Marketing / General",
+    "phone": "Phone if available",
+    "linkedin": "LinkedIn URL if available"
+  }
+]
+
+Department priority (highest to lowest):
+1. Procurement
+2. Green Coffee Buying
+3. Coffee Buyer
+4. Coffee Trader
+5. Import Manager
+6. Trading Manager
+7. Purchasing Manager
+8. Operations
+9. Sales
+10. Marketing
+11. General
+
+Return empty array [] if no contacts found.`;
+
+    try {
+      const result = await AiService.generateContent(prompt, {
+        systemPrompt: 'You extract all contact information from company websites. Return pure JSON array only.'
+      });
+      
+      const jsonMatch = result.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) return [];
+      
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed.map((contact: any) => {
+        const dept = (contact.department || 'General').toLowerCase();
+        const jobTitle = (contact.jobTitle || '').toLowerCase();
+        
+        let priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW';
+        
+        // Priority scoring based on department and job title
+        if (/procurement|purchasing|green\s*coffee\s*buying|coffee\s*buyer|coffee\s*trader|import\s*manager|trading\s*manager/i.test(dept + ' ' + jobTitle)) {
+          priority = 'HIGHEST';
+        } else if (/operations|sourcing|supply\s*chain/i.test(dept + ' ' + jobTitle)) {
+          priority = 'HIGH';
+        } else if (/sales|marketing|manager|director/i.test(dept + ' ' + jobTitle)) {
+          priority = 'MEDIUM';
+        } else {
+          priority = 'LOW';
+        }
+
+        return {
+          name: contact.name || 'Unknown',
+          email: contact.email,
+          jobTitle: contact.jobTitle || 'Staff',
+          department: contact.department || 'General',
+          phone: contact.phone,
+          linkedin: contact.linkedin,
+          priority,
+        };
+      }).filter((c: PersonContact) => c.email); // Only return contacts with valid emails
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Select primary contact based on priority
+   */
+  private static selectPrimaryContact(contacts: PersonContact[]): PersonContact {
+    if (contacts.length === 0) {
+      return {
+        name: 'Unknown',
+        email: '',
+        jobTitle: 'Unknown',
+        department: 'General',
+        priority: 'LOW',
+      };
+    }
+
+    // Sort by priority: HIGHEST > HIGH > MEDIUM > LOW
+    const priorityOrder = { 'HIGHEST': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3 };
+    const sorted = [...contacts].sort((a, b) => {
+      const aPriority = priorityOrder[a.priority] || 3;
+      const bPriority = priorityOrder[b.priority] || 3;
+      return aPriority - bPriority;
+    });
+
+    return sorted[0];
+  }
+
+  /**
+   * Extract contact information from website (legacy method)
    */
   private static async extractContacts(websiteUrl: string, websiteContent: string): Promise<ContactInfo> {
     const prompt = `Extract all possible contact information from this company website.
