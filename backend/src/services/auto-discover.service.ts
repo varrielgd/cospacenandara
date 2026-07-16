@@ -242,20 +242,27 @@ export class AutoDiscoverService {
 
   /**
    * Crawl website content from multiple pages - Enhanced for Business Intelligence
+   * Follows internal links and extracts comprehensive data
    */
   private static async crawlWebsite(websiteUrl: string): Promise<string> {
-    const pages = [
+    const baseUrl = new URL(websiteUrl).origin;
+    const visited = new Set<string>();
+    const pagesToCrawl = [
       '', '/about', '/company', '/products', '/coffee', '/contact', '/team', '/sustainability',
       '/blog', '/careers', '/news', '/certificates', '/quality', '/services', '/locations',
-      '/partners', '/origins', '/our-story', '/about-us', '/our-team', '/history'
+      '/partners', '/origins', '/our-story', '/about-us', '/our-team', '/history',
+      '/management', '/offices', '/privacy', '/terms', '/footer'
     ];
     let allContent = '';
 
     const normalizedUrl = websiteUrl.replace(/\/+$/, '');
 
-    for (const page of pages) {
+    for (const page of pagesToCrawl) {
       try {
         const url = `${normalizedUrl}${page}`;
+        if (visited.has(url)) continue;
+        visited.add(url);
+
         const response = await fetch(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -264,6 +271,27 @@ export class AutoDiscoverService {
           signal: AbortSignal.timeout(10000),
         });
         const html = await response.text();
+        
+        // Extract internal links for further crawling
+        const linkMatches = html.match(/href=["']([^"']+)["']/g) || [];
+        const internalLinks = linkMatches
+          .map(match => match.replace(/href=["']([^"']+)["']/, '$1'))
+          .filter(link => link && !link.startsWith('http') && !link.startsWith('#') && !link.startsWith('mailto:') && !link.startsWith('tel:'))
+          .map(link => {
+            try {
+              const fullUrl = new URL(link, baseUrl).href;
+              return fullUrl;
+            } catch {
+              return null;
+            }
+          })
+          .filter((url): url is string => url !== null && url.startsWith(baseUrl) && !visited.has(url));
+
+        // Add discovered internal links to crawl queue (max 50 pages total)
+        if (internalLinks.length > 0 && visited.size < 50) {
+          pagesToCrawl.push(...internalLinks.slice(0, 10));
+        }
+
         const text = html
           .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
           .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
