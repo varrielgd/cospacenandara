@@ -766,6 +766,84 @@ export const generateIntelligentEmail = async (req: AuthRequest, res: Response) 
   }
 };
 
+/**
+ * Get buyer intelligence timeline
+ */
+export const getBuyerTimeline = async (req: AuthRequest, res: Response) => {
+  try {
+    const importerId = req.params.importerId as string;
+    if (!importerId) return res.status(400).json({ message: 'importerId is required' });
+
+    const { BuyerTimelineService } = await import('../services/buyer-timeline.service.js');
+    const timeline = await BuyerTimelineService.getTimeline(importerId);
+    const profile = await BuyerTimelineService.getBuyerProfile(importerId);
+
+    return res.json({ timeline, profile });
+  } catch (error: any) {
+    logger.error('Get buyer timeline error:', error);
+    return res.status(500).json({ message: `Failed to get timeline: ${error.message}` });
+  }
+};
+
+/**
+ * Deep website analysis with timeline event
+ */
+export const analyzeBuyerWebsiteDeep = async (req: AuthRequest, res: Response) => {
+  try {
+    const { importerId, websiteUrl } = req.body;
+    if (!importerId || !websiteUrl) {
+      return res.status(400).json({ message: 'importerId and websiteUrl are required' });
+    }
+
+    const { BuyerTimelineService } = await import('../services/buyer-timeline.service.js');
+    const analysis = await BuyerTimelineService.analyzeWebsiteDeep(importerId, websiteUrl);
+    const profile = await BuyerTimelineService.getBuyerProfile(importerId);
+
+    return res.json({ analysis, profile });
+  } catch (error: any) {
+    logger.error('Deep website analysis error:', error);
+    return res.status(500).json({ message: `Website analysis failed: ${error.message}` });
+  }
+};
+
+/**
+ * Sync existing data into timeline
+ */
+export const syncBuyerTimeline = async (req: AuthRequest, res: Response) => {
+  try {
+    const { importerId } = req.body;
+    if (!importerId) return res.status(400).json({ message: 'importerId is required' });
+
+    const { BuyerTimelineService } = await import('../services/buyer-timeline.service.js');
+    const eventCount = await BuyerTimelineService.syncFromExistingData(importerId);
+
+    return res.json({ message: `Timeline synced: ${eventCount} events added`, eventCount });
+  } catch (error: any) {
+    logger.error('Sync buyer timeline error:', error);
+    return res.status(500).json({ message: `Sync failed: ${error.message}` });
+  }
+};
+
+/**
+ * Classify buyer reply
+ */
+export const classifyBuyerReply = async (req: AuthRequest, res: Response) => {
+  try {
+    const { importerId, emailId, subject, body } = req.body;
+    if (!importerId || !subject || !body) {
+      return res.status(400).json({ message: 'importerId, subject, and body are required' });
+    }
+
+    const { BuyerTimelineService } = await import('../services/buyer-timeline.service.js');
+    const classification = await BuyerTimelineService.classifyReply(importerId, emailId || '', subject, body);
+
+    return res.json(classification);
+  } catch (error: any) {
+    logger.error('Classify reply error:', error);
+    return res.status(500).json({ message: `Classification failed: ${error.message}` });
+  }
+};
+
 export const fetchGoogleDriveFile = async (req: AuthRequest, res: Response) => {
   try {
     const { driveLink } = req.body;

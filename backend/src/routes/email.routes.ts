@@ -24,5 +24,9 @@ router.post('/generate-email', emailController.generateLeadEmail);
 router.post('/fetch-drive-file', emailController.fetchGoogleDriveFile);
 router.post('/analyze-website', emailController.analyzeBuyerWebsite);
 router.post('/intelligent-generate', emailController.generateIntelligentEmail);
+router.get('/timeline/:importerId', emailController.getBuyerTimeline);
+router.post('/analyze-website-deep', emailController.analyzeBuyerWebsiteDeep);
+router.post('/sync-timeline', emailController.syncBuyerTimeline);
+router.post('/classify-reply', emailController.classifyBuyerReply);
 
 export default router;
