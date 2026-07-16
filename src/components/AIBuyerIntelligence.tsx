@@ -4,13 +4,22 @@ import { api } from '../utils/api';
 // Types matching backend AutoDiscoverResult
 interface CompanyClassification {
   companyName: string;
+  tradingName?: string;
   country: string;
   city: string;
+  address?: string;
   website: string;
   businessType: string;
+  founded?: string;
+  employeeEstimate?: string;
+  businessScale?: string;
   confidenceScore: number;
   isCoffeeBusiness: boolean;
   warning?: string;
+  coffeeCategories?: string[];
+  services?: string[];
+  industries?: string[];
+  targetCustomers?: string[];
 }
 
 interface ContactInfo {
@@ -23,6 +32,7 @@ interface ContactInfo {
   linkedin: string | null;
   contactPerson: string | null;
   jobTitle: string | null;
+  priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
 interface CoffeePortfolio {
