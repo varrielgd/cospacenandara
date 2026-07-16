@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Contact" ADD COLUMN IF NOT EXISTS "department" TEXT,
+ADD COLUMN IF NOT EXISTS "priority" TEXT,
+ALTER COLUMN "isPrimary" SET DEFAULT true;

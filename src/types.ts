@@ -31,6 +31,11 @@ export interface Lead {
   dateAdded: string;
   createdAt: string;
   updatedAt: string;
+  // Additional properties used by components
+  leadType?: string;
+  analysisMatch?: string;
+  websiteConfidence?: string;
+  importerConfidence?: string;
 }
 
 export interface EmailLog {
@@ -112,7 +117,7 @@ export interface Quotation {
   currency: string;
   leadTimeDays: number;
   validUntil: string;
-  status: 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Expired';
+  status: 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Expired' | 'Declined';
   pdfPath?: string;
   dateCreated: string;
   createdAt: string;
