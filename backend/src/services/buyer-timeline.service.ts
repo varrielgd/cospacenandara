@@ -84,7 +84,7 @@ export class BuyerTimelineService {
         `INSERT INTO "BuyerTimeline" ("importerId", "eventType", "source", "title", "description", "metadata", "score", "confidence", "eventDate", "updatedAt")
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
          RETURNING id`,
-        [importerId, eventType, source, title, description || null, metadata ? JSON.stringify(metadata) : null, score || null, confidence || 50]
+        importerId, eventType, source, title, description || null, metadata ? JSON.stringify(metadata) : null, score || null, confidence || 50
       );
 
       // Auto-update relationship score and next best action after significant events
@@ -119,7 +119,7 @@ export class BuyerTimelineService {
          WHERE "importerId" = $1
          ORDER BY "eventDate" DESC
          LIMIT $2`,
-        [importerId, limit]
+        importerId, limit
       );
       return rows.map(r => ({
         ...r,
@@ -142,7 +142,7 @@ export class BuyerTimelineService {
                 "nextActionReason", "productRelevance", "rawAnalysis"
          FROM "BuyerAiAnalysis"
          WHERE "importerId" = $1`,
-        [importerId]
+        importerId
       );
       if (!rows || rows.length === 0) return null;
 
