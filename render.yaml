@@ -37,8 +37,10 @@ services:
         value: https://nandaracorporation.vercel.app
       - key: SMTP_HOST
         value: smtp.hostinger.com
+      - key: RESEND_API_KEY
+        sync: false
       - key: SMTP_PORT
-        value: "465"
+        value: "587"
       - key: SMTP_USER
         value: marketing@nandaranusamontierra.com
       - key: SMTP_PASS

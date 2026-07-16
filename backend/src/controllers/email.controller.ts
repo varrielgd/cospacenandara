@@ -268,6 +268,14 @@ export const sendDirectEmail = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: 'To, subject, and body are required' });
     }
 
+    // Log environment check untuk debugging
+    logger.info('Email send attempt', {
+      hasResendKey: !!process.env.RESEND_API_KEY,
+      hasSmtpPass: !!process.env.SMTP_PASS,
+      to,
+      subject: subject.substring(0, 50),
+    });
+
     const smtpUser  = process.env.SMTP_USER  || 'marketing@nandaranusamontierra.com';
     const smtpPass  = process.env.SMTP_PASS;
     const fromName  = process.env.SMTP_FROM_NAME || 'Nandara Nusa Montierra';

@@ -413,55 +413,70 @@ export default function EmailGeneratorView({
     alert('Email approved successfully! Transmit lock is now UNLOCKED.');
   };
 
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     if (!activeLead) return;
     if (!isApproved) {
       alert("Transmission blocked. Every outbound email must be APPROVED first!");
       return;
     }
 
-    const now = getTimestamp();
-    setStatus('Sent');
+    try {
+      const payload: any = {
+        to: recipientEmail || activeLead.email,
+        subject,
+        body,
+      };
+      if (cc) payload.cc = cc;
+      if (bcc) payload.bcc = bcc;
 
-    const updatedTimestamps = {
-      ...timestamps,
-      sentAt: now
-    };
-    setTimestamps(updatedTimestamps);
+      const result = await api.post('/api/emails/send-direct', payload);
 
-    const freshEmail: EmailLog = {
-        id: currentEmailId,
-        leadId: activeLead.id,
-        recipientEmail: recipientEmail,
-        cc,
-        bcc,
-        emailSubject: subject,
-        emailBody: body,
-        status: 'Sent',
-        approved: true,
-        attachPdfQuotation,
-        attachCatalogue,
-        catalogueDriveLink,
-        attachSampleOffer,
-        sampleOfferDriveLink,
-        // New attachments
-        attachCompanyProfile,
-        companyProfileDriveLink,
-        attachPriceList,
-        priceListDriveLink,
-        attachSampleProgram,
-        sampleProgramDriveLink,
-        attachQuotation,
-        quotationDriveLink,
-        attachProformaInvoice,
-        proformaInvoiceDriveLink,
-      ...timestamps,
-      sentAt: now,
-      sentDate: new Date().toISOString().split('T')[0]
-    };
+      const now = getTimestamp();
+      setStatus('Sent');
 
-    onSaveOrUpdateEmail(freshEmail);
-    alert(`B2B outreach successfully simulated and transmitted to direct mail pipelines! Marked as "Contacted".`);
+      const updatedTimestamps = {
+        ...timestamps,
+        sentAt: now
+      };
+      setTimestamps(updatedTimestamps);
+
+      const freshEmail: EmailLog = {
+          id: currentEmailId,
+          leadId: activeLead.id,
+          recipientEmail: recipientEmail,
+          cc,
+          bcc,
+          emailSubject: subject,
+          emailBody: body,
+          status: 'Sent',
+          approved: true,
+          attachPdfQuotation,
+          attachCatalogue,
+          catalogueDriveLink,
+          attachSampleOffer,
+          sampleOfferDriveLink,
+          // New attachments
+          attachCompanyProfile,
+          companyProfileDriveLink,
+          attachPriceList,
+          priceListDriveLink,
+          attachSampleProgram,
+          sampleProgramDriveLink,
+          attachQuotation,
+          quotationDriveLink,
+          attachProformaInvoice,
+          proformaInvoiceDriveLink,
+        ...timestamps,
+        sentAt: now,
+        sentDate: new Date().toISOString().split('T')[0]
+      };
+
+      onSaveOrUpdateEmail(freshEmail);
+      alert(`Email sent successfully via ${result.method || 'API'}! Message ID: ${result.messageId}`);
+    } catch (err: any) {
+      console.error('Send email error:', err);
+      alert('Failed to send email: ' + (err.message || 'Unknown error'));
+    }
   };
 
   const handleCopy = () => {
