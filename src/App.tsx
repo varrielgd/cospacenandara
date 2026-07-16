@@ -22,6 +22,7 @@ import ExportContractsView from './components/ExportContractsView';
 import ShipmentTrackingView from './components/ShipmentTrackingView';
 import FXHedgingView from './components/FXHedgingView';
 import SystemSettingsView from './components/SystemSettingsView';
+import AIBuyerIntelligence from './components/AIBuyerIntelligence';
 import { api } from './utils/api';
 
 
@@ -224,7 +225,7 @@ export default function App() {
 
       await method(url, emailData);
       refreshEmails();
-      if (emailData.status === 'Sent') {
+      if (emailData.status === 'Sent' && emailData.leadId) {
         handleUpdateLeadStatus(emailData.leadId, 'Contacted');
       }
     } catch (err) {
@@ -443,6 +444,7 @@ export default function App() {
               { tab: 'curriculum', label: 'Export Academy' },
               { tab: 'glossary', label: 'Industry Glossary' },
               { tab: 'sheets', label: 'Sheets Sync Config' },
+              { tab: 'ai-buyer-intelligence', label: 'AI Buyer Intelligence' },
             ].map(({ tab, label }) => (
               <button
                 key={tab}
@@ -520,6 +522,7 @@ export default function App() {
               {activeTab === 'quotation' && "Quotation Engine"}
               {activeTab === 'curriculum' && "Export Academy"}
               {activeTab === 'sheets' && "Sheets Sync Config"}
+              {activeTab === 'ai-buyer-intelligence' && "AI Buyer Intelligence"}
               {activeTab === 'personnel' && "Personnel Control"}
               {activeTab === 'connection-test' && "System Health"}
             </h2>
@@ -679,6 +682,10 @@ export default function App() {
               onUpdateConfig={handleUpdateConfig}
               onSyncAll={handleSyncToSheets}
             />
+          )}
+
+          {activeTab === 'ai-buyer-intelligence' && (
+            <AIBuyerIntelligence />
           )}
 
           {activeTab === 'personnel' && (
