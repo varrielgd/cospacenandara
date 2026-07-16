@@ -82,6 +82,7 @@ interface BuyerInsight {
 interface AutoDiscoverResult {
   classification: CompanyClassification;
   contacts: ContactInfo;
+  allContacts: PersonContact[];
   portfolio: CoffeePortfolio;
   productMatches: ProductMatchDetail[];
   bestProducts: string[];
@@ -101,6 +102,16 @@ interface AutoDiscoverResult {
   };
   recommendedAttachments: string[];
   cached?: boolean;
+}
+
+interface PersonContact {
+  name: string;
+  email: string;
+  jobTitle: string;
+  department: string;
+  phone?: string;
+  linkedin?: string;
+  priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
 interface TimelineEvent {
