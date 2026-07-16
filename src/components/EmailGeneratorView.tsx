@@ -414,6 +414,9 @@ export default function EmailGeneratorView({
   };
 
   const handleSendEmail = async () => {
+    console.log('[SendEmail] Starting handleSendEmail');
+    console.log('[SendEmail] activeLead:', activeLead?.id);
+    console.log('[SendEmail] isApproved:', isApproved);
     if (!activeLead) return;
     if (!isApproved) {
       alert("Transmission blocked. Every outbound email must be APPROVED first!");
@@ -428,8 +431,13 @@ export default function EmailGeneratorView({
       };
       if (cc) payload.cc = cc;
       if (bcc) payload.bcc = bcc;
+      
+      console.log('[SendEmail] Payload:', JSON.stringify(payload));
+      console.log('[SendEmail] Calling API /api/emails/send-direct');
+      console.log('[SendEmail] API base URL:', import.meta.env.VITE_API_BASE_URL || 'https://cospacenandara.onrender.com');
 
       const result = await api.post('/api/emails/send-direct', payload);
+      console.log('[SendEmail] API success:', result);
 
       const now = getTimestamp();
       setStatus('Sent');
