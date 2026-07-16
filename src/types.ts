@@ -1,45 +1,15 @@
+// Original types used across the application
 export interface Lead {
   id: string;
-  dateAdded: string;
   companyName: string;
-  country: string;
-  city: string;
-  state?: string;
-  website: string;
-  contactPage: string;
-  email: string;
-  phone: string;
+  website?: string;
+  email?: string;
+  phone?: string;
   whatsapp?: string;
-  linkedin: string;
-  leadType: string;
-  leadScore: 'A' | 'B' | 'C' | 'A+' | 'B+';
-  status:
-    | 'New Lead'
-    | 'Contacted'
-    | 'Replied'
-    | 'Sample Requested'
-    | 'Sample Sent'
-    | 'Negotiation'
-    | 'Quotation Sent'
-    | 'Order Confirmed'
-    | 'Closed Won'
-    | 'Closed Lost';
-  lastContact: string; // ISO date or descriptive
-  notes: string;
-  // Dynamic analysis fields (Module 3)
-  analysisType?: string;
-  analysisFocus?: string;
-  analysisPotential?: string;
-  analysisMatch?: string;
-  analysisWhy?: string;
-  
-  // Confidence Scores (Real Data Policy)
-  websiteConfidence?: 'High' | 'Medium' | 'Low';
-  emailConfidence?: 'High' | 'Medium' | 'Low';
-  importerConfidence?: 'High' | 'Medium' | 'Low';
-  importerProbability?: 'High' | 'Medium' | 'Low';
-  
-  // New fields from updated schema
+  linkedin?: string;
+  country: string;
+  city?: string;
+  address?: string;
   businessType?: string;
   primaryContactName?: string;
   primaryContactEmail?: string;
@@ -47,130 +17,145 @@ export interface Lead {
   annualVolumeBags?: number;
   estimatedBuyingCapacity?: number;
   targetMoqBags?: number;
-  preferredIncoterm?: 'FOB' | 'CIF' | 'EXW' | 'CNF';
+  preferredIncoterm?: string;
   isRepeatClient?: boolean;
+  coffeeType?: string;
+  greenBeanInterest?: boolean;
+  roastedBeanInterest?: boolean;
+  leadScore?: 'A+' | 'A' | 'B+' | 'B' | 'C';
+  confidenceScore?: number;
+  status: string;
+  notes?: string;
+  emailValidation?: 'VALID' | 'INVALID' | 'CATCH_ALL' | 'UNKNOWN';
+  emailValidatedAt?: string;
+  dateAdded: string;
+  createdAt: string;
+  updatedAt: string;
 }
-
-export type EmailStatus = 
-  | 'Draft Generated' 
-  | 'Pending Review' 
-  | 'Edited By User' 
-  | 'Approved' 
-  | 'Ready To Send' 
-  | 'Sent';
 
 export interface EmailLog {
   id: string;
-  leadId?: string; // matches importerId in Prisma
+  leadId: string;
   importerId?: string;
-  subject?: string;
-  body?: string;
-  to?: string; // recipient email
+  subject: string;
+  body: string;
+  from: string;
+  to: string;
+  recipientEmail?: string;
   cc?: string;
   bcc?: string;
-  status: EmailStatus;
-  approved: boolean;
-  attachPdfQuotation: string; // e.g. quote number or "none"
-  attachCatalogue: boolean;
+  status: 'Draft' | 'Sent' | 'Approved' | 'Received' | 'Bounced' | 'Draft Generated' | 'Pending Review' | 'Edited By User';
+  direction: 'INBOUND' | 'OUTBOUND';
+  isAiGenerated: boolean;
+  sentAt?: string;
+  receivedAt?: string;
+  attachPdfQuotation: string | boolean;
+  attachCatalogue?: boolean;
   catalogueDriveLink?: string;
-  attachSampleOffer: boolean;
+  attachSampleOffer?: boolean;
   sampleOfferDriveLink?: string;
-  // New attachments
-  attachCompanyProfile: boolean;
+  attachCompanyProfile?: boolean;
   companyProfileDriveLink?: string;
-  attachPriceList: boolean;
+  attachPriceList?: boolean;
   priceListDriveLink?: string;
-  attachSampleProgram: boolean;
+  attachSampleProgram?: boolean;
   sampleProgramDriveLink?: string;
-  attachQuotation: boolean;
+  attachQuotation?: boolean;
   quotationDriveLink?: string;
-  attachProformaInvoice: boolean;
+  attachProformaInvoice?: boolean;
   proformaInvoiceDriveLink?: string;
-  
-  // Timestamps
+  analysisMatch?: any;
+  approved?: boolean;
   draftGeneratedAt?: string;
   pendingReviewAt?: string;
   editedByUserAt?: string;
   approvedAt?: string;
   readyToSendAt?: string;
-  sentAt?: string;
-  sentDate?: string; // legacy support (e.g. YYYY-MM-DD)
-  
-  // For backwards compatibility
-  emailSubject?: string;
-  emailBody?: string;
-  recipientEmail?: string;
+  sentDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Sample {
   id: string;
   leadId: string;
-  product: string;
-  weight: string; // e.g., "500g", "1kg"
-  courier: string;
-  trackingNumber: string;
-  status: 'Preparing' | 'Shipped' | 'Delivered';
-  destinationCountry: string;
   sampleRequestDate: string;
-  moistureReading?: number;
+  product: string;
+  format: 'Green Beans' | 'Roasted Beans' | 'Ground Coffee';
+  weight: string;
+  trackingNumber?: string;
+  courier?: string;
+  destination: string;
+  status: 'Requested' | 'Quoted' | 'Payment Confirmed' | 'Preparing' | 'Shipped' | 'Delivered' | 'Feedback Received' | 'Commercial Order' | 'Cancelled';
+  paymentStatus: 'PENDING' | 'CONFIRMED';
+  shipmentDate?: string;
+  deliveryDate?: string;
+  feedback?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Quotation {
+  id: string;
   quoteNumber: string;
   leadId: string;
+  leadCompanyName: string;
+  type: 'Sample' | 'Commercial';
+  shipmentType: 'Air Freight' | 'LCL Shipment' | 'FCL Shipment' | 'Sample Order';
+  packaging: 'Vacuum GrainPro 5kg' | 'GrainPro 10-15kg' | 'GrainPro Jute 30-60kg';
+  paymentTerms: 'TT 50% Deposit + 50% Before Shipment' | 'LC At Sight';
+  incoterm: 'FOB' | 'CIF' | 'EXW' | 'CNF';
   product: string;
-  quantity: string; // e.g., "10 Metric Tons"
-  price: number; // FOB / CIF rate
-  incoterm: string; // e.g., "FOB Belawan", "CIF Hamburg"
-  currency?: string;
-  status: 'Draft' | 'Sent' | 'Accepted' | 'Declined';
+  quantity: number;
+  price: number;
+  currency: string;
+  leadTimeDays: number;
+  validUntil: string;
+  status: 'Draft' | 'Sent' | 'Accepted' | 'Rejected' | 'Expired';
+  pdfPath?: string;
   dateCreated: string;
+  createdAt: string;
+  updatedAt: string;
 }
-
-
 
 export interface SystemConfig {
   googleAppsScriptUrl: string;
   isSynced: boolean;
 }
 
-export interface Supplier {
-  id: string;
-  companyName: string;
-  website: string | null;
-  email: string | null;
-  phone: string | null;
-  whatsapp: string | null;
-  country: string | null;
-  city: string | null;
-  address: string | null;
-  coffeeTypes: string | null;
-  certifications: string | null;
-  minimumOrderQty: string | null;
-  createdAt: string;
-  updatedAt: string;
-  contacts?: SupplierContact[];
-  notes?: SupplierNote[];
-  activities?: any[];
+// New types for AI Buyer Intelligence
+export interface PersonContact {
+  name: string;
+  email: string;
+  jobTitle: string;
+  department: string;
+  phone?: string;
+  linkedin?: string;
+  priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
-export interface SupplierContact {
-  id: string;
-  supplierId: string;
-  firstName: string;
-  lastName: string | null;
-  jobTitle: string | null;
-  email: string | null;
-  phone: string | null;
-  isPrimary: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SupplierNote {
-  id: string;
-  supplierId: string;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
+export interface AutoDiscoverResult {
+  classification: any;
+  contacts: any;
+  allContacts: PersonContact[];
+  portfolio: any;
+  productMatches: any[];
+  bestProducts: string[];
+  gapAnalysis: string;
+  scores: any;
+  insight: any;
+  importerId?: string;
+  isNewBuyer: boolean;
+  timeline: string[];
+  outreachStrategy: {
+    emailType: string;
+    reason: string;
+  };
+  emailDraft: {
+    subject: string;
+    body: string;
+  };
+  recommendedAttachments: string[];
+  cached?: boolean;
 }

@@ -31,7 +31,7 @@ export default function EmailGeneratorView({
   const [body, setBody] = useState('');
   
   // Attachments
-  const [attachPdfQuotation, setAttachPdfQuotation] = useState('none');
+  const [attachPdfQuotation, setAttachPdfQuotation] = useState<string | boolean>('none');
   const [attachCatalogue, setAttachCatalogue] = useState(false);
   const [catalogueDriveLink, setCatalogueDriveLink] = useState('');
   const [catalogueFile, setCatalogueFile] = useState<File | null>(null);
@@ -157,7 +157,7 @@ export default function EmailGeneratorView({
       setBcc(existing.bcc || '');
       setSubject('');
       setBody('');
-      setAttachPdfQuotation(existing.attachPdfQuotation || 'none');
+      setAttachPdfQuotation(existing.attachPdfQuotation ?? 'none');
       setAttachCatalogue(existing.attachCatalogue || false);
       setCatalogueDriveLink(existing.catalogueDriveLink || '');
       setAttachSampleOffer(existing.attachSampleOffer || false);
@@ -1060,7 +1060,7 @@ export default function EmailGeneratorView({
                 </div>
               ) : (
                 <select
-                  value={attachPdfQuotation}
+                  value={typeof attachPdfQuotation === 'string' ? attachPdfQuotation : 'none'}
                   onChange={e => setAttachPdfQuotation(e.target.value)}
                   className="w-full bg-white border border-primary/10 rounded-sm p-1.5 text-[10px] shrink-0"
                 >
