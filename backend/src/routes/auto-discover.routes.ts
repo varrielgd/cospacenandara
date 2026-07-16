@@ -7,8 +7,8 @@ const router = Router();
 // Apply authentication to all auto-discover routes
 router.use(authenticate);
 
-router.post('/auto-discover', executeAutoDiscover);
-router.get('/auto-discover/history/:importerId', getAutoDiscoverHistory);
-router.post('/auto-discover/refresh/:importerId', refreshAutoDiscover);
+router.post('/', executeAutoDiscover);
+router.get('/history/:importerId', getAutoDiscoverHistory);
+router.post('/refresh/:importerId', refreshAutoDiscover);
 
 export default router;
