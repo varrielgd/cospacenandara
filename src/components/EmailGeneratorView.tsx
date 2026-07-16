@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lead, EmailLog, EmailStatus, Quotation } from '../types';
 import { api } from '../utils/api';
+import BuyerIntelligenceTimeline from './BuyerIntelligenceTimeline';
 
 interface EmailGeneratorViewProps {
   leads: Lead[];
@@ -793,26 +794,27 @@ export default function EmailGeneratorView({
           </div>
         )}
 
-        {/* Buyer Website Analysis */}
-        <div className="space-y-1.5 text-xs font-mono">
-          <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">BUYER WEBSITE</label>
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={websiteUrl}
-              onChange={e => setWebsiteUrl(e.target.value)}
-              placeholder={activeLead?.website || "https://buyer-website.com"}
-              className="flex-1 bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+        {/* Buyer Intelligence Timeline */}
+        {activeLead && (
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-2 pb-3">
+              <h3 className="text-[9px] font-bold uppercase tracking-widest text-primary font-mono">BUYER INTELLIGENCE TIMELINE</h3>
+            </div>
+            <BuyerIntelligenceTimeline
+              importerId={activeLead.id}
+              importerName={activeLead.companyName}
+              websiteUrl={websiteUrl || activeLead.website || ''}
+              onIntelligenceLoaded={(profile) => {
+                if (profile.productRelevance && profile.productRelevance.length > 0) {
+                  const bestMatch = profile.productRelevance.find(p => p.match === 'Excellent' || p.match === 'Good');
+                  if (bestMatch) {
+                    setCoffeeInterest(bestMatch.product);
+                  }
+                }
+              }}
             />
-            <button
-              onClick={handleAnalyzeWebsite}
-              disabled={!activeLead || !websiteUrl || isAnalyzingWebsite}
-              className="px-3 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-[9px] font-mono uppercase tracking-widest rounded-sm border border-primary/20 cursor-pointer disabled:opacity-40 font-bold shrink-0"
-            >
-              {isAnalyzingWebsite ? "..." : "ANALYZE"}
-            </button>
           </div>
-        </div>
+        )}
 
         {/* Contact Name Custom Input */}
         <div className="space-y-1.5 text-xs font-mono">
