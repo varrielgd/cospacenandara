@@ -177,7 +177,9 @@ model Contact {
   email       String?
   phone       String?
   linkedin    String?
-  isPrimary   Boolean  @default(false)
+  department  String?  // Procurement, Purchasing, Green Coffee Buying, Sales, Marketing, General, etc.
+  priority    String?  // HIGHEST, HIGH, MEDIUM, LOW
+  isPrimary   Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

@@ -197,7 +197,7 @@ export class AutoDiscoverService {
 
     if (classification.isCoffeeBusiness && classification.confidenceScore >= 70) {
       timeline.push('Creating CRM buyer record...');
-      const result = await this.createOrUpdateBuyer(classification, contacts, portfolio, scores, websiteUrl, insight);
+      const result = await this.createOrUpdateBuyer(classification, contacts, allContacts, portfolio, scores, websiteUrl, insight);
       importerId = result.importerId;
       isNewBuyer = result.isNew;
       timeline.push(isNewBuyer ? 'New buyer created in CRM' : 'Existing buyer updated in CRM');
@@ -834,11 +834,12 @@ Return EXACTLY this JSON:
   }
 
   /**
-   * Create or update CRM buyer record
+   * Create or update CRM buyer record with all contacts
    */
   private static async createOrUpdateBuyer(
     classification: CompanyClassification,
     contacts: ContactInfo,
+    allContacts: PersonContact[],
     portfolio: CoffeePortfolio,
     scores: BuyerScores,
     websiteUrl: string,
@@ -849,51 +850,94 @@ Return EXACTLY this JSON:
       where: { website: websiteUrl }
     });
 
+    let importerId: string;
+    let isNew = false;
+
     if (existing) {
       // Update existing
       await prisma.importer.update({
         where: { id: existing.id },
         data: {
+          companyName: classification.companyName,
           businessType: classification.businessType,
           country: classification.country,
           city: classification.city,
+          address: classification.address,
           email: contacts.companyEmail || existing.email,
           phone: contacts.phone || existing.phone,
+          whatsapp: contacts.whatsapp,
+          linkedin: contacts.linkedin,
+          primaryContactName: contacts.contactPerson || existing.primaryContactName,
+          primaryContactEmail: contacts.procurementEmail || contacts.companyEmail || existing.primaryContactEmail,
           leadScore: scores.opportunityScore >= 70 ? 'A' : scores.opportunityScore >= 50 ? 'B' : 'C',
           confidenceScore: classification.confidenceScore / 100,
+          notes: `Auto-discovered from ${websiteUrl}\n\nBusiness Type: ${classification.businessType}\nFounded: ${classification.founded || 'Unknown'}\nEmployees: ${classification.employeeEstimate || 'Unknown'}\nScale: ${classification.businessScale || 'Unknown'}\nSpecialty Focus: ${portfolio.specialtyFocus}\nCurrent Origins: ${portfolio.origins.join(', ')}\nEstimated Volume: ${portfolio.estimatedAnnualVolume}\n\n${buyerInsight?.businessSummary || ''}`,
         }
       });
+      importerId = existing.id;
 
       await BuyerTimelineService.addEvent(existing.id, 'Company Research', 'Buyer re-discovered via auto-discover',
-        `Website re-analyzed. Updated business classification.`, 'AI', { classification }, scores.opportunityScore, classification.confidenceScore);
+        `Website re-analyzed with enhanced AI. ${allContacts.length} contacts extracted.`, 'AI', 
+        { classification, contacts: allContacts.length }, scores.opportunityScore, classification.confidenceScore);
+    } else {
+      // Create new
+      const importer = await prisma.importer.create({
+        data: {
+          companyName: classification.companyName,
+          website: websiteUrl,
+          email: contacts.companyEmail || contacts.coffeeBuyingEmail || '',
+          phone: contacts.phone || '',
+          whatsapp: contacts.whatsapp,
+          linkedin: contacts.linkedin,
+          country: classification.country,
+          city: classification.city,
+          address: classification.address,
+          businessType: classification.businessType,
+          primaryContactName: contacts.contactPerson || '',
+          primaryContactEmail: contacts.procurementEmail || contacts.companyEmail || '',
+          status: 'NEW' as any,
+          leadScore: scores.opportunityScore >= 70 ? 'A' as any : scores.opportunityScore >= 50 ? 'B' as any : 'C' as any,
+          confidenceScore: classification.confidenceScore / 100,
+          notes: `Auto-discovered from ${websiteUrl}\n\nBusiness Type: ${classification.businessType}\nFounded: ${classification.founded || 'Unknown'}\nEmployees: ${classification.employeeEstimate || 'Unknown'}\nScale: ${classification.businessScale || 'Unknown'}\nSpecialty Focus: ${portfolio.specialtyFocus}\nCurrent Origins: ${portfolio.origins.join(', ')}\nEstimated Volume: ${portfolio.estimatedAnnualVolume}\n\n${buyerInsight?.businessSummary || ''}`,
+        }
+      });
+      importerId = importer.id;
+      isNew = true;
 
-      return { importerId: existing.id, isNew: false };
+      await BuyerTimelineService.addEvent(importer.id, 'AI Insight', 'Buyer created via auto-discover',
+        `Auto-discovered from ${websiteUrl}. Classified as ${classification.businessType}. ${allContacts.length} contacts extracted.`, 'AI',
+        { classification, contacts: allContacts.length }, scores.opportunityScore, classification.confidenceScore);
     }
 
-    // Create new
-    const importer = await prisma.importer.create({
-      data: {
-        companyName: classification.companyName,
-        website: websiteUrl,
-        email: contacts.companyEmail || contacts.coffeeBuyingEmail || '',
-        phone: contacts.phone || '',
-        country: classification.country,
-        city: classification.city,
-        businessType: classification.businessType,
-        primaryContactName: contacts.contactPerson || '',
-        primaryContactEmail: contacts.procurementEmail || contacts.companyEmail || '',
-        status: 'NEW' as any,
-        leadScore: scores.opportunityScore >= 70 ? 'A' as any : scores.opportunityScore >= 50 ? 'B' as any : 'C' as any,
-        confidenceScore: classification.confidenceScore / 100,
-        notes: `Auto-discovered from ${websiteUrl}\n\nBusiness Type: ${classification.businessType}\nSpecialty Focus: ${portfolio.specialtyFocus}\nCurrent Origins: ${portfolio.origins.join(', ')}\nEstimated Volume: ${portfolio.estimatedAnnualVolume}\n\n${buyerInsight?.businessSummary || ''}`,
-      }
+    // Save all extracted contacts (don't delete existing - append new ones)
+    // Only add contacts that don't already exist (by email)
+    const existingContacts = await prisma.contact.findMany({
+      where: { importerId },
+      select: { email: true }
     });
+    const existingEmails = new Set(existingContacts.map(c => c.email).filter((e): e is string => e !== null));
 
-    await BuyerTimelineService.addEvent(importer.id, 'AI Insight', 'Buyer created via auto-discover',
-      `Auto-discovered from ${websiteUrl}. Classified as ${classification.businessType}.`, 'AI',
-      { classification, scores }, scores.opportunityScore, classification.confidenceScore);
+    for (const person of allContacts) {
+      if (person.email && !existingEmails.has(person.email)) {
+        const nameParts = person.name.split(' ');
+        await prisma.contact.create({
+          data: {
+            importerId,
+            firstName: nameParts[0] || person.name,
+            lastName: nameParts.slice(1).join(' ') || null,
+            jobTitle: person.jobTitle,
+            email: person.email,
+            phone: person.phone,
+            linkedin: person.linkedin,
+            department: person.department,
+            priority: person.priority,
+            isPrimary: person.priority === 'HIGHEST',
+          }
+        });
+      }
+    }
 
-    return { importerId: importer.id, isNew: true };
+    return { importerId, isNew };
   }
 
   /**
