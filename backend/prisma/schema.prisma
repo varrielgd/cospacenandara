@@ -161,6 +161,10 @@ model Importer {
   importerNotes        Note[]               @relation("ImporterNotes")
   tasks                Task[]               @relation("ImporterTasks")
   attachments          Attachment[]
+  buyerTimelines       BuyerTimeline[]
+  buyerAiAnalyses      BuyerAiAnalysis[]
+  buyerReplyAnalyses   BuyerReplyAnalysis[]
+  websiteAnalysisCache WebsiteAnalysisCache?
 }
 
 model Contact {
@@ -212,6 +216,8 @@ model Email {
   receivedAt    DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  buyerReplyAnalyses BuyerReplyAnalysis[]
 }
 
 model Sample {
@@ -394,4 +400,104 @@ model SupplierContact {
   isPrimary   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model BuyerTimeline {
+  id            String    @id @default(uuid())
+  importerId    String
+  eventType     String
+  source        String    @default("AI")
+  title         String
+  description   String?
+  metadata      Json?
+  score         Int?
+  confidence    Int       @default(50)
+  eventDate     DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  importer      Importer  @relation(fields: [importerId], references: [id], onDelete: Cascade)
+
+  @@index([importerId])
+  @@index([eventDate(sort: Desc)])
+  @@index([eventType])
+}
+
+model BuyerAiAnalysis {
+  id                      String   @id @default(uuid())
+  importerId              String   @unique
+  industry                String?
+  companyType             String?
+  importerScore           Int      @default(50)
+  coffeeMatchScore        Int      @default(50)
+  specialtyPotential      String?
+  originPreference        String?
+  preferredProcessing     String?
+  likelyBuyingVolume      String?
+  decisionMakerConfidence String?
+  communicationStyle      String?
+  estimatedPurchaseFrequency String?
+  riskLevel               String   @default("Medium")
+  opportunityLevel        String   @default("Medium")
+  relationshipScore       String   @default("Cold")
+  nextBestAction          String?
+  nextActionReason        String?
+  productRelevance        Json?
+  rawAnalysis             String?
+  analyzedAt              DateTime @default(now())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  importer                Importer @relation(fields: [importerId], references: [id], onDelete: Cascade)
+}
+
+model BuyerReplyAnalysis {
+  id            String    @id @default(uuid())
+  importerId    String
+  emailId       String?
+  subject       String?
+  body          String?
+  classification String   @default("Unknown")
+  intent        String?
+  questions     String?
+  concerns      String?
+  urgency       String    @default("Normal")
+  sentiment     String    @default("Neutral")
+  analyzedAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  importer      Importer? @relation(fields: [importerId], references: [id], onDelete: Cascade)
+  email         Email?     @relation(fields: [emailId], references: [id], onDelete: SetNull)
+
+  @@index([importerId])
+  @@index([classification])
+}
+
+model WebsiteAnalysisCache {
+  id                   String    @id @default(uuid())
+  importerId           String    @unique
+  websiteUrl           String
+  businessModel        String?
+  products             String?
+  coffeeTypes          String?
+  roastingCapability   String?
+  importActivity       String?
+  wholesale            String?
+  retail               String?
+  cafe                 String?
+  distributor          String?
+  manufacturer         String?
+  companySize          String?
+  targetMarket         String?
+  country              String?
+  buyingPotential      String?
+  importsGreenCoffee   Boolean   @default(false)
+  certifications       String?
+  brands               String?
+  rawHtml              String?
+  analyzedAt           DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  importer             Importer  @relation(fields: [importerId], references: [id], onDelete: Cascade)
 }
