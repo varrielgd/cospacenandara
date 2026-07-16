@@ -5,13 +5,22 @@ import { EmailIntelligenceService } from './email-intelligence.service.js';
 
 export interface CompanyClassification {
   companyName: string;
+  tradingName?: string;
   country: string;
   city: string;
+  address?: string;
   website: string;
   businessType: string;
+  founded?: string;
+  employeeEstimate?: string;
+  businessScale?: string;
   confidenceScore: number;
   isCoffeeBusiness: boolean;
   warning?: string;
+  coffeeCategories?: string[];
+  services?: string[];
+  industries?: string[];
+  targetCustomers?: string[];
 }
 
 export interface ContactInfo {
@@ -24,6 +33,14 @@ export interface ContactInfo {
   linkedin: string | null;
   contactPerson: string | null;
   jobTitle: string | null;
+  priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface PersonContact {
+  name: string;
+  email: string;
+  jobTitle: string;
+  priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
 export interface CoffeePortfolio {
@@ -224,10 +241,14 @@ export class AutoDiscoverService {
   }
 
   /**
-   * Crawl website content from multiple pages
+   * Crawl website content from multiple pages - Enhanced for Business Intelligence
    */
   private static async crawlWebsite(websiteUrl: string): Promise<string> {
-    const pages = ['', '/about', '/products', '/coffee', '/contact', '/sustainability', '/blog', '/careers'];
+    const pages = [
+      '', '/about', '/company', '/products', '/coffee', '/contact', '/team', '/sustainability',
+      '/blog', '/careers', '/news', '/certificates', '/quality', '/services', '/locations',
+      '/partners', '/origins', '/our-story', '/about-us', '/our-team', '/history'
+    ];
     let allContent = '';
 
     const normalizedUrl = websiteUrl.replace(/\/+$/, '');
@@ -252,37 +273,46 @@ export class AutoDiscoverService {
           .replace(/<[^>]+>/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
-        allContent += `\n--- PAGE: ${url} ---\n${text.substring(0, 3000)}`;
+        allContent += `\n--- PAGE: ${url} ---\n${text.substring(0, 4000)}`;
       } catch {
         // Skip pages that fail to load
       }
     }
 
-    return allContent.substring(0, 30000);
+    return allContent.substring(0, 50000);
   }
 
   /**
-   * Classify company from website content
+   * Classify company from website content - Enhanced Business Intelligence
    */
   private static async classifyCompany(websiteUrl: string, websiteContent: string): Promise<CompanyClassification> {
-    const prompt = `Analyze this company website and classify the business.
+    const prompt = `Analyze this company website and extract comprehensive business intelligence.
 
 WEBSITE: ${websiteUrl}
 
 CONTENT:
-${websiteContent.substring(0, 12000)}
+${websiteContent.substring(0, 15000)}
 
-Return EXACTLY this JSON. Use "Unknown" when unsure. NEVER fabricate.
+Return EXACTLY this JSON. Use "Unknown" or null when not found. NEVER fabricate.
 
 {
-  "companyName": "Company name found on website",
+  "companyName": "Full company name",
+  "tradingName": "Trading name or brand name if different",
   "country": "Country of operation",
   "city": "City of operation",
+  "address": "Full address if available",
   "website": "${websiteUrl}",
-  "businessType": "One of: Coffee Importer / Coffee Trader / Coffee Roaster / Coffee Chain / Coffee Retailer / Private Label / Coffee Distributor / Coffee Manufacturer / Coffee Exporter / Broker / Green Coffee Buyer / Cafe Group / Unknown",
+  "businessType": "One of: Coffee Importer / Coffee Trader / Coffee Roaster / Coffee Chain / Coffee Manufacturer / Coffee Broker / Coffee Retailer / Private Label / Exporter / Other",
+  "founded": "Year founded if mentioned",
+  "employeeEstimate": "Small/Medium/Large/Enterprise",
+  "businessScale": "Local/Regional/National/International",
   "confidenceScore": 0-100,
   "isCoffeeBusiness": true or false,
-  "warning": "If confidence < 70%, explain why uncertain"
+  "warning": "If confidence < 70%, explain why uncertain",
+  "coffeeCategories": ["Green Coffee", "Roasted Coffee", "Instant Coffee", "Coffee Pods", "Specialty Coffee", "Commercial Coffee"],
+  "services": ["Import/Export", "Roasting", "Distribution", "Retail", "Wholesale", "Private Label", "Consulting"],
+  "industries": ["B2B", "B2C", "Food Service", "Hospitality", "Retail", "Online"],
+  "targetCustomers": ["Roasters", "Retailers", "Cafes", "Distributors", "Consumers", "Manufacturers"]
 }`;
 
     try {
@@ -294,13 +324,22 @@ Return EXACTLY this JSON. Use "Unknown" when unsure. NEVER fabricate.
 
       return {
         companyName: parsed.companyName || 'Unknown',
+        tradingName: parsed.tradingName || undefined,
         country: parsed.country || 'Unknown',
         city: parsed.city || 'Unknown',
+        address: parsed.address || undefined,
         website: websiteUrl,
         businessType: parsed.businessType || 'Unknown',
+        founded: parsed.founded || undefined,
+        employeeEstimate: parsed.employeeEstimate || undefined,
+        businessScale: parsed.businessScale || undefined,
         confidenceScore: Math.min(100, Math.max(0, parsed.confidenceScore || 50)),
         isCoffeeBusiness: parsed.isCoffeeBusiness === true,
         warning: parsed.confidenceScore < 70 ? (parsed.warning || 'Low confidence in classification. Manual verification recommended.') : undefined,
+        coffeeCategories: Array.isArray(parsed.coffeeCategories) ? parsed.coffeeCategories : undefined,
+        services: Array.isArray(parsed.services) ? parsed.services : undefined,
+        industries: Array.isArray(parsed.industries) ? parsed.industries : undefined,
+        targetCustomers: Array.isArray(parsed.targetCustomers) ? parsed.targetCustomers : undefined,
       };
     } catch (error: any) {
       logger.error(`[AutoDiscover] Classification failed: ${error.message}`);
@@ -345,6 +384,21 @@ Return EXACTLY this JSON. Use null when not found. NEVER fabricate.
       const jsonMatch = result.match(/\{[\s\S]*\}/);
       const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
 
+      // Determine priority based on job title/role
+      const jobTitleLower = (parsed.jobTitle || '').toLowerCase();
+      const contactPersonLower = (parsed.contactPerson || '').toLowerCase();
+      
+      let priority: 'HIGHEST' | 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
+      if (/coffee\s*buyer|green\s*coffee|trading\s*manager|import\s*manager|purchasing|procurement/i.test(jobTitleLower + ' ' + contactPersonLower)) {
+        priority = 'HIGHEST';
+      } else if (/buyer|trade|operations|sourcing/i.test(jobTitleLower + ' ' + contactPersonLower)) {
+        priority = 'HIGH';
+      } else if (/sales|marketing|manager|director/i.test(jobTitleLower + ' ' + contactPersonLower)) {
+        priority = 'MEDIUM';
+      } else {
+        priority = 'LOW';
+      }
+
       return {
         companyEmail: parsed.companyEmail || null,
         procurementEmail: parsed.procurementEmail || null,
@@ -355,18 +409,20 @@ Return EXACTLY this JSON. Use null when not found. NEVER fabricate.
         linkedin: parsed.linkedin || null,
         contactPerson: parsed.contactPerson || null,
         jobTitle: parsed.jobTitle || null,
+        priority,
       };
     } catch {
       return {
         companyEmail: null, procurementEmail: null, salesEmail: null,
         coffeeBuyingEmail: null, phone: null, whatsapp: null,
         linkedin: null, contactPerson: null, jobTitle: null,
+        priority: 'LOW',
       };
     }
   }
 
   /**
-   * Analyze coffee portfolio from website
+   * Analyze coffee portfolio from website - Enhanced with Indonesia-specific regions
    */
   private static async analyzeCoffeePortfolio(websiteUrl: string, websiteContent: string): Promise<CoffeePortfolio> {
     const prompt = `Analyze this coffee company's portfolio based on their website.
@@ -374,15 +430,17 @@ Return EXACTLY this JSON. Use null when not found. NEVER fabricate.
 WEBSITE: ${websiteUrl}
 
 CONTENT:
-${websiteContent.substring(0, 12000)}
+${websiteContent.substring(0, 15000)}
 
 Return EXACTLY this JSON. Use [] or "Unknown" when not found. NEVER fabricate.
 
+For Indonesian origins, detect specifically: Aceh, Java, Flores, Toraja, Bali, Mandheling, Lintong, Gayo, Lampung, Temanggung, Sumatra, Sulawesi, Papua.
+
 {
-  "origins": ["Brazil", "Colombia", "Ethiopia"],
-  "products": ["Whole bean", "Ground", "Single origin", "Blends"],
-  "processingMethods": ["Washed", "Natural", "Honey"],
-  "certifications": ["Organic", "Fair Trade", "Rainforest Alliance"],
+  "origins": ["Brazil", "Colombia", "Ethiopia", "Indonesia"],
+  "products": ["Whole bean", "Ground", "Single origin", "Blends", "Green coffee"],
+  "processingMethods": ["Washed", "Natural", "Honey", "Wet-Hulled"],
+  "certifications": ["Organic", "Fair Trade", "Rainforest Alliance", "UTZ", "RFA"],
   "roastingStyle": "Light / Medium / Dark / Mixed / Unknown",
   "currentSuppliers": ["Supplier 1", "Supplier 2"],
   "privateLabels": ["Brand 1", "Brand 2"],
@@ -423,7 +481,7 @@ Return EXACTLY this JSON. Use [] or "Unknown" when not found. NEVER fabricate.
   }
 
   /**
-   * Match Nandara products against buyer portfolio
+   * Match Nandara products against buyer portfolio - Enhanced with opportunity analysis
    */
   private static async matchProducts(
     classification: CompanyClassification,
