@@ -703,6 +703,69 @@ export const generateLeadEmail = async (req: AuthRequest, res: Response) => {
   }
 };
 
+/**
+ * Analyze a buyer's website and return structured intelligence
+ */
+export const analyzeBuyerWebsite = async (req: AuthRequest, res: Response) => {
+  try {
+    const { importerId, websiteUrl } = req.body;
+    if (!importerId || !websiteUrl) {
+      return res.status(400).json({ message: 'importerId and websiteUrl are required' });
+    }
+
+    const { EmailIntelligenceService } = await import('../services/email-intelligence.service.js');
+    const intelligence = await EmailIntelligenceService.analyzeWebsite(importerId, websiteUrl);
+    
+    // Also run product matching in parallel
+    const productMatches = await EmailIntelligenceService.matchProducts(importerId, intelligence);
+
+    return res.json({
+      intelligence,
+      productMatches,
+      bestProduct: productMatches.find(p => p.matchLevel === 'HIGH') || productMatches[0] || null
+    });
+  } catch (error: any) {
+    logger.error('Website analysis error:', error);
+    return res.status(500).json({ message: `Website analysis failed: ${error.message}` });
+  }
+};
+
+/**
+ * Generate an intelligent email using the full AI pipeline
+ * (website analysis, product matching, history analysis, strategy, attachments, subject lines)
+ */
+export const generateIntelligentEmail = async (req: AuthRequest, res: Response) => {
+  try {
+    const {
+      importerId, companyName, country, buyerEmail, buyerWebsite,
+      contactName, crmNotes, pipelineStage, emailType
+    } = req.body;
+
+    if (!importerId || !companyName) {
+      return res.status(400).json({ message: 'importerId and companyName are required' });
+    }
+
+    const { EmailIntelligenceService } = await import('../services/email-intelligence.service.js');
+
+    const result = await EmailIntelligenceService.generateIntelligentEmail(
+      importerId,
+      companyName,
+      country || '',
+      buyerEmail || '',
+      buyerWebsite || '',
+      contactName || 'Procurement Manager',
+      crmNotes || '',
+      pipelineStage || 'New Lead',
+      emailType || undefined
+    );
+
+    return res.json(result);
+  } catch (error: any) {
+    logger.error('Intelligent email generation error:', error);
+    return res.status(500).json({ message: `Intelligent email generation failed: ${error.message}` });
+  }
+};
+
 export const fetchGoogleDriveFile = async (req: AuthRequest, res: Response) => {
   try {
     const { driveLink } = req.body;

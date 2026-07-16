@@ -234,10 +234,141 @@ export default function EmailGeneratorView({
     }
   }, [activeLead, emailLogs, isGenerating, status, subject, body, generatedLeadId]);
 
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [isAnalyzingWebsite, setIsAnalyzingWebsite] = useState(false);
+  const [intelligenceResult, setIntelligenceResult] = useState<any>(null);
+  const [useIntelligentMode, setUseIntelligentMode] = useState(true);
+
+  // Intelligent mode toggle
+  useEffect(() => {
+    if (useIntelligentMode) {
+      setEmailType('INTELLIGENT_AUTO_SELECTION');
+    }
+  }, [useIntelligentMode]);
+
+  const handleAnalyzeWebsite = async () => {
+    if (!activeLead || !websiteUrl) {
+      alert('Please select a buyer and enter a website URL');
+      return;
+    }
+    setIsAnalyzingWebsite(true);
+    try {
+      const data = await api.post('/api/emails/analyze-website', {
+        importerId: activeLead.id,
+        websiteUrl
+      });
+      setIntelligenceResult(data);
+      alert(`Website analysis complete! ${data.intelligence.companyProfile.substring(0, 100)}...`);
+    } catch (err: any) {
+      alert('Website analysis failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIsAnalyzingWebsite(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!activeLead) return;
     setIsGenerating(true);
     setCopied(false);
+
+    // If intelligent mode is on, use the new AI pipeline
+    if (useIntelligentMode || emailType === 'INTELLIGENT_AUTO_SELECTION') {
+      try {
+        const data = await api.post('/api/emails/intelligent-generate', {
+          importerId: activeLead.id,
+          companyName: activeLead.companyName,
+          country: activeLead.country,
+          buyerEmail: activeLead.email || recipientEmail,
+          buyerWebsite: websiteUrl || activeLead.website,
+          contactName,
+          crmNotes: activeLead.notes || '',
+          pipelineStage: activeLead.status || 'New Lead',
+        });
+        console.log('[IntelligentEmail] Result:', data);
+
+        const generatedSub = data.subject || '';
+        const generatedBody = data.body || '';
+        const strategyInfo = data.strategy || {};
+        const recommendedAttachments = data.recommendedAttachments || [];
+
+        const now = getTimestamp();
+        setSubject(generatedSub);
+        setBody(generatedBody);
+        setGeneratedLeadId(activeLead.id);
+        setStatus('Draft Generated');
+        setIsApproved(false);
+
+        // Auto-select coffee interest based on AI product matching
+        if (data.selectedProduct) {
+          setCoffeeInterest(data.selectedProduct);
+        }
+
+        // Auto-check recommended attachment checkboxes
+        if (data.emailType) {
+          setEmailType(data.emailType);
+        }
+        if (recommendedAttachments.length > 0) {
+          setAttachCompanyProfile(recommendedAttachments.some((a: any) => a.checkboxField === 'attachCompanyProfile'));
+          setAttachCatalogue(recommendedAttachments.some((a: any) => a.checkboxField === 'attachCatalogue'));
+          setAttachSampleOffer(recommendedAttachments.some((a: any) => a.checkboxField === 'attachSampleOffer'));
+          setAttachPriceList(recommendedAttachments.some((a: any) => a.checkboxField === 'attachPriceList'));
+          setAttachSampleProgram(recommendedAttachments.some((a: any) => a.checkboxField === 'attachSampleProgram'));
+          setAttachQuotation(recommendedAttachments.some((a: any) => a.checkboxField === 'attachQuotation'));
+          setAttachProformaInvoice(recommendedAttachments.some((a: any) => a.checkboxField === 'attachProformaInvoice'));
+        }
+
+        const updatedTimestamps = {
+          ...timestamps,
+          draftGeneratedAt: now,
+          pendingReviewAt: now
+        };
+        setTimestamps(updatedTimestamps);
+
+        const freshEmail: EmailLog = {
+              id: currentEmailId,
+              leadId: activeLead.id,
+              recipientEmail: recipientEmail || activeLead.email || '',
+              cc,
+              bcc,
+              emailSubject: generatedSub,
+              emailBody: generatedBody,
+              status: 'Draft Generated',
+              approved: false,
+              attachPdfQuotation,
+              attachCatalogue,
+              catalogueDriveLink,
+              attachSampleOffer,
+              sampleOfferDriveLink,
+              attachCompanyProfile,
+              companyProfileDriveLink,
+              attachPriceList,
+              priceListDriveLink,
+              attachSampleProgram,
+              sampleProgramDriveLink,
+              attachQuotation,
+              quotationDriveLink,
+              attachProformaInvoice,
+              proformaInvoiceDriveLink,
+          draftGeneratedAt: now,
+          pendingReviewAt: now,
+          sentDate: new Date().toISOString().split('T')[0]
+        };
+        onSaveOrUpdateEmail(freshEmail);
+
+        // Show AI strategy info
+        const strategyMsg = strategyInfo.strategy 
+          ? `\n\nStrategy: ${strategyInfo.strategy}\nConfidence: ${strategyInfo.confidenceScore}%\nNext: ${data.nextRecommendedAction || 'Monitor response'}`
+          : '';
+        alert(`Intelligent email generated!\n\nType: ${data.emailType}\nProduct: ${data.selectedProduct}${strategyMsg}`);
+
+        setIsGenerating(false);
+        return;
+      } catch (err: any) {
+        console.error('[IntelligentEmail] Failed:', err);
+        alert('Intelligent email generation failed: ' + (err.message || 'Unknown error') + '\n\nFalling back to standard generation...');
+        // Fall through to standard generation
+      }
+    }
 
     try {
       const data = await api.post('/api/emails/generate-email', {
@@ -247,10 +378,10 @@ export default function EmailGeneratorView({
         leadType: activeLead.leadType,
         coffeeInterest: coffeeInterest,
         contactName: contactName,
-        emailType: emailType,
+        emailType: emailType === 'INTELLIGENT_AUTO_SELECTION' ? undefined : emailType,
         buyerName: activeLead.companyName,
         buyerEmail: activeLead.email,
-        buyerWebsite: activeLead.website,
+        buyerWebsite: websiteUrl || activeLead.website,
         buyerContact: contactName,
         crmNotes: activeLead.notes || '',
         pipelineStage: activeLead.status || 'New Lead',
@@ -651,8 +782,37 @@ export default function EmailGeneratorView({
               <span className="text-text-dim uppercase tracking-wider text-[8px] font-bold">Confidence scores:</span>
               <span className="block mt-0.5 text-[10px] text-emerald-800">🌐 Web: {activeLead.websiteConfidence || 'High'} • ⚙ Importer: {activeLead.importerConfidence || 'High'}</span>
             </p>
+            {intelligenceResult && (
+              <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
+                <p className="text-[9px] uppercase tracking-widest font-bold text-primary">AI Intelligence</p>
+                <p className="text-[9px]"><span className="text-text-dim">Interest:</span> {intelligenceResult.intelligence.buyingInterestScore}/100</p>
+                <p className="text-[9px]"><span className="text-text-dim">Opportunity:</span> {intelligenceResult.intelligence.opportunityScore}/100</p>
+                <p className="text-[9px]"><span className="text-text-dim">Best Match:</span> {intelligenceResult.bestProduct?.productName || 'N/A'}</p>
+              </div>
+            )}
           </div>
         )}
+
+        {/* Buyer Website Analysis */}
+        <div className="space-y-1.5 text-xs font-mono">
+          <label className="text-primary font-bold uppercase tracking-widest text-[9px] block">BUYER WEBSITE</label>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={websiteUrl}
+              onChange={e => setWebsiteUrl(e.target.value)}
+              placeholder={activeLead?.website || "https://buyer-website.com"}
+              className="flex-1 bg-bg-ivory/40 border border-primary/20 rounded-sm px-3 py-2.5 text-xs text-primary focus:ring-1 focus:ring-gold focus:border-gold outline-hidden font-sans"
+            />
+            <button
+              onClick={handleAnalyzeWebsite}
+              disabled={!activeLead || !websiteUrl || isAnalyzingWebsite}
+              className="px-3 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary text-[9px] font-mono uppercase tracking-widest rounded-sm border border-primary/20 cursor-pointer disabled:opacity-40 font-bold shrink-0"
+            >
+              {isAnalyzingWebsite ? "..." : "ANALYZE"}
+            </button>
+          </div>
+        </div>
 
         {/* Contact Name Custom Input */}
         <div className="space-y-1.5 text-xs font-mono">
