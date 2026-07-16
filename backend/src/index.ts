@@ -20,7 +20,7 @@ import emailRoutes from './routes/email.routes';
 import auditRoutes from './routes/audit.routes';
 import supplierRoutes from './routes/supplier.routes';
 import marketRoutes from './routes/market.routes';
-import autoDiscoverRoutes from './routes/auto-discover.routes.js';
+import autoDiscoverRoutes from './routes/auto-discover.routes';
 import { errorHandler } from './middleware/error.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
