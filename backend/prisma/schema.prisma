@@ -339,6 +339,40 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+model EmailConfig {
+  id             String   @id @default(uuid())
+  
+  // SMTP Settings
+  smtpHost       String   @default("smtp.hostinger.com")
+  smtpPort       Int      @default(587)
+  smtpUser       String   @default("")
+  smtpPass       String   @default("") // Should be encrypted in production
+  smtpFromName   String   @default("Nandara Nusa Montierra")
+  smtpSecure     Boolean  @default(false)
+  
+  // IMAP Settings  
+  imapHost       String   @default("imap.hostinger.com")
+  imapPort       Int      @default(993)
+  imapUser       String   @default("")
+  imapPass       String   @default("") // Should be encrypted in production
+  imapSecure     Boolean  @default(true)
+  
+  // Email Service Provider (for cloud hosting)
+  useResendApi   Boolean  @default(false)
+  resendApiKey   String   @default("") // Should be encrypted in production
+  useBrevoApi    Boolean  @default(false)
+  brevoApiKey    String   @default("") // Should be encrypted in production
+  
+  // Status
+  isConfigured   Boolean  @default(false)
+  lastTestedAt   DateTime?
+  testStatus     String?  // SUCCESS, FAILED, NOT_TESTED
+  testError      String?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String?
