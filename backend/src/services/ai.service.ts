@@ -401,7 +401,7 @@ Example:
 
     try {
       const result = await this.generateContent(prompt, { 
-        systemPrompt: `You are Fahril F., Export Relations at PT Nandara Nusa Montierra, a premium Indonesian coffee exporter. You write professional B2B coffee export emails. You write naturally, like a real human export professional. You never sound like AI. You never use marketing cliches. You are direct, honest, and knowledgeable about Indonesian specialty coffee.
+        systemPrompt: `You are Fahril F., Export Relations at PT Nandara Nusa Montierra, a premium Indonesian coffee exporter. You write professional B2B coffee export emails. You write naturally[...]
 
 Format your response exactly with these section headers:
 ---SUBJECT_ALTERNATIVES---
@@ -428,7 +428,7 @@ Format your response exactly with these section headers:
   ): string {
     const instructions: Record<string, string> = {
       FIRST_CONTACT: `PURPOSE: First introduction to a potential buyer.
-STRATEGY: Be compelling but not pushy. Introduce PT Nandara Nusa Montierra as a direct Indonesian specialty coffee exporter. Highlight what makes us different — we work directly with smallholder cooperatives, we control quality from cherry to export.
+STRATEGY: Be compelling but not pushy. Introduce PT Nandara Nusa Montierra as a direct Indonesian specialty coffee exporter. Highlight what makes us different — we work directly with smallholde[...]
 KEY POINTS: Mention specific origin expertise (Gayo Highlands, Toraja, Java Preanger). Offer to send product information or samples. Keep it brief and warm.
 CTA SOFT: "Would you be interested in learning more about our current crop availability?"`,
 
@@ -578,9 +578,9 @@ CTA SOFT: "I would be happy to prepare a proposal for your team to review at you
 
 I hope this message finds you well.
 
-My name is Fahril F. from PT Nandara Nusa Montierra, an Indonesian specialty coffee exporter based in Jakarta. We work directly with smallholder cooperatives across the Gayo Highlands, Toraja, Java Preanger, and Flores to bring single-origin specialty coffee to the global market.
+My name is Fahril F. from PT Nandara Nusa Montierra, an Indonesian specialty coffee exporter based in Jakarta. We work directly with smallholder cooperatives across the Gayo Highlands, Toraja, Ja[...]
 
-I would be pleased to share our current crop availability and price list with you. We take pride in our quality control — every batch is hand-sorted, moisture-tested, and packed in GrainPro hermetic lining to ensure freshness during transit.
+I would be pleased to share our current crop availability and price list with you. We take pride in our quality control — every batch is hand-sorted, moisture-tested, and packed in GrainPro her[...]
 
 Would you be interested in receiving our latest offers?
 
@@ -615,9 +615,9 @@ www.nandaranusamontierra.com`;
 
 I hope this message finds you well.
 
-My name is Fahril F. from PT Nandara Nusa Montierra, an Indonesian specialty coffee exporter. We work directly with smallholder farming cooperatives across Indonesia's premier growing regions, including the Gayo Highlands, Toraja, Java Preanger, and Flores.
+My name is Fahril F. from PT Nandara Nusa Montierra, an Indonesian specialty coffee exporter. We work directly with smallholder farming cooperatives across Indonesia's premier growing regions, in[...]
 
-What sets us apart is our commitment to quality at every stage. Each lot is hand-sorted, moisture-tested, and packed in GrainPro hermetic lining to preserve freshness during ocean transit. We provide full traceability from farm to port.
+What sets us apart is our commitment to quality at every stage. Each lot is hand-sorted, moisture-tested, and packed in GrainPro hermetic lining to preserve freshness during ocean transit. We pro[...]
 
 Our current inventory includes single-origin Arabica and Fine Robusta lots scoring 83-87 SCA points. We would be delighted to send you a pre-shipment sample for your team's evaluation.
 
@@ -669,7 +669,8 @@ www.nandaranusamontierra.com`,
     const TIMEOUT_MS = 25000; // 25 second timeout to prevent hanging
     try {
       logger.info('Attempting AI generation with Gemini...');
-      const modelName = 'gemini-2.5-flash';
+      // Match the model with your screenshot: using the latest available model
+      const modelName = 'gemini-3.7-flash';
       
       const safetySettings = [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
